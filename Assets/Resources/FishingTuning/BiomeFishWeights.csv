@@ -44,7 +44,7 @@ suncrest-reef,14,Greater Amberjack,0,0
 brinebreak-isle,13,Albacore,2,15
 brinebreak-isle,14,Greater Amberjack,1,18
 deep-ocean,13,Albacore,10,45
-deep-ocean,14,Greater Amberjack,10,70
+deep-ocean,14,Greater Amberjack,0,0
 suncrest-reef,15,Blacktip Shark,0,0
 brinebreak-isle,15,Blacktip Shark,5,14
 deep-ocean,15,Blacktip Shark,12,30
@@ -54,7 +54,7 @@ deep-ocean,16,Yellowtail Snapper,0,0
 bluewater-cay,0,Blue Mackerel,1,4
 bluewater-cay,1,Red Snapper,0,0
 bluewater-cay,2,Sea Bass,0,0
-bluewater-cay,3,Yellowtail,0,0
+bluewater-cay,3,Yellowtail,1.4,14.625
 bluewater-cay,5,Yellowfin Tuna,10,45
 bluewater-cay,6,Yellow Goatfish,0,0
 bluewater-cay,7,Black Spot Goatfish,0,0
@@ -65,7 +65,7 @@ bluewater-cay,11,Striped Bass,0,0
 bluewater-cay,12,Spotted Sand Bass,0,0
 bluewater-cay,13,Albacore,5,35
 bluewater-cay,14,Greater Amberjack,0,0
-bluewater-cay,15,Blacktip Shark,0,0
+bluewater-cay,15,Blacktip Shark,12,30
 bluewater-cay,16,Yellowtail Snapper,0,0
 suncrest-reef,17,Mutton Snapper,0.5,6.5
 brinebreak-isle,17,Mutton Snapper,0.7,13
@@ -79,10 +79,10 @@ brinebreak-isle,19,Mako Shark,0,0
 brinebreak-isle,20,Battle Scarred Mako Shark,0,0
 deep-ocean,18,Blacktip Reef Shark,0,0
 deep-ocean,19,Mako Shark,20,150
-deep-ocean,20,Battle Scarred Mako Shark,30,225
+deep-ocean,20,Battle Scarred Mako Shark,0,0
 bluewater-cay,18,Blacktip Reef Shark,0,0
 bluewater-cay,19,Mako Shark,20,150
-bluewater-cay,20,Battle Scarred Mako Shark,30,225
+bluewater-cay,20,Battle Scarred Mako Shark,0,0
 snapper-island,0,Blue Mackerel,0,0
 snapper-island,1,Red Snapper,0.7,3.2
 snapper-island,2,Sea Bass,0,0

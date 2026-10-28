@@ -198,11 +198,6 @@ export const tournamentIslands = [
         "maxKg": 67.5
       },
       {
-        "id": 14,
-        "name": "Greater Amberjack",
-        "maxKg": 105.0
-      },
-      {
         "id": 15,
         "name": "Blacktip Shark",
         "maxKg": 45.0
@@ -211,11 +206,6 @@ export const tournamentIslands = [
         "id": 19,
         "name": "Mako Shark",
         "maxKg": 225.0
-      },
-      {
-        "id": 20,
-        "name": "Battle Scarred Mako Shark",
-        "maxKg": 337.5
       }
     ]
   },
@@ -223,6 +213,8 @@ export const tournamentIslands = [
     "id": 3,
     "name": "Bluewater Cay",
     "fish": [
+      {"id": 3, "name": "Yellowtail", "maxKg": 21.9375},
+      {"id": 15, "name": "Blacktip Shark", "maxKg": 45.0},
       {
         "id": 0,
         "name": "Blue Mackerel",
@@ -252,11 +244,6 @@ export const tournamentIslands = [
         "id": 19,
         "name": "Mako Shark",
         "maxKg": 225.0
-      },
-      {
-        "id": 20,
-        "name": "Battle Scarred Mako Shark",
-        "maxKg": 337.5
       },
       {
         "id": 24,
