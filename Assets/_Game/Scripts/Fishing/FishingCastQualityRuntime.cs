@@ -97,10 +97,7 @@ public sealed class FishingCastQualityRuntime : MonoBehaviour
             MeasureLandingQuality();
 
         if (state == "Fighting" && !applied)
-        {
-            if (!measured) MeasureLandingQuality();
-            ApplyToHookedFish();
-        }
+            PrepareHookedFish();
 
         if (state == "Idle" && previousState == "Fighting")
             ResetForNewCast();
@@ -174,6 +171,15 @@ public sealed class FishingCastQualityRuntime : MonoBehaviour
         float depth01 = Mathf.Clamp01(ratio);
         float progress = Mathf.Pow(depth01, DepthCurveExponent);
         return Mathf.Lerp(MinimumQuality, 1f, progress);
+    }
+
+    // Called synchronously by StartFight before any fish presentation/catch consumer.
+    // Update remains a fallback; the guard prevents applying the penalty twice.
+    public void PrepareHookedFish()
+    {
+        if (!enabled || fishing == null || applied) return;
+        if (!measured) MeasureLandingQuality();
+        ApplyToHookedFish();
     }
 
     private void ApplyToHookedFish()

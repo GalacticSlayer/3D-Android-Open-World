@@ -1151,8 +1151,6 @@ public class FishingSystem : MonoBehaviour
             if(!pondCast) hookedWeightKg*=castHotspotMultiplier;
             hookedWeightKg *= Progression != null ? Progression.Multiplier(5) : 1f;
 
-            hookedSpeciesId=FishCatalog.ResolveSizeVariant(hookedSpeciesId,hookedWeightKg);
-
             fishUnconscious = false;
             fishOnShore = false;
             fishHealth = 1f;
@@ -1222,6 +1220,11 @@ public class FishingSystem : MonoBehaviour
         fragileBreakTimer=0f;
         fishMaxHealth=Mathf.RoundToInt(FishingRules.MaxHealth(hookedSpeciesId,hookedWeightKg)*ReefCatalog.HealthMultiplier(fightBiome));
         fishHealthPoints=fishMaxHealth;fishHealth=1f;
+        // Finalize depth-adjusted size before choosing the saved/rendered variant.
+        // The quality runtime used to shrink adults after variant selection.
+        var castQuality = GetComponent<FishingCastQualityRuntime>();
+        if (castQuality != null) castQuality.PrepareHookedFish();
+        hookedSpeciesId=FishCatalog.ResolveSizeVariant(hookedSpeciesId,hookedWeightKg);
         damageFraction=0;pendingDamage=0;damageDisplayTimer=0;
         lineBreakTimer = 0f;
         fightTime = 0f;

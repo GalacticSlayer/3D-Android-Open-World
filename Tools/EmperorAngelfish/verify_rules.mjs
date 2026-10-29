@@ -55,3 +55,19 @@ for(const id of [33,34]){
  assert(Math.abs(tournamentIslands[0].fish.find(f=>f.id===id).maxKg-.01738*50**2.88/1000*1.5)<1e-8);
 }
 console.log('PASS: 50 cm endpoint, 22 cm juvenile boundary, shared Mako-style index registration and updated server caps.');
+
+// Regression: a 30 cm adult roll reduced to 18 cm by shallow-water quality
+// must be classified using the final weight, before fight presentation begins.
+const weightAtLength=m=>{const cm=m*100;const lo=Math.floor(cm/5)-1;return weights[lo]+(weights[lo+1]-weights[lo])*(cm/5-lo-1);};
+const adultRoll=weightAtLength(.30), smallCatch=weightAtLength(.18);
+assert(adultRoll>threshold && smallCatch<threshold);
+const shallowQuality=smallCatch/adultRoll;
+assert(shallowQuality>=.2 && shallowQuality<=1);
+assert(adultRoll*shallowQuality<threshold);
+const startFight=system.slice(system.indexOf('private void StartFight()'),system.indexOf('private void UpdateFight('));
+assert(startFight.indexOf('castQuality.PrepareHookedFish()')>startFight.indexOf('fishHealthPoints=fishMaxHealth'));
+assert(startFight.indexOf('ResolveSizeVariant')>startFight.indexOf('castQuality.PrepareHookedFish()'));
+assert(startFight.indexOf('ResolveSizeVariant')<startFight.indexOf('hud.ShowFightMeters'));
+const qualityRuntime=read('Assets/_Game/Scripts/Fishing/FishingCastQualityRuntime.cs');
+assert(qualityRuntime.includes('if (!enabled || fishing == null || applied) return;'));
+console.log('PASS: shallow-water 30 cm to 18 cm regression and synchronous, once-only final size selection.');
