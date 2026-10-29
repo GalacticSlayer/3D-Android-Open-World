@@ -41,7 +41,8 @@ public static class FishSizeTable
         EmperorAngelfishCurve(), // Pomacanthus imperator, FishBase Bayesian estimate
         EmperorAngelfishCurve(), // Juvenile: same physical curve
         PantherGrouperCurve(), // Chromileptes altivelis: FishBase Bayesian estimate
-        CoralGrouperCurve() // Cephalopholis miniata, Coral Hind / Coral Grouper
+        CoralGrouperCurve(), // Cephalopholis miniata, Coral Hind / Coral Grouper
+        BlueLinedGrouperCurve() // Cephalopholis formosa
     };
 
     // Edwards et al. (2011), Rodrigues lagoon measurements, n=17 (14-27 cm TL).
@@ -90,6 +91,14 @@ public static class FishSizeTable
     {
         var row=new float[10];
         for(int i=0;i<row.Length;i++)row[i]=(float)(0.01148*Math.Pow((i+1)*5.0,3.04)/1000.0);
+        return row;
+    }
+
+    // FishBase Bayesian W(g)=0.00955*TL(cm)^2.98; reported maximum 34 cm.
+    private static float[] BlueLinedGrouperCurve()
+    {
+        var row=new float[7];
+        for(int i=0;i<row.Length;i++)row[i]=(float)(0.00955*Math.Pow((i+1)*5.0,2.98)/1000.0);
         return row;
     }
 

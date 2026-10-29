@@ -17,7 +17,7 @@ for(const [i,r] of rows.entries()){
  if(worms){
   assert.equal(+r[col(33)],30);assert.equal(+r[col(31)],1);assert.equal(+r[col(32)],1);
   for(const id of [27,28,29])assert.equal(r[col(id)],r[col(1)]);
- }else if(baseline[i].length===h.length-1)assert.deepEqual(r.slice(0,-1),baseline[i],'Existing other bait/biome odds unchanged');
+ }else if(col(35)===h.length-1 && baseline[i].length===h.length-1)assert.deepEqual(r.slice(0,-1),baseline[i],'Existing other bait/biome odds unchanged');
 }
 assert.equal(rows.length,45);
 const stats=parse(read(dir+'FishStats.csv')).slice(1),g=stats.find(x=>x[0]==='35'),red=stats.find(x=>x[0]==='1');

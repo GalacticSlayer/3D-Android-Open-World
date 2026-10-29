@@ -277,3 +277,18 @@ test('Coral Grouper target and total-weight catches are Suncrest-only with bonus
   assert.throws(()=>catchFish(f,f.host,1,12,{island:1,species:36}),/does not match/);
  }
 });
+
+test('Blue Lined Grouper target and total-weight catches are Suncrest-only with bonus ceilings',()=>{
+ const island=tournamentIslands[0],fish=island.fish.find(f=>f.id===37);
+ assert(fish);assert(Math.abs(fish.maxKg-(.00955*34**2.98/1000)*1.5)<1e-8);
+ for(const other of tournamentIslands.slice(1))assert(!other.fish.some(f=>f.id===37));
+ for(const mode of ['species','weight']){
+  const f=setup({random:()=>tournamentTargets(island).findIndex(x=>x.id===37)});
+  f.create.mode=mode;f.start();
+  if(mode==='species')assert.equal(f.room.tournament.target.id,37);
+  catchFish(f,f.host,fish.maxKg*2,11,{species:37});
+  assert.equal(f.game.view(f.room).entries.find(x=>x.id==='host').points,Math.round(fish.maxKg*2*100));
+  assert.throws(()=>catchFish(f,f.host,fish.maxKg*2+.02,12,{species:37}),/Invalid tournament catch/);
+  assert.throws(()=>catchFish(f,f.host,1,12,{island:1,species:37}),/does not match/);
+ }
+});

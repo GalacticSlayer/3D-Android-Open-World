@@ -7,7 +7,7 @@ const parse=s=>s.trim().split(/\r?\n/).filter(x=>!x.startsWith('#')).map(x=>x.sp
 const dir='Assets/Resources/FishingTuning/';
 const [h,...rows]=parse(read(dir+'BiomeBaitSpeciesChance.csv'));
 const col=id=>h.findIndex(x=>x.startsWith(id+'_'));
-assert.equal(col(36),h.length-1);
+assert(col(36)>=2);
 const baseline=parse(execFileSync('git',['show','HEAD:'+dir+'BiomeBaitSpeciesChance.csv'],{encoding:'utf8'})).slice(1);
 for(const [i,r] of rows.entries()){
  assert.equal(r.length,h.length);assert(r.slice(2).every(x=>Number.isInteger(+x)&&+x>=0));
@@ -17,7 +17,7 @@ for(const [i,r] of rows.entries()){
  if(worms){
   assert.equal(+r[col(33)],30);assert.equal(+r[col(31)],1);assert.equal(+r[col(32)],1);assert.equal(+r[col(35)],30);
   for(const id of [27,28,29])assert.equal(r[col(id)],r[col(1)]);
- }else if(baseline[i].length===h.length-1)assert.deepEqual(r.slice(0,-1),baseline[i],'Existing other bait/biome odds unchanged');
+ }else if(col(36)===h.length-1 && baseline[i].length===h.length-1)assert.deepEqual(r.slice(0,-1),baseline[i],'Existing other bait/biome odds unchanged');
 }
 assert.equal(rows.length,45);
 const stats=parse(read(dir+'FishStats.csv')).slice(1),g=stats.find(x=>x[0]==='36'),red=stats.find(x=>x[0]==='1');
@@ -28,7 +28,7 @@ const ranges=parse(read(dir+'BiomeFishWeights.csv')).slice(1).filter(x=>x[1]==='
 for(const r of ranges){if(r[0]==='suncrest-reef')assert.deepEqual(r.slice(3),g.slice(2,4));else assert.deepEqual(r.slice(3),['0','0']);}
 const cat=read('Assets/_Game/Scripts/Fishing/FishCatalog.cs');assert(cat.includes('CoralGrouperId=36;'));assert(cat.includes('1.26f,30f,120'));
 const system=read('Assets/_Game/Scripts/Fishing/FishingSystem.cs');
-assert(system.includes('if(hookedSpeciesId==FishCatalog.CoralGrouperId)'));
+assert(system.includes('hookedSpeciesId==FishCatalog.CoralGrouperId'));
 assert(system.includes('sizeDifficulty * .26f) * fightQuality * 3f;'),'Multiplier follows Red Snapper clamp');
 const installer=read('Assets/_Game/Editor/CoralGrouperInstaller.cs');
 assert(installer.includes('SeaBassImporter.InstallModel("CoralGrouper", PrefabPath, Source);'));

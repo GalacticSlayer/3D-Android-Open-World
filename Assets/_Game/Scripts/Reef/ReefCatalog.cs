@@ -124,6 +124,13 @@ public static class ReefCatalog
                 starter[FishCatalog.PicassoTriggerfishId]=1f;
                 starter[FishCatalog.TitanTriggerfishId]=1f;
             }
+            if(bait==2)
+            {
+                for(int i=0;i<starter.Length;i++)
+                    if(i!=FishCatalog.PicassoTriggerfishId && i!=FishCatalog.TitanTriggerfishId)
+                        starter[i]*=.5f;
+                starter[FishCatalog.BlueLinedGrouperId]=30f;
+            }
             return starter;
         }
         var weights=new float[original.Length];
