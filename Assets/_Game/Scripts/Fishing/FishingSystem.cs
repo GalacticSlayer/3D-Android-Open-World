@@ -1835,6 +1835,16 @@ public class FishingSystem : MonoBehaviour
                 weightKg
             );
 
+        // Match Red Snapper at the same size percentile, then multiply AFTER
+        // its normal clamp. Raising the base stat alone caps large groupers.
+        if(hookedSpeciesId==FishCatalog.PantherGrouperId)
+            return Mathf.Clamp01(FishCatalog.Get(FishCatalog.RedSnapperId).Difficulty *
+                (pondCast ? .20f : .74f) + sizeDifficulty * .26f) * fightQuality * 2.5f;
+
+        if(hookedSpeciesId==FishCatalog.CoralGrouperId)
+            return Mathf.Clamp01(FishCatalog.Get(FishCatalog.RedSnapperId).Difficulty *
+                (pondCast ? .20f : .74f) + sizeDifficulty * .26f) * fightQuality * 3f;
+
         return
             Mathf.Clamp01(
                 species.Difficulty *

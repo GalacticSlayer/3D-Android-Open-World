@@ -19,9 +19,10 @@ for(const line of lines){
  assert.equal(values.reduce((a,b)=>a+b,0),100,line);
  const home=columns[0]==='suncrest-reef';
  const isShrimp=columns[1]==='shrimp';
+ const isWorm=['worms','worms-legacy'].includes(columns[1]);
  if(home){
-   assert.equal(+columns[titan],isShrimp?20:3);
-   assert.equal(+columns[picasso],isShrimp?20:3);
+   assert.equal(+columns[titan],isShrimp?20:isWorm?1:3);
+   assert.equal(+columns[picasso],isShrimp?20:isWorm?1:3);
    if(isShrimp)shrimp++;else homeOther++;
    assert.equal(columns[red],columns[winter],'Red Snapper/Flounder parity');
    assert.equal(columns[red],columns[roughtail],'Red Snapper/Roughtail parity');

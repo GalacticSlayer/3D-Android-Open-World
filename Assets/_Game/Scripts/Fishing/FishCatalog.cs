@@ -51,6 +51,8 @@ public static class FishCatalog
     public const int TitanTriggerfishId=32;
     public const int EmperorAngelfishId=33;
     public const int JuvenileEmperorAngelfishId=34;
+    public const int PantherGrouperId=35;
+    public const int CoralGrouperId=36;
     // Positive Unity yaw is clockwise viewed from above. Keep pitch/roll and mouth pinning unchanged.
     public static float HeldYaw(int id)=>id==RoughtailStingrayId || id==LeopardStingrayId ? 16f : IsFlatfish(id) ? -4f : 86f;
     public static bool IsFlatfish(int id)=>id==WinterFlounderId || id==RoughtailStingrayId || id==LeopardStingrayId;
@@ -93,11 +95,13 @@ public static class FishCatalog
         new FishSpeciesDefinition("Picasso Triggerfish",new Color(.76f,.67f,.45f),new Color(.13f,.32f,.58f),.06f,.56f,.42f,3f,40),
         new FishSpeciesDefinition("Titan Triggerfish",new Color(.55f,.45f,.24f),new Color(.85f,.70f,.35f),.10f,11.32f,.84f,3f,80),
         new FishSpeciesDefinition("Emperor Angelfish",new Color(.1f,.3f,.7f),new Color(1f,.8f,.1f),0.013184078f,1.358574268f,.42f,30f,40),
-        new FishSpeciesDefinition("Juvenile Emperor Angelfish",new Color(.05f,.08f,.15f),new Color(.2f,.6f,1f),0.013184078f,1.358574268f,.42f,0f,40)
+        new FishSpeciesDefinition("Juvenile Emperor Angelfish",new Color(.05f,.08f,.15f),new Color(.2f,.6f,1f),0.013184078f,1.358574268f,.42f,0f,40),
+        new FishSpeciesDefinition("Panther Grouper",new Color(.78f,.74f,.63f),new Color(.16f,.10f,.08f),0.017781491f,7.126399046f,1.05f,30f,100),
+        new FishSpeciesDefinition("Coral Grouper",new Color(.9f,.2f,.08f),new Color(.1f,.6f,.9f),0.012587570f,1.678072426f,1.26f,30f,120)
     };
 
     public static int Count=>Species.Length;
-    public static readonly int[] ActiveIds={0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34};
+    public static readonly int[] ActiveIds={0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36};
     public static int CanonicalId(int id)=>id==4?YellowfinTunaId:id;
 
     // Tournament identity is deliberately separate from save/render identity.

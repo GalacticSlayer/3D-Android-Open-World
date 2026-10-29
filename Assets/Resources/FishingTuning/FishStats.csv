@@ -36,3 +36,5 @@ speciesId,speciesName,minWeightKg,maxWeightKg,minHealth,maxHealth,minCostCoins,m
 32,Titan Triggerfish,0.1,11.32,230,684,80,600,3.152
 33,Emperor Angelfish,0.013184078,1.358574268,115,342,40,300,3.152
 34,Juvenile Emperor Angelfish,0.013184078,1.358574268,115,342,40,300,3.152
+35,Panther Grouper,0.017781491,7.126399046,288,855,100,750,3.152
+36,Coral Grouper,0.012587570,1.678072426,345,1026,120,900,3.152

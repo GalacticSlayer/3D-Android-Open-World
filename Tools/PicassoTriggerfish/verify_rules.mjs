@@ -20,7 +20,7 @@ for(const line of rows){
  assert.equal(columns.slice(2).reduce((sum,x)=>sum+Number(x),0),100);
  assert.ok(columns.slice(2).every(x=>Number.isInteger(+x)&&+x>=0));
  if(columns[0]==='suncrest-reef'){
-   assert.equal(+columns[newIndex],columns[1]==='shrimp'?20:3,'Picasso shrimp odds 20%, all other Suncrest odds 3%');
+   assert.equal(+columns[newIndex],columns[1]==='shrimp'?20:['worms','worms-legacy'].includes(columns[1])?1:3,'Picasso shrimp odds 20%, worms 1%, other Suncrest odds 3%');
    assert.equal(columns[redIndex],columns[flounderIndex],'Keep Red Snapper/Flounder parity');
    assert.equal(columns[redIndex],columns[stingrayIndex],'Keep Roughtail parity');
    assert.equal(columns[redIndex],columns[leopardIndex],'Keep Leopard parity');

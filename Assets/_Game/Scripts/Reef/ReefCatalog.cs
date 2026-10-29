@@ -43,6 +43,7 @@ public static class ReefCatalog
         if(species==4)return 0f;
         float configured;
         if(FishingTuning.TryGetChance(species,0,0,out configured))return configured;
+        if(species==FishCatalog.PantherGrouperId || species==FishCatalog.CoralGrouperId)return 30f;
         if(FishCatalog.IsFlatfish(species))return Starter.weights[FishCatalog.RedSnapperId];
         if(species==FishCatalog.PicassoTriggerfishId || species==FishCatalog.TitanTriggerfishId)return 3f;
         return species>=0&&species<Starter.weights.Length?Starter.weights[species]:0f;
@@ -116,8 +117,12 @@ public static class ReefCatalog
             {
                 for(int i=0;i<starter.Length;i++)
                     if(i!=FishCatalog.PicassoTriggerfishId && i!=FishCatalog.TitanTriggerfishId)
-                        starter[i]*=64f/94f;
+                        starter[i]*=8f/94f;
                 starter[FishCatalog.EmperorAngelfishId]=30f;
+                starter[FishCatalog.PantherGrouperId]=30f;
+                starter[FishCatalog.CoralGrouperId]=30f;
+                starter[FishCatalog.PicassoTriggerfishId]=1f;
+                starter[FishCatalog.TitanTriggerfishId]=1f;
             }
             return starter;
         }

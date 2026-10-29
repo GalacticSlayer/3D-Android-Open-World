@@ -39,7 +39,9 @@ public static class FishSizeTable
         RhinecanthusAculeatusCurve(), // Picasso triggerfish: measured species-specific W(g)=0.1559*TL(cm)^2.4059
         BalistoidesViridescensCurve(), // Titan triggerfish: FishBase Bayesian W(g)=0.03631*TL(cm)^2.93
         EmperorAngelfishCurve(), // Pomacanthus imperator, FishBase Bayesian estimate
-        EmperorAngelfishCurve() // Juvenile: same physical curve
+        EmperorAngelfishCurve(), // Juvenile: same physical curve
+        PantherGrouperCurve(), // Chromileptes altivelis: FishBase Bayesian estimate
+        CoralGrouperCurve() // Cephalopholis miniata, Coral Hind / Coral Grouper
     };
 
     // Edwards et al. (2011), Rodrigues lagoon measurements, n=17 (14-27 cm TL).
@@ -72,6 +74,22 @@ public static class FishSizeTable
     {
         var row=new float[10];
         for(int i=0;i<row.Length;i++)row[i]=(float)(0.01738*Math.Pow((i+1)*5.0,2.88)/1000.0);
+        return row;
+    }
+
+    // W(g)=0.01479*TL(cm)^3.08; reported maximum 70 cm total length.
+    private static float[] PantherGrouperCurve()
+    {
+        var row=new float[14];
+        for(int i=0;i<row.Length;i++)row[i]=(float)(0.01479*Math.Pow((i+1)*5.0,3.08)/1000.0);
+        return row;
+    }
+
+    // FishBase Bayesian W(g)=0.01148*TL(cm)^3.04; max 50 cm total length.
+    private static float[] CoralGrouperCurve()
+    {
+        var row=new float[10];
+        for(int i=0;i<row.Length;i++)row[i]=(float)(0.01148*Math.Pow((i+1)*5.0,3.04)/1000.0);
         return row;
     }
 
