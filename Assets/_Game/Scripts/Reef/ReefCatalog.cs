@@ -76,6 +76,14 @@ public static class ReefCatalog
             var snapperBaseline=Zones[SnapperBiomeId].weights;
             System.Array.Copy(snapperBaseline,snapper,System.Math.Min(snapperBaseline.Length,snapper.Length));
             snapper[FishCatalog.MahoganySnapperId]=snapper[FishCatalog.YellowtailSnapperId];
+            if(bait==2)
+            {
+                float total=0f;
+                for(int i=0;i<snapper.Length;i++)total+=Mathf.Max(0f,snapper[i]);
+                if(total>0f)
+                    for(int i=0;i<snapper.Length;i++)snapper[i]*=70f/total;
+                snapper[FishCatalog.NassauGrouperId]=30f;
+            }
             return snapper;
         }
         // Legacy fallback only: keep the trevally species exclusive to Bluewater Cay,

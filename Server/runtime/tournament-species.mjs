@@ -269,6 +269,7 @@ export const tournamentIslands = [
     "id": 4,
     "name": "Snapper Island",
     "fish": [
+      {"id": 38, "name": "Nassau Grouper", "maxKg": 37.5},
       {
         "id": 1,
         "name": "Red Snapper",

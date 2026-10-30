@@ -39,3 +39,4 @@ speciesId,speciesName,minWeightKg,maxWeightKg,minHealth,maxHealth,minCostCoins,m
 35,Panther Grouper,0.017781491,7.126399046,288,855,100,750,3.152
 36,Coral Grouper,0.012587570,1.678072426,345,1026,120,900,3.152
 37,Blue Lined Grouper,0.009120179,0.349792541,345,1026,120,900,3.152
+38,Nassau Grouper,0.012880772,25,460,1368,160,1200,3.152

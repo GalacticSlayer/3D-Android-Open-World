@@ -54,6 +54,7 @@ public static class FishCatalog
     public const int PantherGrouperId=35;
     public const int CoralGrouperId=36;
     public const int BlueLinedGrouperId=37;
+    public const int NassauGrouperId=38;
     // Positive Unity yaw is clockwise viewed from above. Keep pitch/roll and mouth pinning unchanged.
     public static float HeldYaw(int id)=>id==RoughtailStingrayId || id==LeopardStingrayId ? 16f : IsFlatfish(id) ? -4f : 86f;
     public static bool IsFlatfish(int id)=>id==WinterFlounderId || id==RoughtailStingrayId || id==LeopardStingrayId;
@@ -99,11 +100,12 @@ public static class FishCatalog
         new FishSpeciesDefinition("Juvenile Emperor Angelfish",new Color(.05f,.08f,.15f),new Color(.2f,.6f,1f),0.013184078f,1.358574268f,.42f,0f,40),
         new FishSpeciesDefinition("Panther Grouper",new Color(.78f,.74f,.63f),new Color(.16f,.10f,.08f),0.017781491f,7.126399046f,1.05f,30f,100),
         new FishSpeciesDefinition("Coral Grouper",new Color(.9f,.2f,.08f),new Color(.1f,.6f,.9f),0.012587570f,1.678072426f,1.26f,30f,120),
-        new FishSpeciesDefinition("Blue Lined Grouper",new Color(.4f,.22f,.10f),new Color(.05f,.5f,1f),0.009120179f,0.349792541f,1.26f,0f,120)
+        new FishSpeciesDefinition("Blue Lined Grouper",new Color(.4f,.22f,.10f),new Color(.05f,.5f,1f),0.009120179f,0.349792541f,1.26f,0f,120),
+        new FishSpeciesDefinition("Nassau Grouper",new Color(.45f,.30f,.18f),new Color(.8f,.7f,.5f),0.012880772f,25f,1.68f,0f,160)
     };
 
     public static int Count=>Species.Length;
-    public static readonly int[] ActiveIds={0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37};
+    public static readonly int[] ActiveIds={0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38};
     public static int CanonicalId(int id)=>id==4?YellowfinTunaId:id;
 
     // Tournament identity is deliberately separate from save/render identity.
