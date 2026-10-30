@@ -21,20 +21,24 @@ public static class ShopCatalog
 {
     public const int StarterLure=4;
     public const int LureVariantCount=5;
-    public const int NeonBreachLureVariant=0;
+    // Stable numeric IDs preserve saved purchases, equipment and tuning tables.
+    public const int HeavyJigLureVariant=0;
+    public const int LightJigLureVariant=1;
+    public const int PopperLureVariant=4;
+    public const int NeonBreachLureVariant=HeavyJigLureVariant; // Legacy tuning alias.
     public const int FireShadLureVariant=2;
-    public const int BloodyBaitLureVariant=4;
+    public const int BloodyBaitLureVariant=PopperLureVariant; // Legacy tuning alias.
     public const int MetalSpoonLureVariant=3; // Retains Deep Flash's saved ownership and tuning slot.
     public const int MaxRodTier=4;
     public const int MaxReelTier=3;
 
     public static readonly string[] LureNames =
     {
-        "Neon Breach Crankbait",
-        "Reef Minnow",
+        "Heavy Jig",
+        "Light Jig",
         "Fire Shad Crankbait",
         "Metal Spoon",
-        "Bloody Bait Crankbait"
+        "Popper"
     };
 
     public static readonly int[] LurePrices =
@@ -48,11 +52,11 @@ public static class ShopCatalog
 
     public static readonly string[] LureDescriptions =
     {
-        "Balanced permanent crankbait. Strong Sea Bass and Red Snapper focus.",
-        "Quick-strike minnow. Highest Sea Bass odds and 15% more strike chance.",
+        "Balanced permanent heavy jig. Strong Sea Bass and Red Snapper focus.",
+        "Quick-strike light jig. Highest Sea Bass odds and 15% more strike chance.",
         "Red Snapper specialist crankbait. Strongly favors Red Snapper while keeping the same tuna odds.",
         "Metal spoon. Slower strikes, larger fish, and the strongest tuna secondary odds.",
-        "Blue-and-red permanent crankbait. Uses the same balanced fishing behavior as Neon Breach."
+        "Permanent popper. Uses the same balanced fishing behavior as the Heavy Jig."
     };
 
     public static int ActiveLureVariant { get; private set; }
@@ -70,12 +74,17 @@ public static class ShopCatalog
     {
         switch(variant)
         {
-            case 1:return "Fishing/ReefMinnowCrankbait";
+            case 1:return "Fishing/LightJig";
             case 2:return "Fishing/FireShadCrankbait";
             case MetalSpoonLureVariant:return "Fishing/MetalSpoon";
-            case 4:return "Fishing/BloodyBaitCrankbait";
-            default:return "Fishing/LiplessCrankbaitGreenStriped";
+            case 4:return "Fishing/Popper";
+            default:return "Fishing/HeavyJig";
         }
+    }
+
+    public static float LurePresentationRoll(int variant)
+    {
+        return variant == FireShadLureVariant ? 10f : 0f;
     }
 
     public static string LurePreviewKey(int variant)
@@ -123,7 +132,7 @@ public static class ShopCatalog
     public static readonly string[] RodNames = { "Woodland Rod", "Level 2 Fishing Rod", "Level 3 Fishing Rod", "Level 4 Fishing Rod", "Level 5 Fishing Rod" };
     public static readonly string[] ReelNames = { "Starter Reel", "Level 2 Fishing Reel", "Level 3 Fishing Reel", "Level 4 Fishing Reel" };
     public static readonly string[] LineNames = { "Standard Line", "Reinforced Line", "Braided Line", "Elite Braid" };
-    public static readonly string[] BaitNames = { "Worms", "Worms (legacy)", "Shrimp", "Squid", "Neon Breach Crankbait" };
+    public static readonly string[] BaitNames = { "Worms", "Worms (legacy)", "Shrimp", "Squid", "Heavy Jig" };
     public static readonly int[] BaitPrices = { 0, 35, 90, 180, 0 };
     public static readonly int[] RodPrices = { 0, 2000, 6000, 10000, 25000 };
     public static readonly int[] ReelPrices = { 0, 1500, 4500, 6500 };

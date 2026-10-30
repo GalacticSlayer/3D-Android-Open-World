@@ -13,7 +13,6 @@ public sealed class LiplessCrankbaitWorldPresentation : MonoBehaviour
 {
     private const float RetrieveDepth = 0.20f;
     private const float FloatDepth = 0.015f;
-    private const float CrankbaitBaseRoll = 10f;
 
     private FishingSystem fishing;
     private ShopProgress shopProgress;
@@ -133,8 +132,7 @@ public sealed class LiplessCrankbaitWorldPresentation : MonoBehaviour
                     Quaternion.LookRotation(retrieveDirection, Vector3.up) *
                     // +Z points toward the player during retrieve: positive roll
                     // is clockwise from that end. Keep it outside the Animator.
-                    Quaternion.AngleAxis(loadedVariant == ShopCatalog.MetalSpoonLureVariant
-                        ? 0f : CrankbaitBaseRoll, Vector3.forward) *
+                    Quaternion.AngleAxis(ShopCatalog.LurePresentationRoll(loadedVariant), Vector3.forward) *
                     Quaternion.Inverse(localRetrieveFrame);
             }
         }
@@ -210,7 +208,7 @@ public sealed class LiplessCrankbaitWorldPresentation : MonoBehaviour
         GameObject prefab = Resources.Load<GameObject>(resource);
         if (prefab == null && desiredVariant!=ShopCatalog.NeonBreachLureVariant)
         {
-            Debug.LogWarning("Missing lure prefab '"+resource+"'. Falling back to Neon Breach until its model is imported.");
+            Debug.LogWarning("Missing lure prefab '"+resource+"'. Falling back to Heavy Jig until its model is imported.");
             prefab=Resources.Load<GameObject>(ShopCatalog.LurePrefabResource(ShopCatalog.NeonBreachLureVariant));
         }
         if (prefab == null)

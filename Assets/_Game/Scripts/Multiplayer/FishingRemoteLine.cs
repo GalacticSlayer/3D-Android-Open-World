@@ -133,7 +133,7 @@ public sealed class FishingRemoteLine : MonoBehaviour
                 Vector3 direction=tip.position-position;direction.y=0f;
                 if(direction.sqrMagnitude>.0001f)
                     tackle.transform.rotation=Quaternion.LookRotation(direction,Vector3.up)*
-                        Quaternion.AngleAxis(variant==ShopCatalog.MetalSpoonLureVariant?0f:10f,Vector3.forward)*Quaternion.Inverse(retrieveFrame);
+                        Quaternion.AngleAxis(ShopCatalog.LurePresentationRoll(variant),Vector3.forward)*Quaternion.Inverse(retrieveFrame);
                 if(animator!=null)animator.speed=reeling?2f:0f;
             }
             tackle.transform.position=position;
