@@ -136,10 +136,11 @@ public static class ReefCatalog
             if(bait==2)
             {
                 for(int i=0;i<starter.Length;i++)starter[i]=0f;
-                starter[FishCatalog.PicassoTriggerfishId]=20f;
-                starter[FishCatalog.TitanTriggerfishId]=20f;
-                starter[FishCatalog.BlueLinedGrouperId]=30f;
-                starter[FishCatalog.NapoleonWrasseId]=30f;
+                starter[FishCatalog.PicassoTriggerfishId]=14f;
+                starter[FishCatalog.TitanTriggerfishId]=14f;
+                starter[FishCatalog.BlueLinedGrouperId]=21f;
+                starter[FishCatalog.NapoleonWrasseId]=21f;
+                starter[FishCatalog.BlueTangId]=30f;
             }
             return starter;
         }

@@ -21,8 +21,8 @@ for(const line of lines){
  const isShrimp=columns[1]==='shrimp';
  const isWorm=['worms','worms-legacy'].includes(columns[1]);
  if(home){
-   assert.equal(+columns[titan],isShrimp?20:isWorm?1:3);
-   assert.equal(+columns[picasso],isShrimp?20:isWorm?1:3);
+   assert.equal(+columns[titan],isShrimp?14:isWorm?1:3);
+   assert.equal(+columns[picasso],isShrimp?14:isWorm?1:3);
    if(isShrimp)shrimp++;else homeOther++;
    assert.equal(columns[red],columns[winter],'Red Snapper/Flounder parity');
    assert.equal(columns[red],columns[roughtail],'Red Snapper/Roughtail parity');
@@ -64,4 +64,4 @@ const importer=read('Assets/_Game/Editor/TitanTriggerfishInstaller.cs');
 assert.ok(importer.includes('SeaBassImporter.InstallModel("TitanTriggerfish", PrefabPath, Source);'));
 assert.ok(!importer.includes('importHeldStruggle:true'),'Supplied FBX has a single swim take');
 assert.ok(importer.includes('FindLocalFile(false)')&&importer.includes('FindLocalFile(true)'));
-console.log('PASS Titan Triggerfish:',count,'complete chance tables, 20% shrimp for both triggerfish, 2x fight difficulty, scientific sizes, animations, island/server restrictions');
+console.log('PASS Titan Triggerfish:',count,'complete chance tables, 14% shrimp for both triggerfish, 2x fight difficulty, scientific sizes, animations, island/server restrictions');

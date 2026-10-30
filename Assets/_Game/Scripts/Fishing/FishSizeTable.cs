@@ -45,7 +45,8 @@ public static class FishSizeTable
         BlueLinedGrouperCurve(), // Cephalopholis formosa
         NassauGrouperCurve(), // Epinephelus striatus
         NapoleonWrasseCurve(), // Cheilinus undulatus
-        GameplayCurve(10f,14) // White Skate: exactly the Leopard Stingray curve
+        GameplayCurve(10f,14), // White Skate: exactly the Leopard Stingray curve
+        BlueTangCurve() // Paracanthurus hepatus
     };
 
     // Edwards et al. (2011), Rodrigues lagoon measurements, n=17 (14-27 cm TL).
@@ -118,6 +119,14 @@ public static class FishSizeTable
     {
         var row=new float[46];
         for(int i=0;i<row.Length;i++)row[i]=(float)(0.01445*Math.Pow((i+1)*5.0,2.98)/1000.0);
+        return row;
+    }
+
+    // FishBase Bayesian family/body-shape estimate, W(g)=0.02291*TL(cm)^2.97.
+    private static float[] BlueTangCurve()
+    {
+        var row=new float[7];
+        for(int i=0;i<row.Length;i++)row[i]=(float)(0.02291*Math.Pow((i+1)*5.0,2.97)/1000.0);
         return row;
     }
 

@@ -13,9 +13,9 @@ for(const [i,r] of rows.entries()){
  assert.equal(r.length,h.length);assert(r.slice(2).every(x=>Number.isInteger(+x)&&+x>=0));
  assert.equal(r.slice(2).reduce((s,x)=>s+ +x,0),100);
  const shrimp=r[0]==='suncrest-reef'&&r[1]==='shrimp';
- assert.equal(+r[col(39)],shrimp?30:0);
+ assert.equal(+r[col(39)],shrimp?21:0);
  if(shrimp){
-  assert.equal(+r[col(37)],30);assert.equal(+r[col(31)],20);assert.equal(+r[col(32)],20);
+  assert.equal(+r[col(37)],21);assert.equal(+r[col(31)],14);assert.equal(+r[col(32)],14);
   for(const id of [27,28,29])assert.equal(r[col(id)],r[col(1)]);
  }else assert.deepEqual(baseline[i].length===r.length?r:r.slice(0,-1),baseline[i],'All other bait/biome odds unchanged');
 }
@@ -37,4 +37,4 @@ assert(read('Assets/_Game/Scripts/Fishing/FishVisualFactory.cs').includes('case 
 assert.deepEqual(tournamentIslands.filter(i=>i.fish.some(f=>f.id===39)).map(i=>i.id),[0]);
 assert(Math.abs(tournamentIslands[0].fish.find(f=>f.id===39).maxKg-weight(229)*1.5)<1e-8);
 assert(tournamentTargets(tournamentIslands[0]).some(f=>f.id===39));
-console.log('PASS Napoleon Wrasse: 45 normalized catch tables; Suncrest-only 30% shrimp; 20–229 cm model; 6.5x combat settings; importer and tournament integration.');
+console.log('PASS Napoleon Wrasse: 45 normalized catch tables; Suncrest-only 21% shrimp; 20–229 cm model; 6.5x combat settings; importer and tournament integration.');

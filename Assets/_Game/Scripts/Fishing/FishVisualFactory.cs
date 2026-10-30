@@ -99,6 +99,7 @@ public static class FishVisualFactory
             case FishCatalog.JuvenileEmperorAngelfishId:return "Fishing/JuvenileEmperorAngelfish";
             case FishCatalog.PantherGrouperId:return "Fishing/PantherGrouper";
             case FishCatalog.CoralGrouperId:return "Fishing/CoralGrouper";
+            case FishCatalog.BlueTangId:return "Fishing/BlueTang";
             case FishCatalog.NapoleonWrasseId:return "Fishing/NapoleonWrasse";
             case FishCatalog.NassauGrouperId:return "Fishing/NassauGrouper";
             case FishCatalog.BlueLinedGrouperId:return "Fishing/BlueLinedGrouper";
