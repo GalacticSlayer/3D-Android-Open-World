@@ -44,7 +44,8 @@ public static class FishSizeTable
         CoralGrouperCurve(), // Cephalopholis miniata, Coral Hind / Coral Grouper
         BlueLinedGrouperCurve(), // Cephalopholis formosa
         NassauGrouperCurve(), // Epinephelus striatus
-        NapoleonWrasseCurve() // Cheilinus undulatus
+        NapoleonWrasseCurve(), // Cheilinus undulatus
+        GameplayCurve(10f,14) // White Skate: exactly the Leopard Stingray curve
     };
 
     // Edwards et al. (2011), Rodrigues lagoon measurements, n=17 (14-27 cm TL).

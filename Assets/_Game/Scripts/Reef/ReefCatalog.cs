@@ -44,6 +44,7 @@ public static class ReefCatalog
         float configured;
         if(FishingTuning.TryGetChance(species,0,0,out configured))return configured;
         if(species==FishCatalog.PantherGrouperId || species==FishCatalog.CoralGrouperId)return 30f;
+        if(species==FishCatalog.WhiteSkateId)return 0f; // Brinebreak-only, including fallback.
         if(FishCatalog.IsFlatfish(species))return Starter.weights[FishCatalog.RedSnapperId];
         if(species==FishCatalog.PicassoTriggerfishId || species==FishCatalog.TitanTriggerfishId)return 3f;
         return species>=0&&species<Starter.weights.Length?Starter.weights[species]:0f;
@@ -142,8 +143,16 @@ public static class ReefCatalog
             }
             return starter;
         }
-        var weights=new float[original.Length];
-        for(int i=0;i<weights.Length;i++)weights[i]=i<Zones[biome].weights.Length && i<Starter.weights.Length && Starter.weights[i]>0?original[i]*Zones[biome].weights[i]/Starter.weights[i]:0;
+        var weights=new float[FishCatalog.Count];
+        for(int i=0;i<original.Length;i++)weights[i]=i<Zones[biome].weights.Length && i<Starter.weights.Length && Starter.weights[i]>0?original[i]*Zones[biome].weights[i]/Starter.weights[i]:0;
+        if(biome==1)
+        {
+            // Same bait profile as Leopard at its home; all other areas remain zero.
+            float chance=bait==ShopCatalog.StarterLure?16f:bait==3?9f:bait==2?0f:1f;
+            float sum=Total(weights);
+            if(sum>0f)for(int i=0;i<weights.Length;i++)weights[i]*=(100f-chance)/sum;
+            weights[FishCatalog.WhiteSkateId]=chance;
+        }
         // Invalid tuning must not reintroduce snappers into Deep Ocean catches.
         if(biome==2)
         {
@@ -157,6 +166,7 @@ public static class ReefCatalog
     {
         float minimum,maximum;
         if(FishingTuning.TryGetWeightRange(species,biome,out minimum,out maximum))return minimum;
+        if(species==FishCatalog.WhiteSkateId)return biome==1?.25f:0f;
         var fish=FishCatalog.Get(species);return biome==1?Mathf.Max(fish.MinWeightKg,fish.MaxWeightKg*.18f):fish.MinWeightKg;
     }
 
@@ -164,6 +174,7 @@ public static class ReefCatalog
     {
         float minimum,maximum;
         if(FishingTuning.TryGetWeightRange(species,biome,out minimum,out maximum))return maximum;
+        if(species==FishCatalog.WhiteSkateId)return biome==1?1.541871456f:0f;
         return FishCatalog.Get(species).MaxWeightKg*(biome==1?1.6f:biome==2?2.25f:1f);
     }
 

@@ -159,7 +159,8 @@ export const tournamentIslands = [
         "id": 18,
         "name": "Blacktip Reef Shark",
         "maxKg": 27.0
-      }
+      },
+      {"id": 40, "name": "White Skate", "maxKg": 2.312807184}
     ]
   },
   {

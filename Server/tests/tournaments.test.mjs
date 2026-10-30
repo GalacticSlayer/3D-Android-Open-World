@@ -322,3 +322,18 @@ test('Napoleon Wrasse target and total-weight catches are Suncrest-only with bon
   assert.throws(()=>catchFish(f,f.host,1,12,{island:1,species:39}),/does not match/);
  }
 });
+
+test('White Skate is Brinebreak-only with Leopard weight and full Charm allowance',()=>{
+ const island=tournamentIslands.find(i=>i.id===1),fish=island.fish.find(f=>f.id===40);
+ assert(fish);assert(Math.abs(fish.maxKg-1.541871456*1.5)<1e-9);
+ assert(tournamentTargets(island).some(f=>f.id===40));
+ for(const other of tournamentIslands.filter(i=>i.id!==1))assert(!other.fish.some(f=>f.id===40));
+ for(const mode of ['species','weight']){
+  const f=setup({random:()=>tournamentTargets(island).findIndex(x=>x.id===40)});
+  f.create.mode=mode;f.create.island=mode==='species'?1:0;f.start();
+  catchFish(f,f.host,fish.maxKg*2,11,{island:1,species:40});
+  assert.equal(f.game.view(f.room).entries.find(x=>x.id==='host').points,Math.round(fish.maxKg*2*100));
+  assert.throws(()=>catchFish(f,f.host,fish.maxKg*2+.02,12,{island:1,species:40}),/Invalid tournament catch/);
+  assert.throws(()=>catchFish(f,f.host,1,12,{island:0,species:40}),/does not match/);
+ }
+});
