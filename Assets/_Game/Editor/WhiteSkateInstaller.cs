@@ -53,12 +53,23 @@ public static class WhiteSkateInstaller
         var material=AssetDatabase.LoadAssetAtPath<Material>(Source + "/WhiteSkate.mat");
         string path=Source + "/WhiteSkateMetallicRoughness.png";
         var importer=AssetImporter.GetAtPath(path) as TextureImporter;
-        if(material==null || importer==null)throw new InvalidOperationException("White Skate material map missing.");
+        if(material==null)throw new InvalidOperationException("White Skate material missing at " + Source + "/WhiteSkate.mat");
+        if(importer==null)
+        {
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
+            importer=AssetImporter.GetAtPath(path) as TextureImporter;
+        }
+        if(importer==null)throw new InvalidOperationException("White Skate texture importer missing at " + path);
         if(importer.sRGBTexture || importer.wrapMode!=TextureWrapMode.Repeat)
         { importer.sRGBTexture=false;importer.wrapMode=TextureWrapMode.Repeat;importer.SaveAndReimport(); }
-        var shader=Resources.Load<Shader>("Fishing/AuthoredLure");
+        var shader=AuthoredLureReplacementImporter.LoadSurfaceShader();
         var texture=AssetDatabase.LoadAssetAtPath<Texture2D>(path);
-        if(shader==null || texture==null)throw new InvalidOperationException("White Skate texture shader missing.");
+        if(texture==null)
+        {
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
+            texture=AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+        }
+        if(texture==null)throw new InvalidOperationException("White Skate texture could not be loaded at " + path);
         if(material.shader==shader && material.GetTexture("_MetallicRoughnessMap")==texture &&
             material.IsKeywordEnabled("_AUTHORED_METALLIC_ROUGHNESS"))return;
         material.shader=shader;material.SetTexture("_MetallicRoughnessMap",texture);

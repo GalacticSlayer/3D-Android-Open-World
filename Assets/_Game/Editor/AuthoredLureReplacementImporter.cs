@@ -46,6 +46,24 @@ public static class AuthoredLureReplacementImporter
         foreach (string name in Names) Install(name, force);
     }
 
+    public static Shader LoadSurfaceShader()
+    {
+        // Editor/build installation must resolve the source asset directly, without
+        // depending on the runtime Resources lookup during player preprocessing.
+        const string path = "Assets/Resources/Fishing/AuthoredLure.shader";
+        if (!File.Exists(path))
+            throw new FileNotFoundException("Authored surface shader source is missing. Pull the complete update.", path);
+        var shader = AssetDatabase.LoadAssetAtPath<Shader>(path);
+        if (shader == null)
+        {
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
+            shader = AssetDatabase.LoadAssetAtPath<Shader>(path);
+        }
+        if (shader == null)
+            throw new InvalidOperationException("Could not import shader at " + path + ". Check the shader import errors in the Console.");
+        return shader;
+    }
+
     private static void Install(string name, bool force)
     {
         string Folder = "Assets/_Game/Fishing/" + name;
@@ -69,8 +87,7 @@ public static class AuthoredLureReplacementImporter
             Export data = JsonUtility.FromJson<Export>(source.text);
             if (data.version != 1 || data.parts == null || data.parts.Length != (name == "Popper" ? 3 : 2))
                 throw new InvalidDataException("Unexpected Authored Lures export.");
-            Shader shader = Resources.Load<Shader>("Fishing/AuthoredLure");
-            if (shader == null) throw new InvalidOperationException("AuthoredLure shader is missing.");
+            Shader shader = LoadSurfaceShader();
             root = new GameObject(name);
             Transform model = Child(root.transform, "AuthoredModel", Vector3.zero, Quaternion.identity);
             AnimationClip clip = new AnimationClip { name = name + "Retrieve", frameRate = data.fps, legacy = false };
