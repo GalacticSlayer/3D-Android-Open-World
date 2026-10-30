@@ -43,7 +43,8 @@ public static class FishSizeTable
         PantherGrouperCurve(), // Chromileptes altivelis: FishBase Bayesian estimate
         CoralGrouperCurve(), // Cephalopholis miniata, Coral Hind / Coral Grouper
         BlueLinedGrouperCurve(), // Cephalopholis formosa
-        NassauGrouperCurve() // Epinephelus striatus
+        NassauGrouperCurve(), // Epinephelus striatus
+        NapoleonWrasseCurve() // Cheilinus undulatus
     };
 
     // Edwards et al. (2011), Rodrigues lagoon measurements, n=17 (14-27 cm TL).
@@ -108,6 +109,14 @@ public static class FishSizeTable
     {
         var row=new float[25];
         for(int i=0;i<row.Length;i++)row[i]=(float)(0.01148*Math.Pow((i+1)*5.0,3.05)/1000.0);
+        return row;
+    }
+
+    // FishBase Bayesian W(g)=0.01445*TL(cm)^2.98; normal length cap 229 cm.
+    private static float[] NapoleonWrasseCurve()
+    {
+        var row=new float[46];
+        for(int i=0;i<row.Length;i++)row[i]=(float)(0.01445*Math.Pow((i+1)*5.0,2.98)/1000.0);
         return row;
     }
 

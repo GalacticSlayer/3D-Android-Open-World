@@ -40,3 +40,4 @@ speciesId,speciesName,minWeightKg,maxWeightKg,minHealth,maxHealth,minCostCoins,m
 36,Coral Grouper,0.012587570,1.678072426,345,1026,120,900,3.152
 37,Blue Lined Grouper,0.009120179,0.349792541,345,1026,120,900,3.152
 38,Nassau Grouper,0.012880772,25,460,1368,160,1200,3.152
+39,Napoleon Wrasse,0.108877273,155.660200125,748,2223,260,1950,3.152

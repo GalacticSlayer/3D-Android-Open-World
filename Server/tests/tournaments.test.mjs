@@ -307,3 +307,18 @@ test('Nassau Grouper target and total-weight catches are Snapper Isle-only with 
   assert.throws(()=>catchFish(f,f.host,1,12,{island:1,species:38}),/does not match/);
  }
 });
+
+test('Napoleon Wrasse target and total-weight catches are Suncrest-only with bonus ceilings',()=>{
+ const island=tournamentIslands[0],fish=island.fish.find(f=>f.id===39);
+ assert(fish);assert(Math.abs(fish.maxKg-(.01445*229**2.98/1000)*1.5)<1e-8);
+ for(const other of tournamentIslands.slice(1))assert(!other.fish.some(f=>f.id===39));
+ for(const mode of ['species','weight']){
+  const f=setup({random:()=>tournamentTargets(island).findIndex(x=>x.id===39)});
+  f.create.mode=mode;f.start();
+  if(mode==='species')assert.equal(f.room.tournament.target.id,39);
+  catchFish(f,f.host,fish.maxKg*2,11,{species:39});
+  assert.equal(f.game.view(f.room).entries.find(x=>x.id==='host').points,Math.round(fish.maxKg*2*100));
+  assert.throws(()=>catchFish(f,f.host,fish.maxKg*2+.02,12,{species:39}),/Invalid tournament catch/);
+  assert.throws(()=>catchFish(f,f.host,1,12,{island:1,species:39}),/does not match/);
+ }
+});

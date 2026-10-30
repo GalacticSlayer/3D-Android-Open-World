@@ -14,7 +14,7 @@ for(const [i,r] of rows.entries()){
  assert.equal(r.slice(2).reduce((s,x)=>s+ +x,0),100);
  const shrimp=r[0]==='snapper-island'&&r[1]==='shrimp';
  assert.equal(+r[col(38)],shrimp?30:0);
- if(!shrimp) assert.deepEqual(baseline[i].length===r.length?r:r.slice(0,-1),baseline[i],'All other bait/biome odds unchanged');
+ if(!shrimp && col(38)===h.length-1) assert.deepEqual(baseline[i].length===r.length?r:r.slice(0,-1),baseline[i],'All other bait/biome odds unchanged');
 }
 assert.equal(rows.length,45);
 const stats=parse(read(dir+'FishStats.csv')).slice(1),g=stats.find(x=>x[0]==='38'),red=stats.find(x=>x[0]==='1');

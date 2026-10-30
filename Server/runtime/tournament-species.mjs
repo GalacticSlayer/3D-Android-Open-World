@@ -67,7 +67,8 @@ export const tournamentIslands = [
       {"id": 34, "name": "Juvenile Emperor Angelfish", "maxKg": 2.037861402},
       {"id": 35, "name": "Panther Grouper", "maxKg": 10.689598570},
       {"id": 36, "name": "Coral Grouper", "maxKg": 2.517108640},
-      {"id": 37, "name": "Blue Lined Grouper", "maxKg": 0.524688812}
+      {"id": 37, "name": "Blue Lined Grouper", "maxKg": 0.524688812},
+      {"id": 39, "name": "Napoleon Wrasse", "maxKg": 233.490300188}
     ]
   },
   {
