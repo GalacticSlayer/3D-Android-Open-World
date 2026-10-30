@@ -22,7 +22,24 @@ def capture(name):
   output[key]=poses
  assert set(output)=={'Swim','HeldStruggle'}
  return output
+
 old=capture('LeopardStingray');new=capture('WhiteSkate')
-error=max(abs(x-y) for action in old for a,b in zip(old[action],new[action]) for bone in a for x,y in zip(a[bone],b[bone]))
+swim_error=max(abs(x-y) for a,b in zip(old['Swim'],new['Swim']) for bone in a for x,y in zip(a[bone],b[bone]))
+assert swim_error<.0001,swim_error
+# Compare held motion to the original Blend, with only the established root roll.
+import math
+from mathutils import Matrix
+bpy.ops.wm.open_mainfile(filepath=str(R.parents[3]/'Tools/WhiteSkate/Source/WhiteSkate.blend'))
+arm=next(o for o in bpy.context.scene.objects if o.type=='ARMATURE')
+action=bpy.data.actions['Stingray Struggling'];arm.animation_data.action=action
+if len(action.slots):arm.animation_data.action_slot=action.slots[0]
+rename={f'Bone.{10+i:03d}':('Bone' if i==0 else f'Bone.{i:03d}') for i in range(9)}
+error=0
+for frame in range(1,31):
+ bpy.context.scene.frame_set(frame)
+ for bone in arm.pose.bones:
+  expected=Matrix.Rotation(-math.pi/2,4,'Y')@arm.matrix_world@bone.matrix
+  actual=new['HeldStruggle'][frame-1][rename.get(bone.name,bone.name)]
+  error=max(error,max(abs(x-y) for x,y in zip([v for row in expected for v in row],actual)))
 assert error<.0001,error
-print('PASS: both loops and all 29 animated bone world matrices match Leopard; max error',error)
+print('PASS: unchanged Leopard swim and original White Skate struggle; errors',swim_error,error)

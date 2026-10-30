@@ -1,12 +1,13 @@
 # White Skate (species ID 40)
 
 GalacticSlayer/3D-Android-Open-World. New independent species, Brinebreak Isle only.
-The supplied model, UVs and weights are retained. The exact installed Leopard
-Stingray Swim and HeldStruggle bone poses are baked onto the compatible 29-bone
-rig, including corrected mirrored wing movement and spine parenting. All 30
-frames of both takes are verified after FBX round trip against Leopard world-space
-bone poses (maximum error under 0.0001). Flatfish previews, held yaw (16 degrees),
-shared mouth anchoring, aquarium, fishing and multiplayer presentation are reused.
+The supplied model, UVs and weights are retained. Swimming keeps the exact installed
+Leopard Stingray motion. HeldStruggle uses the `Stingray Struggling` action from
+the supplied WhiteSkate.blend, baked onto the existing compatible 29-bone rig.
+All 30 frames of each take are verified after FBX round trip against their
+respective sources (maximum error under 0.0001). Flatfish previews, held yaw
+(16 degrees), shared mouth anchoring, aquarium, fishing and multiplayer
+presentation are reused.
 
 Packed 4096x4096 albedo and metallic/roughness maps are extracted directly from
 the Blender material links. PNG pixels are checked against the decoded original.

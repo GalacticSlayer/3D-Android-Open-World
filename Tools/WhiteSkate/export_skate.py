@@ -1,4 +1,4 @@
-"""Use the supplied mesh/UV/weights with the exact installed Leopard rig motion."""
+"""Use the supplied mesh/UV/weights with the installed Leopard swim and supplied White Skate struggle."""
 import bpy,math,json
 from pathlib import Path
 from mathutils import Matrix
@@ -22,6 +22,16 @@ assert set(samples)=={'Swim','HeldStruggle'}
 bpy.ops.wm.open_mainfile(filepath=str(ROOT/'Tools/WhiteSkate/Source/WhiteSkate.blend'))
 arm=next(o for o in bpy.context.scene.objects if o.type=='ARMATURE');body=next(o for o in bpy.context.scene.objects if o.type=='MESH')
 assert len(arm.data.bones)==29 and body.data.uv_layers.active
+# Capture the authored struggle before changing hierarchy or bone names.
+struggle=bpy.data.actions['Stingray Struggling']
+arm.animation_data.action=struggle
+if len(struggle.slots):arm.animation_data.action_slot=struggle.slots[0]
+rename={f'Bone.{10+i:03d}':('Bone' if i==0 else f'Bone.{i:03d}') for i in range(9)}
+samples['HeldStruggle']={}
+for frame in range(1,31):
+ bpy.context.scene.frame_set(frame)
+ samples['HeldStruggle'][frame]={rename.get(b.name,b.name):b.matrix.copy() for b in arm.pose.bones}
+
 mat=body.data.materials[0];bsdf=next(n for n in mat.node_tree.nodes if n.type=='BSDF_PRINCIPLED')
 colour=bsdf.inputs['Base Color'].links[0].from_node.image
 mr=bsdf.inputs['Metallic'].links[0].from_node.inputs[0].links[0].from_node.image
