@@ -1,0 +1,566 @@
+[
+  {
+    "biomeId": "suncrest-reef",
+    "rank": 1,
+    "speciesId": 6,
+    "speciesName": "Yellow Goatfish",
+    "preferred": "worms",
+    "secondary": [],
+    "percent": {
+      "worms": 40,
+      "shrimp": 32,
+      "squid": 23,
+      "lure:0": 1,
+      "lure:1": 1,
+      "lure:2": 1,
+      "lure:3": 1,
+      "lure:4": 1
+    }
+  },
+  {
+    "biomeId": "suncrest-reef",
+    "rank": 2,
+    "speciesId": 7,
+    "speciesName": "Black Spot Goatfish",
+    "preferred": "worms",
+    "secondary": [],
+    "percent": {
+      "worms": 38,
+      "shrimp": 32,
+      "squid": 23,
+      "lure:0": 1,
+      "lure:1": 1,
+      "lure:2": 2,
+      "lure:3": 2,
+      "lure:4": 1
+    }
+  },
+  {
+    "biomeId": "suncrest-reef",
+    "rank": 3,
+    "speciesId": 41,
+    "speciesName": "Blue Tang",
+    "preferred": "squid",
+    "secondary": [],
+    "percent": {
+      "worms": 22,
+      "shrimp": 28,
+      "squid": 40,
+      "lure:0": 2,
+      "lure:1": 2,
+      "lure:2": 2,
+      "lure:3": 2,
+      "lure:4": 2
+    }
+  },
+  {
+    "biomeId": "suncrest-reef",
+    "rank": 4,
+    "speciesId": 33,
+    "speciesName": "Emperor Angelfish",
+    "preferred": "squid",
+    "secondary": [],
+    "percent": {
+      "worms": 21,
+      "shrimp": 27,
+      "squid": 40,
+      "lure:0": 3,
+      "lure:1": 2,
+      "lure:2": 2,
+      "lure:3": 2,
+      "lure:4": 3
+    }
+  },
+  {
+    "biomeId": "suncrest-reef",
+    "rank": 5,
+    "speciesId": 31,
+    "speciesName": "Picasso Triggerfish",
+    "preferred": "shrimp",
+    "secondary": [],
+    "percent": {
+      "worms": 20,
+      "shrimp": 38,
+      "squid": 28,
+      "lure:0": 3,
+      "lure:1": 3,
+      "lure:2": 3,
+      "lure:3": 3,
+      "lure:4": 2
+    }
+  },
+  {
+    "biomeId": "suncrest-reef",
+    "rank": 6,
+    "speciesId": 32,
+    "speciesName": "Titan Triggerfish",
+    "preferred": "shrimp",
+    "secondary": [],
+    "percent": {
+      "worms": 19,
+      "shrimp": 37,
+      "squid": 28,
+      "lure:0": 3,
+      "lure:1": 4,
+      "lure:2": 3,
+      "lure:3": 3,
+      "lure:4": 3
+    }
+  },
+  {
+    "biomeId": "suncrest-reef",
+    "rank": 7,
+    "speciesId": 42,
+    "speciesName": "Dussumieri Tang",
+    "preferred": "squid",
+    "secondary": [],
+    "percent": {
+      "worms": 18,
+      "shrimp": 27,
+      "squid": 37,
+      "lure:0": 3,
+      "lure:1": 3,
+      "lure:2": 4,
+      "lure:3": 4,
+      "lure:4": 4
+    }
+  },
+  {
+    "biomeId": "suncrest-reef",
+    "rank": 8,
+    "speciesId": 35,
+    "speciesName": "Panther Grouper",
+    "preferred": "lure:1",
+    "secondary": [
+      "lure:0",
+      "lure:2"
+    ],
+    "percent": {
+      "worms": 3,
+      "shrimp": 4,
+      "squid": 8,
+      "lure:0": 15,
+      "lure:1": 30,
+      "lure:2": 15,
+      "lure:3": 12,
+      "lure:4": 13
+    }
+  },
+  {
+    "biomeId": "suncrest-reef",
+    "rank": 9,
+    "speciesId": 37,
+    "speciesName": "Blue Lined Grouper",
+    "preferred": "lure:0",
+    "secondary": [
+      "lure:1",
+      "lure:3"
+    ],
+    "percent": {
+      "worms": 2,
+      "shrimp": 4,
+      "squid": 7,
+      "lure:0": 30,
+      "lure:1": 15,
+      "lure:2": 13,
+      "lure:3": 15,
+      "lure:4": 14
+    }
+  },
+  {
+    "biomeId": "suncrest-reef",
+    "rank": 10,
+    "speciesId": 36,
+    "speciesName": "Coral Grouper",
+    "preferred": "lure:3",
+    "secondary": [
+      "lure:2",
+      "lure:4"
+    ],
+    "percent": {
+      "worms": 1,
+      "shrimp": 4,
+      "squid": 7,
+      "lure:0": 14,
+      "lure:1": 14,
+      "lure:2": 15,
+      "lure:3": 30,
+      "lure:4": 15
+    }
+  },
+  {
+    "biomeId": "suncrest-reef",
+    "rank": 11,
+    "speciesId": 39,
+    "speciesName": "Napoleon Wrasse",
+    "preferred": "lure:4",
+    "secondary": [
+      "lure:0",
+      "lure:1"
+    ],
+    "percent": {
+      "worms": 0,
+      "shrimp": 4,
+      "squid": 6,
+      "lure:0": 15,
+      "lure:1": 15,
+      "lure:2": 15,
+      "lure:3": 15,
+      "lure:4": 30
+    }
+  },
+  {
+    "biomeId": "snapper-island",
+    "rank": 1,
+    "speciesId": 16,
+    "speciesName": "Yellowtail Snapper",
+    "preferred": "worms",
+    "secondary": [],
+    "percent": {
+      "worms": 40,
+      "shrimp": 32,
+      "squid": 23,
+      "lure:0": 1,
+      "lure:1": 1,
+      "lure:2": 1,
+      "lure:3": 1,
+      "lure:4": 1
+    }
+  },
+  {
+    "biomeId": "snapper-island",
+    "rank": 2,
+    "speciesId": 30,
+    "speciesName": "Mahogany Snapper",
+    "preferred": "shrimp",
+    "secondary": [],
+    "percent": {
+      "worms": 25,
+      "shrimp": 40,
+      "squid": 27,
+      "lure:0": 1,
+      "lure:1": 1,
+      "lure:2": 2,
+      "lure:3": 2,
+      "lure:4": 2
+    }
+  },
+  {
+    "biomeId": "snapper-island",
+    "rank": 3,
+    "speciesId": 1,
+    "speciesName": "Red Snapper",
+    "preferred": "shrimp",
+    "secondary": [],
+    "percent": {
+      "worms": 23,
+      "shrimp": 39,
+      "squid": 28,
+      "lure:0": 2,
+      "lure:1": 2,
+      "lure:2": 2,
+      "lure:3": 2,
+      "lure:4": 2
+    }
+  },
+  {
+    "biomeId": "snapper-island",
+    "rank": 4,
+    "speciesId": 17,
+    "speciesName": "Mutton Snapper",
+    "preferred": "squid",
+    "secondary": [],
+    "percent": {
+      "worms": 21,
+      "shrimp": 27,
+      "squid": 40,
+      "lure:0": 3,
+      "lure:1": 2,
+      "lure:2": 2,
+      "lure:3": 2,
+      "lure:4": 3
+    }
+  },
+  {
+    "biomeId": "snapper-island",
+    "rank": 5,
+    "speciesId": 21,
+    "speciesName": "Mangrove Snapper",
+    "preferred": "squid",
+    "secondary": [],
+    "percent": {
+      "worms": 19,
+      "shrimp": 27,
+      "squid": 40,
+      "lure:0": 3,
+      "lure:1": 3,
+      "lure:2": 3,
+      "lure:3": 3,
+      "lure:4": 2
+    }
+  },
+  {
+    "biomeId": "snapper-island",
+    "rank": 6,
+    "speciesId": 38,
+    "speciesName": "Nassau Grouper",
+    "preferred": "lure:1",
+    "secondary": [
+      "lure:2",
+      "lure:3"
+    ],
+    "percent": {
+      "worms": 3,
+      "shrimp": 4,
+      "squid": 8,
+      "lure:0": 12,
+      "lure:1": 30,
+      "lure:2": 15,
+      "lure:3": 15,
+      "lure:4": 13
+    }
+  },
+  {
+    "biomeId": "snapper-island",
+    "rank": 7,
+    "speciesId": 22,
+    "speciesName": "Blackfin Barracuda",
+    "preferred": "lure:4",
+    "secondary": [
+      "lure:0",
+      "lure:2"
+    ],
+    "percent": {
+      "worms": 2,
+      "shrimp": 4,
+      "squid": 7,
+      "lure:0": 15,
+      "lure:1": 13,
+      "lure:2": 15,
+      "lure:3": 14,
+      "lure:4": 30
+    }
+  },
+  {
+    "biomeId": "snapper-island",
+    "rank": 8,
+    "speciesId": 23,
+    "speciesName": "Great Barracuda",
+    "preferred": "lure:4",
+    "secondary": [
+      "lure:1",
+      "lure:3"
+    ],
+    "percent": {
+      "worms": 1,
+      "shrimp": 4,
+      "squid": 7,
+      "lure:0": 14,
+      "lure:1": 15,
+      "lure:2": 14,
+      "lure:3": 15,
+      "lure:4": 30
+    }
+  },
+  {
+    "biomeId": "snapper-island",
+    "rank": 9,
+    "speciesId": 18,
+    "speciesName": "Blacktip Reef Shark",
+    "preferred": "lure:0",
+    "secondary": [
+      "lure:2",
+      "lure:3"
+    ],
+    "percent": {
+      "worms": 0,
+      "shrimp": 4,
+      "squid": 6,
+      "lure:0": 30,
+      "lure:1": 15,
+      "lure:2": 15,
+      "lure:3": 15,
+      "lure:4": 15
+    }
+  },
+  {
+    "biomeId": "brinebreak-isle",
+    "rank": 1,
+    "speciesId": 27,
+    "speciesName": "Winter Flounder",
+    "preferred": "squid",
+    "secondary": [],
+    "percent": {
+      "worms": 15,
+      "shrimp": 25,
+      "squid": 55,
+      "lure:0": 1,
+      "lure:1": 1,
+      "lure:2": 1,
+      "lure:3": 1,
+      "lure:4": 1
+    }
+  },
+  {
+    "biomeId": "brinebreak-isle",
+    "rank": 2,
+    "speciesId": 10,
+    "speciesName": "Black Sea Bass",
+    "preferred": "shrimp",
+    "secondary": [],
+    "percent": {
+      "worms": 14,
+      "shrimp": 51,
+      "squid": 28,
+      "lure:0": 1,
+      "lure:1": 1,
+      "lure:2": 2,
+      "lure:3": 2,
+      "lure:4": 1
+    }
+  },
+  {
+    "biomeId": "brinebreak-isle",
+    "rank": 3,
+    "speciesId": 12,
+    "speciesName": "Spotted Sand Bass",
+    "preferred": "shrimp",
+    "secondary": [],
+    "percent": {
+      "worms": 13,
+      "shrimp": 50,
+      "squid": 28,
+      "lure:0": 2,
+      "lure:1": 2,
+      "lure:2": 1,
+      "lure:3": 2,
+      "lure:4": 2
+    }
+  },
+  {
+    "biomeId": "brinebreak-isle",
+    "rank": 4,
+    "speciesId": 2,
+    "speciesName": "Sea Bass",
+    "preferred": "lure:2",
+    "secondary": [
+      "lure:1",
+      "lure:3"
+    ],
+    "percent": {
+      "worms": 3,
+      "shrimp": 4,
+      "squid": 8,
+      "lure:0": 12,
+      "lure:1": 15,
+      "lure:2": 30,
+      "lure:3": 15,
+      "lure:4": 13
+    }
+  },
+  {
+    "biomeId": "brinebreak-isle",
+    "rank": 5,
+    "speciesId": 11,
+    "speciesName": "Striped Bass",
+    "preferred": "lure:2",
+    "secondary": [
+      "lure:0",
+      "lure:3"
+    ],
+    "percent": {
+      "worms": 2,
+      "shrimp": 4,
+      "squid": 8,
+      "lure:0": 15,
+      "lure:1": 13,
+      "lure:2": 30,
+      "lure:3": 15,
+      "lure:4": 13
+    }
+  },
+  {
+    "biomeId": "brinebreak-isle",
+    "rank": 6,
+    "speciesId": 14,
+    "speciesName": "Greater Amberjack",
+    "preferred": "lure:4",
+    "secondary": [
+      "lure:1",
+      "lure:3"
+    ],
+    "percent": {
+      "worms": 2,
+      "shrimp": 4,
+      "squid": 7,
+      "lure:0": 13,
+      "lure:1": 15,
+      "lure:2": 14,
+      "lure:3": 15,
+      "lure:4": 30
+    }
+  },
+  {
+    "biomeId": "brinebreak-isle",
+    "rank": 7,
+    "speciesId": 40,
+    "speciesName": "White Skate",
+    "preferred": "lure:1",
+    "secondary": [
+      "lure:2",
+      "lure:4"
+    ],
+    "percent": {
+      "worms": 1,
+      "shrimp": 4,
+      "squid": 7,
+      "lure:0": 14,
+      "lure:1": 30,
+      "lure:2": 15,
+      "lure:3": 14,
+      "lure:4": 15
+    }
+  },
+  {
+    "biomeId": "brinebreak-isle",
+    "rank": 8,
+    "speciesId": 29,
+    "speciesName": "Leopard Stingray",
+    "preferred": "lure:0",
+    "secondary": [
+      "lure:1",
+      "lure:3"
+    ],
+    "percent": {
+      "worms": 1,
+      "shrimp": 4,
+      "squid": 6,
+      "lure:0": 30,
+      "lure:1": 15,
+      "lure:2": 14,
+      "lure:3": 15,
+      "lure:4": 15
+    }
+  },
+  {
+    "biomeId": "brinebreak-isle",
+    "rank": 9,
+    "speciesId": 28,
+    "speciesName": "Roughtail Stingray",
+    "preferred": "lure:0",
+    "secondary": [
+      "lure:2",
+      "lure:4"
+    ],
+    "percent": {
+      "worms": 0,
+      "shrimp": 4,
+      "squid": 6,
+      "lure:0": 30,
+      "lure:1": 15,
+      "lure:2": 15,
+      "lure:3": 15,
+      "lure:4": 15
+    }
+  }
+]

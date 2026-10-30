@@ -3,27 +3,27 @@
 # Internally: underlying P01=min+1% of range,P99=max-1% of range,then the normal curve is truncated/renormalized at min/max.,,
 # Result: catches stay inside min/max with a bell-shaped distribution and no clamp pile-up at the endpoints.,,,,
 biomeId,speciesId,speciesName,minKg,maxKg
-suncrest-reef,0,Blue Mackerel,0.25,2.3
-suncrest-reef,1,Red Snapper,0.7,3.2
-suncrest-reef,2,Sea Bass,0.9,4.8
-suncrest-reef,3,Yellowtail,1.4,6.5
+suncrest-reef,0,Blue Mackerel,0,0
+suncrest-reef,1,Red Snapper,0,0
+suncrest-reef,2,Sea Bass,0,0
+suncrest-reef,3,Yellowtail,0,0
 suncrest-reef,5,Yellowfin Tuna,0,0
 suncrest-reef,6,Yellow Goatfish,0.35,2.2
 suncrest-reef,7,Black Spot Goatfish,0.3,1.8
-suncrest-reef,8,Bigeye Tuna,1,6
+suncrest-reef,8,Bigeye Tuna,0,0
 suncrest-reef,9,Bonito,0,0
 suncrest-reef,10,Black Sea Bass,0,0
-suncrest-reef,11,Striped Bass,5,10
+suncrest-reef,11,Striped Bass,0,0
 suncrest-reef,12,Spotted Sand Bass,0,0
-brinebreak-isle,0,Blue Mackerel,1,3
-brinebreak-isle,1,Red Snapper,0.7,7
+brinebreak-isle,0,Blue Mackerel,0,0
+brinebreak-isle,1,Red Snapper,0,0
 brinebreak-isle,2,Sea Bass,0.9,7.68
-brinebreak-isle,3,Yellowtail,1.4,13
-brinebreak-isle,5,Yellowfin Tuna,3,20
-brinebreak-isle,6,Yellow Goatfish,0.396,4
-brinebreak-isle,7,Black Spot Goatfish,0.324,4.9
-brinebreak-isle,8,Bigeye Tuna,2,15
-brinebreak-isle,9,Bonito,0.9,8
+brinebreak-isle,3,Yellowtail,0,0
+brinebreak-isle,5,Yellowfin Tuna,0,0
+brinebreak-isle,6,Yellow Goatfish,0,0
+brinebreak-isle,7,Black Spot Goatfish,0,0
+brinebreak-isle,8,Bigeye Tuna,0,0
+brinebreak-isle,9,Bonito,0,0
 brinebreak-isle,10,Black Sea Bass,0.36,3.2
 brinebreak-isle,11,Striped Bass,1,28
 brinebreak-isle,12,Spotted Sand Bass,0.36,3.2
@@ -41,14 +41,14 @@ deep-ocean,11,Striped Bass,0,0
 deep-ocean,12,Spotted Sand Bass,0,0
 suncrest-reef,13,Albacore,0,0
 suncrest-reef,14,Greater Amberjack,0,0
-brinebreak-isle,13,Albacore,2,15
+brinebreak-isle,13,Albacore,0,0
 brinebreak-isle,14,Greater Amberjack,1,18
 deep-ocean,13,Albacore,10,45
 deep-ocean,14,Greater Amberjack,0,0
 suncrest-reef,15,Blacktip Shark,0,0
-brinebreak-isle,15,Blacktip Shark,5,14
+brinebreak-isle,15,Blacktip Shark,0,0
 deep-ocean,15,Blacktip Shark,12,30
-suncrest-reef,16,Yellowtail Snapper,0.25,4.1
+suncrest-reef,16,Yellowtail Snapper,0,0
 brinebreak-isle,16,Yellowtail Snapper,0,0
 deep-ocean,16,Yellowtail Snapper,0,0
 bluewater-cay,0,Blue Mackerel,1,4
@@ -67,14 +67,14 @@ bluewater-cay,13,Albacore,5,35
 bluewater-cay,14,Greater Amberjack,0,0
 bluewater-cay,15,Blacktip Shark,12,30
 bluewater-cay,16,Yellowtail Snapper,0,0
-suncrest-reef,17,Mutton Snapper,0.5,6.5
-brinebreak-isle,17,Mutton Snapper,0.7,13
+suncrest-reef,17,Mutton Snapper,0,0
+brinebreak-isle,17,Mutton Snapper,0,0
 deep-ocean,17,Mutton Snapper,0,0
 bluewater-cay,17,Mutton Snapper,0,0
 suncrest-reef,18,Blacktip Reef Shark,0,0
 suncrest-reef,19,Mako Shark,0,0
 suncrest-reef,20,Battle Scarred Mako Shark,0,0
-brinebreak-isle,18,Blacktip Reef Shark,3,18
+brinebreak-isle,18,Blacktip Reef Shark,0,0
 brinebreak-isle,19,Mako Shark,0,0
 brinebreak-isle,20,Battle Scarred Mako Shark,0,0
 deep-ocean,18,Blacktip Reef Shark,0,0
@@ -103,7 +103,7 @@ snapper-island,17,Mutton Snapper,0.5,6.5
 snapper-island,18,Blacktip Reef Shark,3,18
 snapper-island,19,Mako Shark,0,0
 snapper-island,20,Battle Scarred Mako Shark,0,0
-suncrest-reef,21,Mangrove Snapper,0.5,5.5
+suncrest-reef,21,Mangrove Snapper,0,0
 brinebreak-isle,21,Mangrove Snapper,0,0
 deep-ocean,21,Mangrove Snapper,0,0
 bluewater-cay,21,Mangrove Snapper,0,0
@@ -133,18 +133,18 @@ brinebreak-isle,26,Giant Trevally,0,0
 deep-ocean,26,Giant Trevally,0,0
 bluewater-cay,26,Giant Trevally,3.6,99
 snapper-island,26,Giant Trevally,0,0
-suncrest-reef,27,Winter Flounder,0.25,1.541871456
-brinebreak-isle,27,Winter Flounder,0,0
+suncrest-reef,27,Winter Flounder,0,0
+brinebreak-isle,27,Winter Flounder,0.25,1.541871456
 deep-ocean,27,Winter Flounder,0,0
 bluewater-cay,27,Winter Flounder,0,0
 snapper-island,27,Winter Flounder,0,0
-suncrest-reef,28,Roughtail Stingray,0.25,1.541871456
-brinebreak-isle,28,Roughtail Stingray,0,0
+suncrest-reef,28,Roughtail Stingray,0,0
+brinebreak-isle,28,Roughtail Stingray,0.25,1.541871456
 deep-ocean,28,Roughtail Stingray,0,0
 bluewater-cay,28,Roughtail Stingray,0,0
 snapper-island,28,Roughtail Stingray,0,0
-suncrest-reef,29,Leopard Stingray,0.25,1.541871456
-brinebreak-isle,29,Leopard Stingray,0,0
+suncrest-reef,29,Leopard Stingray,0,0
+brinebreak-isle,29,Leopard Stingray,0.25,1.541871456
 deep-ocean,29,Leopard Stingray,0,0
 bluewater-cay,29,Leopard Stingray,0,0
 snapper-island,29,Leopard Stingray,0,0

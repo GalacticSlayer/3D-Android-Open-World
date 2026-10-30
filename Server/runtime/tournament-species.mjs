@@ -9,26 +9,6 @@ export const tournamentIslands = [
     "name": "Suncrest Reef",
     "fish": [
       {
-        "id": 0,
-        "name": "Blue Mackerel",
-        "maxKg": 3.4499999999999997
-      },
-      {
-        "id": 1,
-        "name": "Red Snapper",
-        "maxKg": 4.800000000000001
-      },
-      {
-        "id": 2,
-        "name": "Sea Bass",
-        "maxKg": 7.199999999999999
-      },
-      {
-        "id": 3,
-        "name": "Yellowtail",
-        "maxKg": 9.75
-      },
-      {
         "id": 6,
         "name": "Yellow Goatfish",
         "maxKg": 3.3000000000000003
@@ -39,38 +19,55 @@ export const tournamentIslands = [
         "maxKg": 2.7
       },
       {
-        "id": 8,
-        "name": "Bigeye Tuna",
-        "maxKg": 9.0
+        "id": 41,
+        "name": "Blue Tang",
+        "maxKg": 0.9235503540000001
       },
       {
-        "id": 16,
-        "name": "Yellowtail Snapper",
-        "maxKg": 6.1499999999999995
+        "id": 33,
+        "name": "Emperor Angelfish",
+        "maxKg": 2.037861402
       },
       {
-        "id": 17,
-        "name": "Mutton Snapper",
-        "maxKg": 9.75
+        "id": 34,
+        "name": "Juvenile Emperor Angelfish",
+        "maxKg": 2.037861402
       },
       {
-        "id": 21,
-        "name": "Mangrove Snapper",
-        "maxKg": 8.25
+        "id": 31,
+        "name": "Picasso Triggerfish",
+        "maxKg": 0.8400000000000001
       },
-      {"id": 27, "name": "Winter Flounder", "maxKg": 2.312807183365},
-      {"id": 28, "name": "Roughtail Stingray", "maxKg": 2.312807183365},
-      {"id": 29, "name": "Leopard Stingray", "maxKg": 2.312807183365},
-      {"id": 31, "name": "Picasso Triggerfish", "maxKg": 0.84},
-      {"id": 32, "name": "Titan Triggerfish", "maxKg": 16.98},
-      {"id": 33, "name": "Emperor Angelfish", "maxKg": 2.037861402},
-      {"id": 34, "name": "Juvenile Emperor Angelfish", "maxKg": 2.037861402},
-      {"id": 35, "name": "Panther Grouper", "maxKg": 10.689598570},
-      {"id": 36, "name": "Coral Grouper", "maxKg": 2.517108640},
-      {"id": 37, "name": "Blue Lined Grouper", "maxKg": 0.524688812},
-      {"id": 39, "name": "Napoleon Wrasse", "maxKg": 233.490300188},
-      {"id": 41, "name": "Blue Tang", "maxKg": 0.923550354},
-      {"id": 42, "name": "Dussumieri Tang", "maxKg": 5.709815301}
+      {
+        "id": 32,
+        "name": "Titan Triggerfish",
+        "maxKg": 16.98
+      },
+      {
+        "id": 42,
+        "name": "Dussumieri Tang",
+        "maxKg": 5.709815301
+      },
+      {
+        "id": 35,
+        "name": "Panther Grouper",
+        "maxKg": 10.689598569000001
+      },
+      {
+        "id": 37,
+        "name": "Blue Lined Grouper",
+        "maxKg": 0.5246888115
+      },
+      {
+        "id": 36,
+        "name": "Coral Grouper",
+        "maxKg": 2.517108639
+      },
+      {
+        "id": 39,
+        "name": "Napoleon Wrasse",
+        "maxKg": 233.4903001875
+      }
     ]
   },
   {
@@ -78,49 +75,9 @@ export const tournamentIslands = [
     "name": "Brinebreak Isle",
     "fish": [
       {
-        "id": 0,
-        "name": "Blue Mackerel",
-        "maxKg": 4.5
-      },
-      {
-        "id": 1,
-        "name": "Red Snapper",
-        "maxKg": 10.5
-      },
-      {
-        "id": 2,
-        "name": "Sea Bass",
-        "maxKg": 11.52
-      },
-      {
-        "id": 3,
-        "name": "Yellowtail",
-        "maxKg": 19.5
-      },
-      {
-        "id": 5,
-        "name": "Yellowfin Tuna",
-        "maxKg": 30.0
-      },
-      {
-        "id": 6,
-        "name": "Yellow Goatfish",
-        "maxKg": 6.0
-      },
-      {
-        "id": 7,
-        "name": "Black Spot Goatfish",
-        "maxKg": 7.3500000000000005
-      },
-      {
-        "id": 8,
-        "name": "Bigeye Tuna",
-        "maxKg": 22.5
-      },
-      {
-        "id": 9,
-        "name": "Bonito",
-        "maxKg": 12.0
+        "id": 27,
+        "name": "Winter Flounder",
+        "maxKg": 2.312807184
       },
       {
         "id": 10,
@@ -128,19 +85,19 @@ export const tournamentIslands = [
         "maxKg": 4.800000000000001
       },
       {
-        "id": 11,
-        "name": "Striped Bass",
-        "maxKg": 42.0
-      },
-      {
         "id": 12,
         "name": "Spotted Sand Bass",
         "maxKg": 4.800000000000001
       },
       {
-        "id": 13,
-        "name": "Albacore",
-        "maxKg": 22.5
+        "id": 2,
+        "name": "Sea Bass",
+        "maxKg": 11.52
+      },
+      {
+        "id": 11,
+        "name": "Striped Bass",
+        "maxKg": 42.0
       },
       {
         "id": 14,
@@ -148,21 +105,20 @@ export const tournamentIslands = [
         "maxKg": 27.0
       },
       {
-        "id": 15,
-        "name": "Blacktip Shark",
-        "maxKg": 21.0
+        "id": 40,
+        "name": "White Skate",
+        "maxKg": 2.312807184
       },
       {
-        "id": 17,
-        "name": "Mutton Snapper",
-        "maxKg": 19.5
+        "id": 29,
+        "name": "Leopard Stingray",
+        "maxKg": 2.312807184
       },
       {
-        "id": 18,
-        "name": "Blacktip Reef Shark",
-        "maxKg": 27.0
-      },
-      {"id": 40, "name": "White Skate", "maxKg": 2.312807184}
+        "id": 28,
+        "name": "Roughtail Stingray",
+        "maxKg": 2.312807184
+      }
     ]
   },
   {
@@ -273,16 +229,20 @@ export const tournamentIslands = [
     "id": 4,
     "name": "Snapper Island",
     "fish": [
-      {"id": 38, "name": "Nassau Grouper", "maxKg": 37.5},
-      {
-        "id": 1,
-        "name": "Red Snapper",
-        "maxKg": 4.800000000000001
-      },
       {
         "id": 16,
         "name": "Yellowtail Snapper",
         "maxKg": 6.1499999999999995
+      },
+      {
+        "id": 30,
+        "name": "Mahogany Snapper",
+        "maxKg": 6.1499999999999995
+      },
+      {
+        "id": 1,
+        "name": "Red Snapper",
+        "maxKg": 4.800000000000001
       },
       {
         "id": 17,
@@ -290,14 +250,14 @@ export const tournamentIslands = [
         "maxKg": 9.75
       },
       {
-        "id": 18,
-        "name": "Blacktip Reef Shark",
-        "maxKg": 27.0
-      },
-      {
         "id": 21,
         "name": "Mangrove Snapper",
         "maxKg": 15.75
+      },
+      {
+        "id": 38,
+        "name": "Nassau Grouper",
+        "maxKg": 37.5
       },
       {
         "id": 22,
@@ -309,7 +269,11 @@ export const tournamentIslands = [
         "name": "Great Barracuda",
         "maxKg": 72.0
       },
-      {"id": 30, "name": "Mahogany Snapper", "maxKg": 6.1499999999999995}
+      {
+        "id": 18,
+        "name": "Blacktip Reef Shark",
+        "maxKg": 27.0
+      }
     ]
   }
 ];
