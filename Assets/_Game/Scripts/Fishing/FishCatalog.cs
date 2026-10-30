@@ -58,6 +58,7 @@ public static class FishCatalog
     public const int NapoleonWrasseId=39;
     public const int WhiteSkateId=40;
     public const int BlueTangId=41;
+    public const int DussumieriTangId=42;
     // Positive Unity yaw is clockwise viewed from above. Keep pitch/roll and mouth pinning unchanged.
     public static float HeldYaw(int id)=>id==RoughtailStingrayId || id==LeopardStingrayId || id==WhiteSkateId ? 16f : IsFlatfish(id) ? -4f : 86f;
     public static bool IsFlatfish(int id)=>id==WinterFlounderId || id==RoughtailStingrayId || id==LeopardStingrayId || id==WhiteSkateId;
@@ -107,11 +108,12 @@ public static class FishCatalog
         new FishSpeciesDefinition("Nassau Grouper",new Color(.45f,.30f,.18f),new Color(.8f,.7f,.5f),0.012880772f,25f,1.68f,0f,160),
         new FishSpeciesDefinition("Napoleon Wrasse",new Color(.1f,.5f,.45f),new Color(.1f,.6f,.8f),0.108877273f,155.660200125f,2.73f,0f,260),
         new FishSpeciesDefinition("White Skate",new Color(.8f,.78f,.72f),new Color(.94f,.92f,.86f),.25f,3.6f,.68f,26f,150),
-        new FishSpeciesDefinition("Blue Tang",new Color(.03f,.2f,.9f),new Color(1f,.85f,.05f),0.021380856f,0.615700236f,.42f,0f,40)
+        new FishSpeciesDefinition("Blue Tang",new Color(.03f,.2f,.9f),new Color(1f,.85f,.05f),0.021380856f,0.615700236f,.42f,0f,40),
+        new FishSpeciesDefinition("Dussumieri Tang",new Color(.3f,.45f,.55f),new Color(.95f,.8f,.1f),0.026300815f,3.806543534f,1.05f,0f,100)
     };
 
     public static int Count=>Species.Length;
-    public static readonly int[] ActiveIds={0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41};
+    public static readonly int[] ActiveIds={0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42};
     public static int CanonicalId(int id)=>id==4?YellowfinTunaId:id;
 
     // Tournament identity is deliberately separate from save/render identity.

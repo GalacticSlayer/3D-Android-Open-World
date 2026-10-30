@@ -142,6 +142,12 @@ public static class ReefCatalog
                 starter[FishCatalog.NapoleonWrasseId]=21f;
                 starter[FishCatalog.BlueTangId]=30f;
             }
+            if(bait==3)
+            {
+                float total=Total(starter);
+                if(total>0f)for(int i=0;i<starter.Length;i++)starter[i]*=70f/total;
+                starter[FishCatalog.DussumieriTangId]=30f;
+            }
             return starter;
         }
         var weights=new float[FishCatalog.Count];

@@ -69,7 +69,8 @@ export const tournamentIslands = [
       {"id": 36, "name": "Coral Grouper", "maxKg": 2.517108640},
       {"id": 37, "name": "Blue Lined Grouper", "maxKg": 0.524688812},
       {"id": 39, "name": "Napoleon Wrasse", "maxKg": 233.490300188},
-      {"id": 41, "name": "Blue Tang", "maxKg": 0.923550354}
+      {"id": 41, "name": "Blue Tang", "maxKg": 0.923550354},
+      {"id": 42, "name": "Dussumieri Tang", "maxKg": 5.709815301}
     ]
   },
   {

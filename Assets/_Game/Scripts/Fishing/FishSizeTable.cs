@@ -46,7 +46,8 @@ public static class FishSizeTable
         NassauGrouperCurve(), // Epinephelus striatus
         NapoleonWrasseCurve(), // Cheilinus undulatus
         GameplayCurve(10f,14), // White Skate: exactly the Leopard Stingray curve
-        BlueTangCurve() // Paracanthurus hepatus
+        BlueTangCurve(), // Paracanthurus hepatus
+        DussumieriTangCurve() // Acanthurus dussumieri
     };
 
     // Edwards et al. (2011), Rodrigues lagoon measurements, n=17 (14-27 cm TL).
@@ -127,6 +128,14 @@ public static class FishSizeTable
     {
         var row=new float[7];
         for(int i=0;i<row.Length;i++)row[i]=(float)(0.02291*Math.Pow((i+1)*5.0,2.97)/1000.0);
+        return row;
+    }
+
+    // FishBase Bayesian species/genus estimate, W(g)=0.02951*TL(cm)^2.95.
+    private static float[] DussumieriTangCurve()
+    {
+        var row=new float[11];
+        for(int i=0;i<row.Length;i++)row[i]=(float)(0.02951*Math.Pow((i+1)*5.0,2.95)/1000.0);
         return row;
     }
 
