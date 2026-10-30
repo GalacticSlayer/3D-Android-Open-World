@@ -51,30 +51,55 @@ public static class WhiteSkateInstaller
     private static void ApplySurface()
     {
         var material=AssetDatabase.LoadAssetAtPath<Material>(Source + "/WhiteSkate.mat");
-        string path=Source + "/WhiteSkateMetallicRoughness.png";
-        var importer=AssetImporter.GetAtPath(path) as TextureImporter;
         if(material==null)throw new InvalidOperationException("White Skate material missing at " + Source + "/WhiteSkate.mat");
-        if(importer==null)
-        {
-            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
-            importer=AssetImporter.GetAtPath(path) as TextureImporter;
-        }
-        if(importer==null)throw new InvalidOperationException("White Skate texture importer missing at " + path);
-        if(importer.sRGBTexture || importer.wrapMode!=TextureWrapMode.Repeat)
-        { importer.sRGBTexture=false;importer.wrapMode=TextureWrapMode.Repeat;importer.SaveAndReimport(); }
         var shader=AuthoredLureReplacementImporter.LoadSurfaceShader();
-        var texture=AssetDatabase.LoadAssetAtPath<Texture2D>(path);
-        if(texture==null)
-        {
-            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
-            texture=AssetDatabase.LoadAssetAtPath<Texture2D>(path);
-        }
-        if(texture==null)throw new InvalidOperationException("White Skate texture could not be loaded at " + path);
+        var texture=LoadMetallicRoughness();
         if(material.shader==shader && material.GetTexture("_MetallicRoughnessMap")==texture &&
             material.IsKeywordEnabled("_AUTHORED_METALLIC_ROUGHNESS"))return;
         material.shader=shader;material.SetTexture("_MetallicRoughnessMap",texture);
         material.EnableKeyword("_AUTHORED_METALLIC_ROUGHNESS");
         EditorUtility.SetDirty(material);AssetDatabase.SaveAssets();
+    }
+
+    private static Texture2D LoadMetallicRoughness()
+    {
+        // Like SeaBassImporter.BuildAtlas, decode the supplied PNG directly.
+        // A TextureImporter can exist while its imported Texture2D is unavailable.
+        // Persist a native asset so the material also works in the built player.
+        const string sourcePath = Source + "/WhiteSkateMetallicRoughness.png";
+        const string assetPath = Source + "/WhiteSkateMetallicRoughness.asset";
+        var saved = AssetDatabase.LoadAssetAtPath<Texture2D>(assetPath);
+        if (saved != null && saved.width == 4096 && saved.height == 4096)
+            return saved;
+        if (!File.Exists(sourcePath))
+            throw new FileNotFoundException("White Skate metallic/roughness PNG is missing. Pull the complete update.", sourcePath);
+        // Data channels must stay linear: G = roughness, B = metallic.
+        var decoded = new Texture2D(2, 2, TextureFormat.RGBA32, true, true);
+        try
+        {
+            if (!ImageConversion.LoadImage(decoded, File.ReadAllBytes(sourcePath), false) ||
+                decoded.width != 4096 || decoded.height != 4096)
+                throw new InvalidOperationException("Cannot decode White Skate metallic/roughness PNG at " + sourcePath);
+            decoded.name = "White Skate Metallic Roughness";
+            decoded.wrapMode = TextureWrapMode.Repeat;
+            decoded.filterMode = FilterMode.Trilinear;
+            decoded.anisoLevel = 2;
+            decoded.Apply(true, false);
+            if (saved == null)
+            {
+                AssetDatabase.CreateAsset(decoded, assetPath);
+                saved = decoded;
+                decoded = null;
+            }
+            else EditorUtility.CopySerialized(decoded, saved);
+            EditorUtility.SetDirty(saved);
+            AssetDatabase.SaveAssets();
+            saved = AssetDatabase.LoadAssetAtPath<Texture2D>(assetPath);
+            if (saved == null || saved.width != 4096 || saved.height != 4096)
+                throw new InvalidOperationException("Could not save White Skate metallic/roughness texture at " + assetPath);
+            return saved;
+        }
+        finally { if (decoded != null) UnityEngine.Object.DestroyImmediate(decoded); }
     }
 
     [MenuItem("Tools/Open World/Rebuild White Skate")]
