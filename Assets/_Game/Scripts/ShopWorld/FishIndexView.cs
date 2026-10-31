@@ -49,7 +49,7 @@ public sealed class FishIndexView : MonoBehaviour
         float width=speciesScroll.viewport.rect.width;
         if(Mathf.Abs(width-gridWidth)<.5f)return;
         gridWidth=width;
-        int columns=width>=640f?2:1;
+        const int columns=2;
         gridLayout.constraintCount=columns;
         gridLayout.cellSize=new Vector2(Mathf.Max(1,(width-20f-(columns-1)*12f)/columns),132f);
         LayoutRebuilder.MarkLayoutForRebuild(grid);
@@ -88,6 +88,8 @@ public sealed class FishIndexView : MonoBehaviour
         Anchor(speciesScroll.GetComponent<RectTransform>(),0,0,.62f,1,0,0,-12,-198);
         gridLayout=grid.gameObject.AddComponent<GridLayoutGroup>();
         gridLayout.constraint=GridLayoutGroup.Constraint.FixedColumnCount;gridLayout.constraintCount=2;
+        gridLayout.startCorner=GridLayoutGroup.Corner.UpperLeft;
+        gridLayout.startAxis=GridLayoutGroup.Axis.Horizontal;
         gridLayout.spacing=new Vector2(12,12);gridLayout.padding=new RectOffset(4,4,4,4);
         foreach(int family in families)BuildCard(family);
         if(families.Count==0)
@@ -175,53 +177,40 @@ public sealed class FishIndexView : MonoBehaviour
             }
         }
         Divider();
-        TextRow("Preferred Lures & Baits",27,cyan,44,TextAnchor.MiddleLeft);
+        TextRow(known?"Preferred Lures & Baits":"Top 3 Preferred Lures",27,cyan,44,TextAnchor.MiddleLeft);
+        bool emperorFamily=family==FishCatalog.EmperorAngelfishId;
+        bool makoFamily=family==FishCatalog.MakoSharkId;
+        int baitSpecies=emperorFamily?FishCatalog.EmperorAngelfishId:variant;
         if(!known)
-            TextRow("Catch this fish to reveal its details.",21,muted,60);
+            TextRow("Catch and register this fish to reveal its percentages.",21,muted,60);
         else
         {
-            bool emperorFamily=family==FishCatalog.EmperorAngelfishId;
-            bool makoFamily=family==FishCatalog.MakoSharkId;
-            int baitSpecies=emperorFamily?FishCatalog.EmperorAngelfishId:variant;
             if(emperorFamily)
                 TextRow("Juveniles are the smallest 30% of the 10–50 cm range (22 cm or less).",18,muted,60,TextAnchor.MiddleLeft);
             if(makoFamily)
                 TextRow("Mako sharks: 80% normal, 20% battle-scarred. The overall bite rate stays the same.",18,muted,60,TextAnchor.MiddleLeft);
             TextRow((emperorFamily?"Combined chance for both variants in ":"Chance in ")+ReefCatalog.Zones[biome].name+" when a fish bites.",18,muted,emperorFamily?60:46,TextAnchor.MiddleLeft);
-            var options=FishIndexCatalog.Baits();
-            options.Sort((a,b)=>Chance(baitSpecies,b.Key).CompareTo(Chance(baitSpecies,a.Key)));
-            foreach(var bait in options)
-            {
-                var row=Row(76);
-                var icon=Picture(row,"BaitImage");
-                Anchor(icon.rectTransform,0,0,.29f,1,0,5,0,-5);
-                PreserveImageAspect(icon,bait.PreviewKey!=null && bait.PreviewKey.StartsWith("Bait")?1f:2f);
-                snapshots.Attach(icon,0,1f,bait.PreviewKey,false,true);
-                var name=Label(row,bait.Name,21,Color.white);
-                Anchor(name.rectTransform,.31f,0,.81f,1,0,6,-8,-6);
-                float percent=Chance(baitSpecies,bait.Key);
-                bool available=percent>=0f;
-                var odds=Label(row,available?percent.ToString("0.##")+"%":"—",25,available && percent>0?gold:muted,TextAnchor.MiddleRight);
-                Anchor(odds.rectTransform,.81f,0,1,1,0,0,-2,0);
-            }
-            if(!FishingTuning.IsValid)TextRow("Catch percentages are unavailable until the tuning table is valid.",18,muted,60);
         }
+        var options=FishIndexCatalog.PreferredOptions(baitSpecies,biome,known);
+        foreach(var bait in options)
+        {
+            var row=Row(76);
+            var icon=Picture(row,"BaitImage");
+            Anchor(icon.rectTransform,0,0,.29f,1,0,5,0,-5);
+            PreserveImageAspect(icon,bait.PreviewKey!=null && bait.PreviewKey.StartsWith("Bait")?1f:2f);
+            snapshots.Attach(icon,0,1f,bait.PreviewKey,false,true);
+            var name=Label(row,bait.Name,21,Color.white);
+            Anchor(name.rectTransform,.31f,0,.81f,1,0,6,-8,-6);
+            float percent=FishIndexCatalog.CatchChance(baitSpecies,bait.Key,biome);
+            bool available=percent>=0f;
+            var odds=Label(row,FishIndexCatalog.ChanceLabel(percent,known),25,known && available && percent>0?gold:muted,TextAnchor.MiddleRight);
+            Anchor(odds.rectTransform,.81f,0,1,1,0,0,-2,0);
+        }
+        if(!FishingTuning.IsValid)TextRow("Catch percentages are unavailable until the tuning table is valid.",18,muted,60);
         LayoutRebuilder.ForceRebuildLayoutImmediate(details);
         detailScroll.StopMovement();detailScroll.verticalNormalizedPosition=1f;
     }
 
-    private float Chance(int species,string key)
-    {
-        // The CSV's Mako column is a combined species chance; split it for the index.
-        if(species==FishCatalog.BattleScarredMakoSharkId)
-        {
-            return FishingTuning.TryGetChance(FishCatalog.MakoSharkId,key,biome,out float combinedOdds)
-                ?combinedOdds*FishCatalog.BattleScarredMakoVariantChance:-1f;
-        }
-        if(!FishingTuning.TryGetChance(species,key,biome,out float odds))return -1f;
-        return species==FishCatalog.MakoSharkId
-            ?odds*(1f-FishCatalog.BattleScarredMakoVariantChance):odds;
-    }
     private static float PreviewWeight(int species)
     {var fish=FishCatalog.Get(species);return (fish.MinWeightKg+fish.MaxWeightKg)*.5f;}
     private static string Measurements(int species,float kg)
