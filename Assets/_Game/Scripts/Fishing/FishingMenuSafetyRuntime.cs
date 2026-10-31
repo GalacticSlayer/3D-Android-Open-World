@@ -357,7 +357,7 @@ public sealed class FishingMenuSafetyRuntime : MonoBehaviour
             string text=CombinedText(button.gameObject);
             if(!string.Equals(text.Trim(),"CLOSE",StringComparison.OrdinalIgnoreCase))continue;
             button.onClick.RemoveAllListeners();
-            button.onClick.AddListener(shopHud.Close);
+            button.onClick.AddListener(shopHud.CloseMenuPage);
             SetButton(button,true);
             break;
         }

@@ -4,7 +4,7 @@ using UnityEngine.UI;
 // Resolution-independent HUD artwork, drawn without font-dependent glyphs.
 public sealed class FishingHudSymbol : MaskableGraphic
 {
-    public enum Kind { Reel, Bolt, Pin, Island, Gear, Cart, Camera }
+    public enum Kind { Reel, Bolt, Pin, Island, Gear, Cart, Camera, Fish, Rod, Stats, People, Home, Boat }
     public Kind kind;
     public static void Add(Transform parent, Kind kind, Vector2 anchor, Vector2 position, float size)
     {
@@ -50,6 +50,25 @@ public sealed class FishingHudSymbol : MaskableGraphic
         vh.Clear();
         switch(kind)
         {
+            case Kind.Home:
+                Tri(vh,new Vector2(.02f,.52f),new Vector2(.98f,.52f),new Vector2(.5f,.96f));
+                Quad(vh,.17f,.08f,.25f,.49f);Quad(vh,.59f,.08f,.24f,.49f);Quad(vh,.40f,.39f,.21f,.18f);break;
+            case Kind.Fish:
+                Tri(vh,new Vector2(.04f,.26f),new Vector2(.04f,.75f),new Vector2(.40f,.5f));
+                Ring(vh,.57f,.5f,.29f,.29f);Tri(vh,new Vector2(.43f,.73f),new Vector2(.58f,.91f),new Vector2(.69f,.7f));break;
+            case Kind.Rod:
+                Tri(vh,new Vector2(.08f,.08f),new Vector2(.17f,.06f),new Vector2(.82f,.91f));
+                Quad(vh,.80f,.18f,.018f,.73f);Ring(vh,.76f,.18f,.05f,.018f,.75f);break;
+            case Kind.Stats:
+                for(int i=0;i<4;i++)Quad(vh,.08f+i*.23f,.15f,.15f,.2f+i*.17f);
+                Quad(vh,.06f,.05f,.88f,.04f);break;
+            case Kind.People:
+                Ring(vh,.5f,.74f,.16f,.16f);Ring(vh,.17f,.65f,.12f,.12f);Ring(vh,.83f,.65f,.12f,.12f);
+                Quad(vh,.30f,.12f,.40f,.39f);Quad(vh,.03f,.17f,.22f,.29f);Quad(vh,.75f,.17f,.22f,.29f);break;
+            case Kind.Boat:
+                Tri(vh,new Vector2(.04f,.40f),new Vector2(.92f,.40f),new Vector2(.73f,.12f));
+                Tri(vh,new Vector2(.04f,.40f),new Vector2(.73f,.12f),new Vector2(.21f,.12f));
+                Quad(vh,.32f,.44f,.38f,.20f);Quad(vh,.42f,.67f,.03f,.18f);break;
             case Kind.Camera:
                 Quad(vh,.10f,.25f,.80f,.06f); Quad(vh,.10f,.70f,.80f,.06f);
                 Quad(vh,.10f,.25f,.06f,.51f); Quad(vh,.84f,.25f,.06f,.51f);

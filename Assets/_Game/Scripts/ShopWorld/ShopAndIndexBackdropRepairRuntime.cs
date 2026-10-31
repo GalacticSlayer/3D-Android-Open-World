@@ -57,7 +57,7 @@ public sealed class ShopAndIndexBackdropRepairRuntime : MonoBehaviour
         bool visible = modalObject != null && modalObject.activeInHierarchy;
         bool tackle = visible && page == "gear";
         bool index = visible && (page == "islands" || page == "reef-fish" || page == "stats");
-        bool market = visible && (page == "market" || page == "sell-confirm" || page == "bait");
+        bool market = visible && (page == "market" || page == "sell-confirm" || page == "bait" || page == "bag" || page == "equipment" || page == "multiplayer" || page == "travel");
 
         if (!tackle && !index && !market)
         {
@@ -86,6 +86,7 @@ public sealed class ShopAndIndexBackdropRepairRuntime : MonoBehaviour
             // The new fish view owns its card selection, silhouettes, and text.
             // Keep the supplied backdrop/CLOSE styling without restyling its tree.
             if(page=="reef-fish" || page=="stats"){wasThemed=true;return;}
+            if(page=="travel"){wasThemed=true;return;}
             StyleIndexRows();
             StyleIndexText(modalObject.transform, heading);
             if (market && heading != null) heading.color = Color.white;

@@ -19,6 +19,8 @@ public sealed class FishingMultiplayerPanel : MonoBehaviour
     private void Create()
     {
         font=Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        gameObject.AddComponent<Image>().raycastTarget=false;
+        FishingHudTheme.Panel(gameObject);
         Label("PLAY TOGETHER",0,55,32);
         Label("Open a room and share its code. Friends join with the same game version.\nPlayer movement is shared; catches, boats and saves stay local.",60,80,23);
         status=Label("",145,65,25);
@@ -56,7 +58,7 @@ public sealed class FishingMultiplayerPanel : MonoBehaviour
     private InputField Field(string placeholder,float y)
     {
         var go=new GameObject("Input",typeof(RectTransform),typeof(Image),typeof(InputField));go.transform.SetParent(transform,false);
-        Position(go.GetComponent<RectTransform>(),y,66,.1f,.9f);go.GetComponent<Image>().color=new Color(.08f,.15f,.18f);
+        Position(go.GetComponent<RectTransform>(),y,66,.1f,.9f);FishingHudTheme.Panel(go);
         var input=go.GetComponent<InputField>();input.targetGraphic=go.GetComponent<Image>();
         var text=Label("",0,66,26,go.transform);input.textComponent=text;
         var hint=Label(placeholder,0,66,24,go.transform);hint.color=new Color(.65f,.75f,.8f);input.placeholder=hint;
@@ -65,7 +67,7 @@ public sealed class FishingMultiplayerPanel : MonoBehaviour
     private Button Action(string caption,float y,float min,float max,UnityEngine.Events.UnityAction action)
     {
         var go=new GameObject(caption,typeof(RectTransform),typeof(Image),typeof(Button));go.transform.SetParent(transform,false);
-        Position(go.GetComponent<RectTransform>(),y,72,min,max);go.GetComponent<Image>().color=new Color(.04f,.36f,.39f);
+        Position(go.GetComponent<RectTransform>(),y,72,min,max);FishingHudTheme.Panel(go,1);
         var button=go.GetComponent<Button>();button.targetGraphic=go.GetComponent<Image>();button.onClick.AddListener(action);
         Label(caption,0,72,27,go.transform);return button;
     }

@@ -40,6 +40,8 @@ public sealed class ShopWorldHUD : MonoBehaviour
     private ScrollRect scroll;
     private Text heading, wallet, feedback, nearLabel;
     private string page="travel", message="";
+    private bool travelMenuSession;
+    private GameObject travelHeadingIcon;
     private int indexBiome;
     private FishIndexView fishIndexView;
     private Texture2D rockyThumbnail,deepThumbnail;
@@ -73,7 +75,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
     {
         if(root==null) return;
         if(Keyboard.current!=null && Keyboard.current.escapeKey.wasPressedThisFrame)
-        { if(MenuOpen) Close(); else Open("travel"); }
+        { if(MenuOpen) CloseMenuPage(); else Open("travel"); }
         // The animated catch-XP bar temporarily replaces MENU / TRAVEL only.
         // Keep the other shortcuts working and restore the menu button afterward.
         menuShortcut.SetActive(!MenuOpen && !FishingExperienceToast.IsShowingXp);
@@ -98,8 +100,10 @@ public sealed class ShopWorldHUD : MonoBehaviour
         if(!MenuOpen)
         {
             shopSession=destination=="gear" || destination=="market"?destination:null;
+            travelMenuSession=destination=="travel";
             fishing.PrepareForMenu();
         }
+        if(destination=="travel")travelMenuSession=true;
         MenuOpen=true; page=destination; modal.SetActive(true); root.transform.SetAsLastSibling();
         player.SetMenuOpen(true); if(fishingHUD!=null) fishingHUD.SetMenuCovered(true);
         Refresh(true);
@@ -108,12 +112,17 @@ public sealed class ShopWorldHUD : MonoBehaviour
     {
         if(travel!=null && travel.Traveling) return;
         SaveProfileName();
-        MenuOpen=false;shopSession=null;bagPicker=null;habitatPicker=null;message="";
+        MenuOpen=false;travelMenuSession=false;shopSession=null;bagPicker=null;habitatPicker=null;message="";
         if(previews!=null)previews.Suspend();
         if(modal!=null) modal.SetActive(false);
         if(player!=null) player.SetMenuOpen(false);
         if(fishingHUD!=null) fishingHUD.SetMenuCovered(false);
 
+    }
+    public void CloseMenuPage()
+    {
+        if(travelMenuSession && page!="travel") { bagPicker=null; Open("travel"); }
+        else Close();
     }
     private void Build()
     {
@@ -156,9 +165,11 @@ public sealed class ShopWorldHUD : MonoBehaviour
         Anchor(storeBody.GetComponent<RectTransform>(),0,0,1,1,0,60,0,-258);
         storeHeader.SetActive(false);storeBody.SetActive(false);
         heading=Label(modal.transform,"MENU / TRAVEL",36,gold); Anchor(heading.rectTransform,0,1,1,1,24,-62,-150,-12);
+        FishingHudSymbol.Add(modal.transform,FishingHudSymbol.Kind.Pin,new Vector2(0,1),new Vector2(56,-46),64);
+        travelHeadingIcon=modal.transform.Find("HudPin").gameObject;
         BuildProfileName();
         wallet=Label(modal.transform,"",22,Color.white); Anchor(wallet.rectTransform,0,1,1,1,24,-92,-24,-62);
-        Button close=ButtonAt(modal.transform,"CLOSE",Close); menuClose=close; Rect(close.GetComponent<RectTransform>(),Vector2.one,Vector2.one,Vector2.one,new Vector2(-18,-16),new Vector2(160,64));
+        Button close=ButtonAt(modal.transform,"CLOSE",CloseMenuPage); menuClose=close; Rect(close.GetComponent<RectTransform>(),Vector2.one,Vector2.one,Vector2.one,new Vector2(-18,-16),new Vector2(160,64));
         perspectiveToggle=ButtonAt(modal.transform,"",()=>
         {
             var view=FishingThirdPersonView.For(player);
@@ -167,8 +178,24 @@ public sealed class ShopWorldHUD : MonoBehaviour
         perspectiveToggle.gameObject.name="Toggle Third Person";
         Rect(perspectiveToggle.GetComponent<RectTransform>(),Vector2.one,Vector2.one,Vector2.one,new Vector2(-190,-16),new Vector2(64,64));
         FishingHudSymbol.Add(perspectiveToggle.transform,FishingHudSymbol.Kind.Camera,new Vector2(.5f,.5f),Vector2.zero,48);
-        string[] tabs={"travel","bag","equipment"}; string[] names={"TRAVEL","FISH BAG","EQUIPMENT"};
-        for(int i=0;i<tabs.Length;i++) { string tab=tabs[i]; var b=ButtonAt(modal.transform,names[i],()=>Open(tab)); navigationTabs.Add(b.gameObject); Anchor(b.GetComponent<RectTransform>(),i/3f,1,(i+1)/3f,1,16,-148,-16,-103); }
+        string[] tabs={"travel","bag","equipment","stats","multiplayer"};
+        string[] names={"TRAVEL","FISH BAG","EQUIPMENT","PERSONAL\nSTATS","MULTIPLAYER\nOPEN / JOIN"};
+        FishingHudSymbol.Kind[] icons={FishingHudSymbol.Kind.Pin,FishingHudSymbol.Kind.Fish,
+            FishingHudSymbol.Kind.Rod,FishingHudSymbol.Kind.Stats,FishingHudSymbol.Kind.People};
+        for(int i=0;i<tabs.Length;i++)
+        {
+            string tab=tabs[i]; var b=ButtonAt(modal.transform,names[i],()=>Open(tab));
+            navigationTabs.Add(b.gameObject);
+            Anchor(b.GetComponent<RectTransform>(),0,1,.18f,1,18,-244-i*112,-14,-144-i*112);
+            FishingHudTheme.Panel(b.gameObject,i==0?6:0);
+            FishingHudSymbol.Add(b.transform,icons[i],new Vector2(.13f,.5f),Vector2.zero,54);
+            var label=b.GetComponentInChildren<Text>();label.alignment=TextAnchor.MiddleLeft;
+            label.fontSize=25;label.resizeTextMinSize=16;label.resizeTextMaxSize=25;
+            Anchor(label.rectTransform,.29f,0,.91f,1,0,8,0,-8);
+            label.color=i==0?new Color(1f,.87f,.22f):new Color(.76f,.95f,1f);
+            var arrow=Label(b.transform,"›",32,label.color);arrow.alignment=TextAnchor.MiddleCenter;
+            Anchor(arrow.rectTransform,.90f,0,1,1,0,0,-6,0);
+        }
         GameObject viewport=Panel("ScrollViewport",modal.transform,new Color(0,0,0,0.1f));
         var vr=viewport.GetComponent<RectTransform>(); Anchor(vr,0,0,1,1,20,70,-30,-164);
         viewport.AddComponent<RectMask2D>(); scroll=viewport.AddComponent<ScrollRect>();
@@ -226,6 +253,8 @@ public sealed class ShopWorldHUD : MonoBehaviour
         heading.text=shopSession=="gear"?"TACKLE STORE":shopSession=="market"?"SELL FISH":"MENU / TRAVEL";
         bool index=page=="islands" || page=="reef-fish";
         if(index)heading.text=page=="islands"?"ISLAND / BIOME INDEX":ReefCatalog.Zones[indexBiome].name.ToUpperInvariant()+" • FISH INDEX";
+        if(page=="bag")heading.text="FISH BAG";
+        if(page=="equipment")heading.text="EQUIPMENT";
         if(page=="bait")heading.text="BAIT / LURES";
         if(page=="multiplayer")heading.text="MULTIPLAYER";
         if(page=="stats")heading.text="PERSONAL STATS";
@@ -249,10 +278,11 @@ public sealed class ShopWorldHUD : MonoBehaviour
         bool independent=index || page=="bait" || page=="stats" || habitatAddId!=null;
         SetStorePresentation(shopSession=="gear");
         perspectiveToggle.gameObject.SetActive(page=="travel");
+        travelHeadingIcon.SetActive(page=="travel");
         profileNameRow.SetActive(page=="travel");
         if(page=="travel")
         {
-            Anchor(heading.rectTransform,0,1,.42f,1,24,-62,-18,-12);
+            Anchor(heading.rectTransform,0,1,.42f,1,98,-66,-18,-12);
             if(!profileNameInput.isFocused)profileNameInput.SetTextWithoutNotify(ShopProgress.NormalizePlayerName(progress.Data.playerName));
             profileNameInput.interactable=!progress.ReadOnly;
         }
@@ -260,7 +290,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
         heading.gameObject.SetActive(!fishIndex);wallet.gameObject.SetActive(!fishIndex);
         feedback.gameObject.SetActive(!fishIndex);scroll.gameObject.SetActive(!fishIndex);
         scroll.verticalScrollbar.gameObject.SetActive(!fishIndex);
-        foreach(var tab in navigationTabs)tab.SetActive(shopSession==null && !independent);
+        foreach(var tab in navigationTabs)tab.SetActive(page=="travel");
         if(page=="stats")
         {
             wallet.gameObject.SetActive(false);feedback.gameObject.SetActive(false);
@@ -280,15 +310,22 @@ public sealed class ShopWorldHUD : MonoBehaviour
     // Layout only. Keep the plain heading text used by existing shop companions.
     private void SetStorePresentation(bool tackle)
     {
-        bool market=page=="market" || page=="sell-confirm" || page=="bait";
-        bool themed=tackle || market;
+        bool market=page=="market" || page=="sell-confirm" || page=="bait" || page=="bag" || page=="equipment";
+        bool themed=tackle || market || page=="multiplayer";
         storeHeader.SetActive(themed);storeBody.SetActive(themed);
+        var headerSymbol=storeHeader.GetComponentInChildren<FishingHudSymbol>();
+        if(headerSymbol!=null)
+        {
+            headerSymbol.kind=page=="bag"?FishingHudSymbol.Kind.Fish:page=="equipment"?FishingHudSymbol.Kind.Rod:
+                page=="multiplayer"?FishingHudSymbol.Kind.People:FishingHudSymbol.Kind.Cart;
+            headerSymbol.SetVerticesDirty();
+        }
         // The item surface reaches the frame bottom, with equal 20-unit list insets.
         Anchor(storeBody.GetComponent<RectTransform>(),0,0,1,1,0,0,0,tackle?-258:-158);
         modal.GetComponent<Image>().color=themed?Color.clear:ink;
         var r=modal.GetComponent<RectTransform>();
         bool index=page=="islands" || page=="reef-fish";
-        bool sharedFrame=themed || index || page=="stats";
+        bool sharedFrame=themed || index || page=="stats" || page=="travel";
         // Identical size and true screen center for both themed menus.
         r.anchorMin=sharedFrame?new Vector2(.025f,.0275f):new Vector2(.045f,.045f);
         r.anchorMax=sharedFrame?new Vector2(.975f,.9725f):new Vector2(.955f,.955f);
@@ -312,6 +349,18 @@ public sealed class ShopWorldHUD : MonoBehaviour
         // Keep purchase/sale messages clear of the newly extended item list.
         if(themed)Anchor(feedback.rectTransform,0,1,1,1,24,-150,-24,-130);
         else Anchor(feedback.rectTransform,0,0,1,0,24,10,-24,60);
+        heading.supportRichText=page=="travel";
+        if(page=="travel")
+        {
+            heading.text="MENU / <color=#FFDF38>TRAVEL</color>";
+            heading.fontStyle=FontStyle.Bold;heading.color=Color.white;
+            Anchor(wallet.rectTransform,0,1,1,1,24,-118,-24,-80);
+            Anchor(scroll.viewport,.18f,0,1,1,6,28,-34,-140);
+            Anchor(track,1,0,1,1,-24,30,-12,-140);
+            FishingHudTheme.Panel(menuClose.gameObject);
+            FishingHudTheme.Panel(perspectiveToggle.gameObject,1);
+            Anchor(feedback.rectTransform,.18f,0,1,0,20,0,-30,28);
+        }
         if(index)
         {
             // Reserve a header band and a separate right-hand close-button column.
@@ -657,7 +706,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
     private void Result(bool ok,string success) { message=ok?success:"Action unavailable. Check coins, ownership, capacity and distance to the shop."; Refresh(false); }
     private void Row(string title,string detail,string action,Action callback,bool enabled=true,CaughtFishRecord fish=null,string gear=null)
     {
-        bool market=page=="market" || page=="sell-confirm" || page=="bait";
+        bool market=page=="market" || page=="sell-confirm" || page=="bait" || page=="bag" || page=="equipment";
         GameObject row=Panel("Item",list,new Color(0.07f,0.12f,0.14f,1));
         row.AddComponent<LayoutElement>().preferredHeight=page=="reef-fish"?340:market?200:184;
         var accent=Panel("Accent",row.transform,gold); Anchor(accent.GetComponent<RectTransform>(),0,0,0,1,0,0,4,0);

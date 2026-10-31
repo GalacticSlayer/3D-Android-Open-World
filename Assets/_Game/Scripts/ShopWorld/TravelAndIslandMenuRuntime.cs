@@ -137,53 +137,43 @@ public sealed class TravelAndIslandMenuRuntime : MonoBehaviour
     private void BuildTravelPage(RectTransform list)
     {
         ClearList(list);
-
-        Button stats=ButtonAt(list,"PERSONAL STATS  •  LEVELS & ABILITIES",()=>hud.Open("stats"));
-        stats.gameObject.AddComponent<LayoutElement>().preferredHeight=100f;
-        FishingHudTheme.Panel(stats.gameObject);
-        PersonalStatsView.AddMenuIcon(stats);
-        Text statsText=stats.GetComponentInChildren<Text>();
-        Anchor(statsText.rectTransform,.16f,0f,.98f,1f,0,6,0,-6);
-
-        Button multiplayer=ButtonAt(list,"MULTIPLAYER  •  OPEN / JOIN SERVER",()=>hud.Open("multiplayer"));
-        multiplayer.gameObject.AddComponent<LayoutElement>().preferredHeight=100f;
-        SetButtonAvailable(multiplayer,!IsFishingBusy());
-
-        GameObject hint=Panel("IslandTravelHint",list,new Color(.04f,.12f,.14f,.95f));
-        hint.AddComponent<LayoutElement>().preferredHeight=78f;
-        Text hintText=Label(hint.transform,travel!=null && travel.TournamentTravelRestricted
-            ?"TOTAL-WEIGHT TOURNAMENT: ONLY SUNCREST AND TIDEGLASS QUAY TRAVEL IS ENABLED"
-            :"ISLAND FAST TRAVEL HAS MOVED TO  ISLAND / BIOME INDEX",22,gold,TextAnchor.MiddleCenter);
-        Full(hintText.rectTransform,18,8,-18,-8);
-
-        GameObject row=Panel("DimensionTravel",list,Color.clear);
-        row.AddComponent<LayoutElement>().preferredHeight=250f;
-        CreateTravelCard(row.transform,0f,.5f,"TIDEGLASS QUAY","View habitats • buy upgrades • sell your catch",1,new Color(.29f,.23f,.13f));
-        CreateTravelCard(row.transform,.5f,1f,"HOME","Your garden • aquarium • pond • fish collection",2,new Color(.12f,.30f,.22f));
-
-        GameObject boatRow=Panel("BoatTravel",list,Color.clear);
-        boatRow.AddComponent<LayoutElement>().preferredHeight=225f;
-        CreateBoatTravelCard(boatRow.transform);
-
+        // One responsive layout slot keeps both cards and the boat strip visible together.
+        GameObject surface=Panel("TravelDestinations",list,Color.clear);
+        var slot=surface.AddComponent<LayoutElement>();
+        slot.preferredHeight=Mathf.Max(560f,((RectTransform)list.parent).rect.height-4f);
+        var resize=surface.AddComponent<TravelMenuHeight>();resize.viewport=(RectTransform)list.parent;
+        CreateTravelCard(surface.transform,0f,.5f,"HOME",
+            "Your garden, aquarium, pond and fish collection.",2,"Home",FishingHudSymbol.Kind.Home);
+        CreateTravelCard(surface.transform,.5f,1f,"SHOP",
+            "Buy baits, lures and equipment. Upgrade your gear and supplies.",1,"Shop",FishingHudSymbol.Kind.Cart);
+        CreateBoatTravelCard(surface.transform);
         AddMarker(list);
     }
 
-    private void CreateTravelCard(Transform parent,float minX,float maxX,string title,string detail,int destination,Color color)
+    private void CreateTravelCard(Transform parent,float minX,float maxX,string title,string detail,
+        int destination,string artwork,FishingHudSymbol.Kind icon)
     {
         bool here=travel!=null && travel.Destination==destination;
         bool allowed=travel==null || travel.TournamentAllowsDimension(destination);
-        string footer=!allowed?"LOCKED DURING TOURNAMENT":here?"YOU ARE HERE":"TRAVEL →";
-        Button button=ButtonAt(parent,title+"\n\n"+detail+"\n\n"+footer,()=>
+        var card=Panel(title+"TravelCard",parent,Color.white);
+        FishingHudTheme.Panel(card);
+        Anchor(card.GetComponent<RectTransform>(),minX,.21f,maxX,1f,6,8,-6,0);
+        TravelMenuArtwork.Place(card.transform,artwork);
+        FishingHudSymbol.Add(card.transform,icon,new Vector2(.10f,.35f),Vector2.zero,78);
+        Text name=Label(card.transform,title,40,Color.white,TextAnchor.MiddleLeft);
+        name.fontStyle=FontStyle.Bold;
+        Anchor(name.rectTransform,.21f,.36f,1f,.47f,0,0,-20,0);
+        Text description=Label(card.transform,detail,27,new Color(.70f,.91f,.97f),TextAnchor.UpperLeft);
+        description.resizeTextForBestFit=true;description.resizeTextMinSize=18;description.resizeTextMaxSize=27;
+        Anchor(description.rectTransform,.21f,.19f,.97f,.36f,0,0,0,0);
+        string footer=!allowed?"LOCKED DURING TOURNAMENT":here?"YOU ARE HERE":"TRAVEL TO "+title;
+        Button button=ButtonAt(card.transform,footer,()=>
         {
             CapturePlacedBoat();
             if(travel!=null)travel.Travel(destination);
         });
-        Anchor(button.GetComponent<RectTransform>(),minX,0f,maxX,1f,8,8,-8,-8);
-        button.GetComponent<Image>().color=color;
-        Text caption=button.GetComponentInChildren<Text>();
-        caption.fontSize=32;caption.resizeTextForBestFit=true;caption.resizeTextMinSize=19;caption.resizeTextMaxSize=32;
-        caption.horizontalOverflow=HorizontalWrapMode.Wrap;caption.verticalOverflow=VerticalWrapMode.Truncate;
-        Full(caption.rectTransform,18,16,-18,-16);
+        Anchor(button.GetComponent<RectTransform>(),.12f,.045f,.88f,.175f,0,0,0,0);
+        FishingHudTheme.Panel(button.gameObject,1);
         SetButtonAvailable(button,allowed && !here && !IsFishingBusy());
     }
 
@@ -192,15 +182,19 @@ public sealed class TravelAndIslandMenuRuntime : MonoBehaviour
         bool owns=OwnsAnyBoat();
         bool placed=hasPlacedBoat || (boats!=null && boats.ActiveBoat!=null);
         bool restricted=travel!=null && travel.TournamentTravelRestricted;
-        string footer=restricted?"LOCKED DURING TOURNAMENT":!owns?"NO BOAT OWNED":!placed?"BOAT NOT PLACED":"TELEPORT TO BOAT →";
-        string detail="Return directly to the boat you placed in the fishing world";
-        Button button=ButtonAt(parent,"YOUR BOAT\n\n"+detail+"\n\n"+footer,BeginBoatTeleport);
-        Anchor(button.GetComponent<RectTransform>(),0f,0f,1f,1f,8,8,-8,-8);
-        button.GetComponent<Image>().color=new Color(.06f,.28f,.34f,1f);
-        Text caption=button.GetComponentInChildren<Text>();
-        caption.fontSize=32;caption.resizeTextForBestFit=true;caption.resizeTextMinSize=19;caption.resizeTextMaxSize=32;
-        caption.horizontalOverflow=HorizontalWrapMode.Wrap;caption.verticalOverflow=VerticalWrapMode.Truncate;
-        Full(caption.rectTransform,24,16,-24,-16);
+        string footer=restricted?"LOCKED DURING TOURNAMENT":!owns?"NO BOAT OWNED":!placed?"BOAT NOT PLACED":"TRAVEL TO BOAT";
+        var row=Panel("ReturnToBoat",parent,Color.white);FishingHudTheme.Panel(row);
+        Anchor(row.GetComponent<RectTransform>(),0,0,1,.21f,6,0,-6,-8);
+        FishingHudSymbol.Add(row.transform,FishingHudSymbol.Kind.Boat,new Vector2(.055f,.5f),Vector2.zero,78);
+        Text title=Label(row.transform,"RETURN TO YOUR BOAT",30,Color.white,TextAnchor.MiddleLeft);
+        title.fontStyle=FontStyle.Bold;
+        Anchor(title.rectTransform,.105f,.5f,.71f,.88f,0,0,-12,0);
+        Text detail=Label(row.transform,"Return directly to the boat you placed in the fishing world.",23,new Color(.70f,.91f,.97f),TextAnchor.MiddleLeft);
+        detail.resizeTextForBestFit=true;detail.resizeTextMinSize=16;detail.resizeTextMaxSize=23;
+        Anchor(detail.rectTransform,.105f,.12f,.71f,.5f,0,0,-12,0);
+        Button button=ButtonAt(row.transform,footer,BeginBoatTeleport);
+        Anchor(button.GetComponent<RectTransform>(),.73f,.20f,.975f,.80f,0,0,0,0);
+        FishingHudTheme.Panel(button.gameObject,1);
         SetButtonAvailable(button,!restricted && owns && placed && travel!=null && !travel.Traveling && !IsFishingBusy());
     }
 
