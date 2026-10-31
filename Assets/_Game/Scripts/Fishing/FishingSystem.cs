@@ -227,9 +227,13 @@ public class FishingSystem : MonoBehaviour
         {
             foreach(var renderer in rodRoot.GetComponentsInChildren<MeshRenderer>(true))
             {
-                if(renderer.name=="ReelSeatCollar") continue;
+                // RodBlank uses the equipped rod's authored material and texture.
+                // Lure hook saves also trigger this callback during combat, when
+                // the legacy rod component (and its tint cleanup) is disabled.
+                // Never apply the old placeholder tier tint to the rod itself.
+                if(renderer.name=="RodBlank" || renderer.name=="ReelSeatCollar") continue;
                 var block=new MaterialPropertyBlock();renderer.GetPropertyBlock(block);
-                Color tint=renderer.name=="RodBlank" ? Color.Lerp(Color.white,new Color(0.2f,0.3f,0.33f),gear.rodEquipped/3f) : Color.Lerp(Color.white,new Color(0.94f,0.78f,0.42f),gear.reelEquipped/3f);
+                Color tint=Color.Lerp(Color.white,new Color(0.94f,0.78f,0.42f),gear.reelEquipped/3f);
                 block.SetColor("_BaseColor",tint);renderer.SetPropertyBlock(block);
             }
         }
