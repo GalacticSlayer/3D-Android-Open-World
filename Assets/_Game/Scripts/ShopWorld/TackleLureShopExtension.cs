@@ -13,7 +13,7 @@ public sealed class TackleLureShopExtension : MonoBehaviour
         public int variant;
         public Button button;
         public Text buttonLabel;
-        public Text nameLabel;
+        public Text descriptionLabel;
         public Button buyButton;
         public Image buttonImage;
     }
@@ -167,11 +167,11 @@ public sealed class TackleLureShopExtension : MonoBehaviour
 
         LureRowView view=new LureRowView();
         view.variant=variant;
-        view.nameLabel=name;
+        view.descriptionLabel=description;
         if(sectionIsShop)
         {
             Rect(button.GetComponent<RectTransform>(),new Vector2(1,.5f),new Vector2(1,.5f),new Vector2(1,.5f),new Vector2(-24,45),new Vector2(238,70));
-            view.buyButton=CreateButton(row.transform,"BUY 1 / "+ShopCatalog.LurePrices[variant],()=>{progress.BuyLure(selected);RefreshRows();});
+            view.buyButton=CreateButton(row.transform,"BUY "+ShopCatalog.LurePrices[variant].ToString("N0"),()=>{progress.BuyLure(selected);RefreshRows();});
             Rect(view.buyButton.GetComponent<RectTransform>(),new Vector2(1,.5f),new Vector2(1,.5f),new Vector2(1,.5f),new Vector2(-24,-45),new Vector2(238,70));
         }
         view.button=button;
@@ -188,7 +188,7 @@ public sealed class TackleLureShopExtension : MonoBehaviour
             if(view==null || view.button==null)continue;
 
             int variant=view.variant;
-            view.nameLabel.text=ShopCatalog.LureNames[variant]+" ×"+progress.Data.LureQuantity(variant);
+            view.descriptionLabel.text=progress.Data.LureQuantity(variant)+" remaining / Kept on catch; lost if a hooked fish escapes.";
             if(view.buyButton!=null)view.buyButton.interactable=!progress.ReadOnly && progress.Data.coins>=ShopCatalog.LurePrices[variant];
             bool owned=progress.Data.OwnsLure(variant);
             bool equipped=owned && progress.Data.baitEquipped==ShopCatalog.StarterLure && progress.Data.lureEquipped==variant;

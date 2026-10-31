@@ -396,7 +396,7 @@ public sealed class TabbedTackleStoreExtension : MonoBehaviour
         if(buyMore!=null)
         {
             Rect(button.GetComponent<RectTransform>(),new Vector2(1,.5f),new Vector2(1,.5f),new Vector2(1,.5f),new Vector2(-24,45),new Vector2(238,70));
-            Button buy=CreateButton(row.transform,"BUY 1 / "+price.ToString("N0"),buyMore);
+            Button buy=CreateButton(row.transform,"BUY "+price.ToString("N0"),buyMore);
             Rect(buy.GetComponent<RectTransform>(),new Vector2(1,.5f),new Vector2(1,.5f),new Vector2(1,.5f),new Vector2(-24,-45),new Vector2(238,70));
             buy.interactable=!progress.ReadOnly && progress.Data.coins>=price;
             FishingHudTheme.Panel(buy.gameObject,buy.interactable?1:0);
