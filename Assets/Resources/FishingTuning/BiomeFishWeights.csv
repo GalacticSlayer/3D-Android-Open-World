@@ -8,8 +8,8 @@ suncrest-reef,1,Red Snapper,0,0
 suncrest-reef,2,Sea Bass,0,0
 suncrest-reef,3,Yellowtail,0,0
 suncrest-reef,5,Yellowfin Tuna,0,0
-suncrest-reef,6,Yellow Goatfish,0.35,2.2
-suncrest-reef,7,Black Spot Goatfish,0.3,1.8
+suncrest-reef,6,Yellow Goatfish,0.35,2
+suncrest-reef,7,Black Spot Goatfish,0.3,2
 suncrest-reef,8,Bigeye Tuna,0,0
 suncrest-reef,9,Bonito,0,0
 suncrest-reef,10,Black Sea Bass,0,0
@@ -17,55 +17,55 @@ suncrest-reef,11,Striped Bass,0,0
 suncrest-reef,12,Spotted Sand Bass,0,0
 brinebreak-isle,0,Blue Mackerel,0,0
 brinebreak-isle,1,Red Snapper,0,0
-brinebreak-isle,2,Sea Bass,0.9,7.68
+brinebreak-isle,2,Sea Bass,0.9,10.8
 brinebreak-isle,3,Yellowtail,0,0
 brinebreak-isle,5,Yellowfin Tuna,0,0
 brinebreak-isle,6,Yellow Goatfish,0,0
 brinebreak-isle,7,Black Spot Goatfish,0,0
 brinebreak-isle,8,Bigeye Tuna,0,0
 brinebreak-isle,9,Bonito,0,0
-brinebreak-isle,10,Black Sea Bass,0.36,3.2
-brinebreak-isle,11,Striped Bass,1,28
-brinebreak-isle,12,Spotted Sand Bass,0.36,3.2
-deep-ocean,0,Blue Mackerel,3,5
+brinebreak-isle,10,Black Sea Bass,0.35,4.5
+brinebreak-isle,11,Striped Bass,3,20
+brinebreak-isle,12,Spotted Sand Bass,0.25,4.5
+deep-ocean,0,Blue Mackerel,0.25,5
 deep-ocean,1,Red Snapper,0,0
 deep-ocean,2,Sea Bass,0,0
 deep-ocean,3,Yellowtail,1.4,14.625
-deep-ocean,5,Yellowfin Tuna,30,63
+deep-ocean,5,Yellowfin Tuna,1,63
 deep-ocean,6,Yellow Goatfish,0,0
 deep-ocean,7,Black Spot Goatfish,0,0
-deep-ocean,8,Bigeye Tuna,30,90
-deep-ocean,9,Bonito,5,11.25
-deep-ocean,10,Black Sea Bass,3,4.5
+deep-ocean,8,Bigeye Tuna,1,90
+deep-ocean,9,Bonito,0.5,11.25
+deep-ocean,10,Black Sea Bass,0.35,4.5
 deep-ocean,11,Striped Bass,0,0
 deep-ocean,12,Spotted Sand Bass,0,0
 suncrest-reef,13,Albacore,0,0
 suncrest-reef,14,Greater Amberjack,0,0
 brinebreak-isle,13,Albacore,0,0
-brinebreak-isle,14,Greater Amberjack,1,18
-deep-ocean,13,Albacore,10,45
+brinebreak-isle,14,Greater Amberjack,1,70
+deep-ocean,13,Albacore,2,45
 deep-ocean,14,Greater Amberjack,0,0
 suncrest-reef,15,Blacktip Shark,0,0
 brinebreak-isle,15,Blacktip Shark,0,0
-deep-ocean,15,Blacktip Shark,12,30
+deep-ocean,15,Blacktip Shark,5,30
 suncrest-reef,16,Yellowtail Snapper,0,0
 brinebreak-isle,16,Yellowtail Snapper,0,0
 deep-ocean,16,Yellowtail Snapper,0,0
-bluewater-cay,0,Blue Mackerel,1,4
+bluewater-cay,0,Blue Mackerel,0.25,5
 bluewater-cay,1,Red Snapper,0,0
 bluewater-cay,2,Sea Bass,0,0
 bluewater-cay,3,Yellowtail,1.4,14.625
-bluewater-cay,5,Yellowfin Tuna,10,45
+bluewater-cay,5,Yellowfin Tuna,1,63
 bluewater-cay,6,Yellow Goatfish,0,0
 bluewater-cay,7,Black Spot Goatfish,0,0
-bluewater-cay,8,Bigeye Tuna,10,60
-bluewater-cay,9,Bonito,2,10
+bluewater-cay,8,Bigeye Tuna,1,90
+bluewater-cay,9,Bonito,0.5,11.25
 bluewater-cay,10,Black Sea Bass,0,0
 bluewater-cay,11,Striped Bass,0,0
 bluewater-cay,12,Spotted Sand Bass,0,0
-bluewater-cay,13,Albacore,5,35
+bluewater-cay,13,Albacore,2,45
 bluewater-cay,14,Greater Amberjack,0,0
-bluewater-cay,15,Blacktip Shark,12,30
+bluewater-cay,15,Blacktip Shark,5,30
 bluewater-cay,16,Yellowtail Snapper,0,0
 suncrest-reef,17,Mutton Snapper,0,0
 brinebreak-isle,17,Mutton Snapper,0,0
@@ -84,7 +84,7 @@ bluewater-cay,18,Blacktip Reef Shark,0,0
 bluewater-cay,19,Mako Shark,20,150
 bluewater-cay,20,Battle Scarred Mako Shark,0,0
 snapper-island,0,Blue Mackerel,0,0
-snapper-island,1,Red Snapper,0.7,3.2
+snapper-island,1,Red Snapper,0.7,7.2
 snapper-island,2,Sea Bass,0,0
 snapper-island,3,Yellowtail,0,0
 snapper-island,5,Yellowfin Tuna,0,0
@@ -99,7 +99,7 @@ snapper-island,13,Albacore,0,0
 snapper-island,14,Greater Amberjack,0,0
 snapper-island,15,Blacktip Shark,0,0
 snapper-island,16,Yellowtail Snapper,0.25,4.1
-snapper-island,17,Mutton Snapper,0.5,6.5
+snapper-island,17,Mutton Snapper,0.5,13
 snapper-island,18,Blacktip Reef Shark,3,18
 snapper-island,19,Mako Shark,0,0
 snapper-island,20,Battle Scarred Mako Shark,0,0
@@ -121,30 +121,30 @@ snapper-island,23,Great Barracuda,3.2,48
 suncrest-reef,24,Bluefin Trevally,0,0
 brinebreak-isle,24,Bluefin Trevally,0,0
 deep-ocean,24,Bluefin Trevally,0,0
-bluewater-cay,24,Bluefin Trevally,2,55
+bluewater-cay,24,Bluefin Trevally,1,70
 snapper-island,24,Bluefin Trevally,0,0
 suncrest-reef,25,Golden Trevally,0,0
 brinebreak-isle,25,Golden Trevally,0,0
 deep-ocean,25,Golden Trevally,0,0
-bluewater-cay,25,Golden Trevally,2,55
+bluewater-cay,25,Golden Trevally,1,70
 snapper-island,25,Golden Trevally,0,0
 suncrest-reef,26,Giant Trevally,0,0
 brinebreak-isle,26,Giant Trevally,0,0
 deep-ocean,26,Giant Trevally,0,0
-bluewater-cay,26,Giant Trevally,3.6,99
+bluewater-cay,26,Giant Trevally,1.8,126
 snapper-island,26,Giant Trevally,0,0
 suncrest-reef,27,Winter Flounder,0,0
-brinebreak-isle,27,Winter Flounder,0.25,1.541871456
+brinebreak-isle,27,Winter Flounder,0.25,5
 deep-ocean,27,Winter Flounder,0,0
 bluewater-cay,27,Winter Flounder,0,0
 snapper-island,27,Winter Flounder,0,0
 suncrest-reef,28,Roughtail Stingray,0,0
-brinebreak-isle,28,Roughtail Stingray,0.25,1.541871456
+brinebreak-isle,28,Roughtail Stingray,3,360
 deep-ocean,28,Roughtail Stingray,0,0
 bluewater-cay,28,Roughtail Stingray,0,0
 snapper-island,28,Roughtail Stingray,0,0
 suncrest-reef,29,Leopard Stingray,0,0
-brinebreak-isle,29,Leopard Stingray,0.25,1.541871456
+brinebreak-isle,29,Leopard Stingray,3,85
 deep-ocean,29,Leopard Stingray,0,0
 bluewater-cay,29,Leopard Stingray,0,0
 snapper-island,29,Leopard Stingray,0,0
@@ -153,37 +153,37 @@ brinebreak-isle,30,Mahogany Snapper,0,0
 deep-ocean,30,Mahogany Snapper,0,0
 bluewater-cay,30,Mahogany Snapper,0,0
 snapper-island,30,Mahogany Snapper,0.25,4.1
-suncrest-reef,31,Picasso Triggerfish,0.06,0.56
+suncrest-reef,31,Picasso Triggerfish,0.06,4
 brinebreak-isle,31,Picasso Triggerfish,0,0
 deep-ocean,31,Picasso Triggerfish,0,0
 bluewater-cay,31,Picasso Triggerfish,0,0
 snapper-island,31,Picasso Triggerfish,0,0
-suncrest-reef,32,Titan Triggerfish,0.1,11.32
+suncrest-reef,32,Titan Triggerfish,0.1,12
 brinebreak-isle,32,Titan Triggerfish,0,0
 deep-ocean,32,Titan Triggerfish,0,0
 bluewater-cay,32,Titan Triggerfish,0,0
 snapper-island,32,Titan Triggerfish,0,0
-suncrest-reef,33,Emperor Angelfish,0.013184078,1.358574268
+suncrest-reef,33,Emperor Angelfish,0.03,1.8
 brinebreak-isle,33,Emperor Angelfish,0,0
 deep-ocean,33,Emperor Angelfish,0,0
 bluewater-cay,33,Emperor Angelfish,0,0
 snapper-island,33,Emperor Angelfish,0,0
-suncrest-reef,34,Juvenile Emperor Angelfish,0.013184078,1.358574268
+suncrest-reef,34,Juvenile Emperor Angelfish,0.03,1.8
 brinebreak-isle,34,Juvenile Emperor Angelfish,0,0
 deep-ocean,34,Juvenile Emperor Angelfish,0,0
 bluewater-cay,34,Juvenile Emperor Angelfish,0,0
 snapper-island,34,Juvenile Emperor Angelfish,0,0
-suncrest-reef,35,Panther Grouper,0.017781491,7.126399046
+suncrest-reef,35,Panther Grouper,0.3,10
 brinebreak-isle,35,Panther Grouper,0,0
 deep-ocean,35,Panther Grouper,0,0
 bluewater-cay,35,Panther Grouper,0,0
 snapper-island,35,Panther Grouper,0,0
-suncrest-reef,36,Coral Grouper,0.012587570,1.678072426
+suncrest-reef,36,Coral Grouper,0.4,10
 brinebreak-isle,36,Coral Grouper,0,0
 deep-ocean,36,Coral Grouper,0,0
 bluewater-cay,36,Coral Grouper,0,0
 snapper-island,36,Coral Grouper,0,0
-suncrest-reef,37,Blue Lined Grouper,0.009120179,0.349792541
+suncrest-reef,37,Blue Lined Grouper,0.3,5
 brinebreak-isle,37,Blue Lined Grouper,0,0
 deep-ocean,37,Blue Lined Grouper,0,0
 bluewater-cay,37,Blue Lined Grouper,0,0
@@ -192,23 +192,23 @@ suncrest-reef,38,Nassau Grouper,0,0
 brinebreak-isle,38,Nassau Grouper,0,0
 deep-ocean,38,Nassau Grouper,0,0
 bluewater-cay,38,Nassau Grouper,0,0
-snapper-island,38,Nassau Grouper,0.012880772,25
-suncrest-reef,39,Napoleon Wrasse,0.108877273,155.660200125
+snapper-island,38,Nassau Grouper,2,25
+suncrest-reef,39,Napoleon Wrasse,2,35
 brinebreak-isle,39,Napoleon Wrasse,0,0
 deep-ocean,39,Napoleon Wrasse,0,0
 bluewater-cay,39,Napoleon Wrasse,0,0
 snapper-island,39,Napoleon Wrasse,0,0
 suncrest-reef,40,White Skate,0,0
-brinebreak-isle,40,White Skate,0.25,1.541871456
+brinebreak-isle,40,White Skate,3,85
 deep-ocean,40,White Skate,0,0
 bluewater-cay,40,White Skate,0,0
 snapper-island,40,White Skate,0,0
-suncrest-reef,41,Blue Tang,0.021380856,0.615700236
+suncrest-reef,41,Blue Tang,0.02,1
 brinebreak-isle,41,Blue Tang,0,0
 deep-ocean,41,Blue Tang,0,0
 bluewater-cay,41,Blue Tang,0,0
 snapper-island,41,Blue Tang,0,0
-suncrest-reef,42,Dussumieri Tang,0.026300815,3.806543534
+suncrest-reef,42,Dussumieri Tang,0.1,5.5
 brinebreak-isle,42,Dussumieri Tang,0,0
 deep-ocean,42,Dussumieri Tang,0,0
 bluewater-cay,42,Dussumieri Tang,0,0
