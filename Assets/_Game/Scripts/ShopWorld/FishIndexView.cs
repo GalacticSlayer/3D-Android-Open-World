@@ -177,7 +177,7 @@ public sealed class FishIndexView : MonoBehaviour
             }
         }
         Divider();
-        TextRow(known?"Preferred Lures & Baits":"Top 3 Preferred Lures",27,cyan,44,TextAnchor.MiddleLeft);
+        TextRow(known?"Preferred Lures & Baits":"Top 3 Lures & Baits",27,cyan,44,TextAnchor.MiddleLeft);
         bool emperorFamily=family==FishCatalog.EmperorAngelfishId;
         bool makoFamily=family==FishCatalog.MakoSharkId;
         int baitSpecies=emperorFamily?FishCatalog.EmperorAngelfishId:variant;

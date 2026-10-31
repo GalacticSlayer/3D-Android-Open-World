@@ -194,15 +194,6 @@ public class FishingSystem : MonoBehaviour
         0.16f
     };
 
-    private const string YellowfinPreviewGrantKey =
-        "OpenWorld.YellowfinTunaPreviewGrant.v2";
-
-    private const string GoatfishPreviewGrantKey =
-        "OpenWorld.GoatfishPreviewGrant.v1";
-
-    private const string RedSnapperPreviewGrantKey =
-        "OpenWorld.RedSnapperPreviewGrant.v1";
-
     public FishingInventory Inventory => inventory;
 
     private ShopProgress shopProgress;
@@ -307,10 +298,6 @@ public class FishingSystem : MonoBehaviour
 
         minimumFishingDepth = 0.6f;
         deepWaterSafetyRadius = 0.75f;
-
-        GrantYellowfinPreviewOnce();
-        GrantGoatfishPreviewOnce();
-        GrantRedSnapperPreviewOnce();
 
         CreateRodAndLine();
         ApplyShopGear();
@@ -614,98 +601,6 @@ public class FishingSystem : MonoBehaviour
             hud.ShowFightMeters(false);
             hud.SetInventoryOpen(false);
         }
-    }
-
-    private void GrantYellowfinPreviewOnce()
-    {
-        if (inventory == null)
-            return;
-
-        if (PlayerPrefs.GetInt(
-                YellowfinPreviewGrantKey,
-                0) != 0)
-        {
-            return;
-        }
-
-        inventory.AddFish(
-            FishCatalog.YellowfinTunaId,
-            14.50f
-        );
-
-        PlayerPrefs.SetInt(
-            YellowfinPreviewGrantKey,
-            1
-        );
-
-        PlayerPrefs.Save();
-
-        Debug.Log(
-            "Granted one temporary 14.50 kg Yellowfin Tuna preview catch. This one-time development grant will be removed after the imported fish is approved."
-        );
-    }
-
-    private void GrantGoatfishPreviewOnce()
-    {
-        if (inventory == null)
-            return;
-
-        if (PlayerPrefs.GetInt(
-                GoatfishPreviewGrantKey,
-                0) != 0)
-        {
-            return;
-        }
-
-        inventory.AddFish(
-            FishCatalog.YellowGoatfishId,
-            1.25f
-        );
-
-        inventory.AddFish(
-            FishCatalog.BlackSpotGoatfishId,
-            1.10f
-        );
-
-        PlayerPrefs.SetInt(
-            GoatfishPreviewGrantKey,
-            1
-        );
-
-        PlayerPrefs.Save();
-
-        Debug.Log(
-            "Granted one temporary Yellow Goatfish and one temporary Black Spot Goatfish for animation testing."
-        );
-    }
-
-    private void GrantRedSnapperPreviewOnce()
-    {
-        if (inventory == null)
-            return;
-
-        if (PlayerPrefs.GetInt(
-                RedSnapperPreviewGrantKey,
-                0) != 0)
-        {
-            return;
-        }
-
-        inventory.AddFish(
-            FishCatalog.RedSnapperId,
-            1.75f
-        );
-
-        PlayerPrefs.SetInt(
-            RedSnapperPreviewGrantKey,
-            1
-        );
-
-        PlayerPrefs.Save();
-
-        Debug.Log(
-            "Granted one temporary 1.75 kg Red Snapper for imported-model testing."
-        );
     }
 
     private void ResolveReferences()

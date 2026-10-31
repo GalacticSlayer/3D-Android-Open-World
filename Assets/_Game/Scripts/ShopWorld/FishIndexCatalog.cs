@@ -101,8 +101,10 @@ public static class FishIndexCatalog
     public static List<BaitOption> PreferredOptions(int species,int biome,bool discovered)
     {
         var options=Baits();
+        // Rank the same bait/lure pool before and after discovery. Only the
+        // number of visible options and their percentage labels are concealed.
         if(!discovered)
-            options.RemoveAll(b=>!b.Key.StartsWith("lure:") || CatchChance(species,b.Key,biome)<0f);
+            options.RemoveAll(b=>CatchChance(species,b.Key,biome)<0f);
         options.Sort((a,b)=> {
             int compared=CatchChance(species,b.Key,biome).CompareTo(CatchChance(species,a.Key,biome));
             return compared!=0?compared:string.CompareOrdinal(a.Key,b.Key);
