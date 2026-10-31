@@ -310,7 +310,7 @@ public sealed class TabbedTackleStoreExtension : MonoBehaviour
 
     private int BuildLureRows(Transform parent)
     {
-        for(int variant=0;variant<ShopCatalog.LureVariantCount;variant++)CreateLureRow(parent,variant);
+        foreach(int variant in ShopCatalog.LureShopOrder)CreateLureRow(parent,variant);
         return ShopCatalog.LureVariantCount;
     }
 

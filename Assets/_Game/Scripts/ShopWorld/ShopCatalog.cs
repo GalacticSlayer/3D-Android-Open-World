@@ -41,6 +41,16 @@ public static class ShopCatalog
         "Popper"
     };
 
+    // Display order only; saved lure IDs and fishing behavior stay unchanged.
+    public static readonly int[] LureShopOrder =
+    {
+        MetalSpoonLureVariant,
+        FireShadLureVariant,
+        LightJigLureVariant,
+        HeavyJigLureVariant,
+        PopperLureVariant
+    };
+
     public static readonly int[] LurePrices =
     {
         650,

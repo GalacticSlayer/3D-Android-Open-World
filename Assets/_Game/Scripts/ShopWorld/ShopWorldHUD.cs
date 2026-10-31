@@ -497,7 +497,9 @@ public sealed class ShopWorldHUD : MonoBehaviour
         if(shop && !travel.Near("gear")) { Row("Visit the tackle counter","Return to the counter to make purchases.","CLOSE",Close); return; }
         foreach(GearKind kind in Enum.GetValues(typeof(GearKind)))
         {
-            for(int tier=0;tier<4;tier++)
+            int tierCount=kind==GearKind.Rod?ShopCatalog.RodNames.Length:
+                kind==GearKind.Reel?ShopCatalog.ReelNames.Length:ShopCatalog.LineNames.Length;
+            for(int tier=0;tier<tierCount;tier++)
             {
                 int t=tier; GearKind k=kind; bool owned=t<=progress.Data.Owned(k), equipped=t==progress.Data.Equipped(k);
                 if((!shop && !owned) || (shop && owned)) continue;

@@ -119,8 +119,9 @@ public sealed class TackleLureShopExtension : MonoBehaviour
         title.rectTransform.offsetMin=new Vector2(8f,0f);
         title.rectTransform.offsetMax=new Vector2(-8f,0f);
 
-        for(int variant=0;variant<ShopCatalog.LureVariantCount;variant++)
+        for(int index=0;index<ShopCatalog.LureVariantCount;index++)
         {
+            int variant=shop?ShopCatalog.LureShopOrder[index]:index;
             bool owned=progress.Data.OwnsLure(variant);
             if(!shop && !owned)continue;
             CreateLureRow(section.transform,variant);
