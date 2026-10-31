@@ -31,6 +31,8 @@ public sealed class ShopProgress : MonoBehaviour
             if(string.IsNullOrWhiteSpace(Data.playerName))
             {Data.playerName=NormalizePlayerName(PlayerPrefs.GetString("MultiplayerGuestName","Angler"));migrated=true;}
             migrated|=Data.EnsureLures();
+            // An interrupted fight (including quitting the app) loses its lure once.
+            migrated|=Data.ResolveLureFight(false);
             migrated|=Data.EnsureGearOwnership();
             if(!Data.infiniteWormsMigrated){Data.baitEquipped=0;Data.infiniteWormsMigrated=true;migrated=true;}
             if(Data.baitEquipped==1){Data.baitEquipped=0;migrated=true;}
@@ -68,6 +70,8 @@ public sealed class ShopProgress : MonoBehaviour
                 throw new InvalidOperationException("Invalid saved equipment");
         }
         if(d.coins<0 || d.baitEquipped<0 || d.baitEquipped>ShopCatalog.StarterLure || d.lureEquipped<0 || d.lureEquipped>=ShopCatalog.LureVariantCount || d.lureOwnedMask<0) throw new InvalidOperationException("Invalid saved balance, bait, or lure");
+        if(d.lureQuantities!=null)foreach(int amount in d.lureQuantities)
+            if(amount<0)throw new InvalidOperationException("Invalid lure quantity");
         foreach(int amount in d.bait) if(amount<0) throw new InvalidOperationException("Invalid bait quantity");
         foreach(var habitat in d.habitats) if(habitat==null || ShopCatalog.Habitat(habitat.id)==null || habitat.fish==null)
             throw new InvalidOperationException("Invalid saved habitat");
@@ -166,6 +170,8 @@ public sealed class ShopProgress : MonoBehaviour
     // Equipping an already-owned lure is loadout management, just like selecting
     // owned bait from the BAIT / LURES shortcut. It must keep working after a
     // restart and does not require standing at the tackle counter.
+    public bool BeginLureFight(int variant) => !ReadOnly && Commit(Data.BeginLureFight(variant));
+    public bool ResolveLureFight(bool caught) => !ReadOnly && Commit(Data.ResolveLureFight(caught));
     public bool EquipLure(int variant) => !ReadOnly && Commit(Data.EquipLure(variant));
     public bool BuyHabitat(string id) => CanTrade && ShopDimensionManager.Instance.Near(id) && Commit(Data.BuyHabitat(id));
     public bool Sell(CaughtFishRecord fish) => CanTrade && ShopDimensionManager.Instance.Near("market") && Commit(Data.Sell(fish,FishCatalog.GetSellValue(fish.speciesId,fish.weightKg)));

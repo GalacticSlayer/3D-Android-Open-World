@@ -43,6 +43,10 @@ using System.Collections.Generic;
     public int[] bait = new int[4];
     public int lureOwnedMask = 1;
     public int lureEquipped;
+    public int lureQuantityVersion;
+    public int[] lureQuantities;
+    public bool lureFightPending;
+    public int fightLureVariant;
     public bool infiniteWormsMigrated;
     public int catchStatsVersion;
     public int[] totalCaught;
@@ -102,21 +106,50 @@ using System.Collections.Generic;
     public bool EnsureLures()
     {
         bool changed=false;
-        if((lureOwnedMask&1)==0){lureOwnedMask|=1;changed=true;}
-        if(lureEquipped<0 || lureEquipped>=ShopCatalog.LureVariantCount || !OwnsLure(lureEquipped))
+        if(lureQuantityVersion<1)
+        {
+            lureQuantities=new int[ShopCatalog.LureVariantCount];
+            // Preserve each old unlock, including the starter Heavy Jig, as one copy.
+            for(int i=0;i<lureQuantities.Length;i++)
+                lureQuantities[i]=(i==0 || (lureOwnedMask&(1<<i))!=0)?1:0;
+            lureQuantityVersion=1;changed=true;
+        }
+        if(lureQuantities==null || lureQuantities.Length<ShopCatalog.LureVariantCount)
+        {Array.Resize(ref lureQuantities,ShopCatalog.LureVariantCount);changed=true;}
+        int mask=0;
+        for(int i=0;i<ShopCatalog.LureVariantCount;i++)if(LureQuantity(i)>0)mask|=1<<i;
+        if(mask!=lureOwnedMask){lureOwnedMask=mask;changed=true;}
+        if(lureEquipped<0 || lureEquipped>=ShopCatalog.LureVariantCount)
         {lureEquipped=0;changed=true;}
+        if(baitEquipped==ShopCatalog.StarterLure && !OwnsLure(lureEquipped))
+        {baitEquipped=0;changed=true;}
         return changed;
     }
-    public bool OwnsLure(int variant) => variant>=0 && variant<ShopCatalog.LureVariantCount && (lureOwnedMask&(1<<variant))!=0;
+    public int LureQuantity(int variant) => variant>=0 && lureQuantities!=null && variant<lureQuantities.Length ? lureQuantities[variant] : 0;
+    public bool OwnsLure(int variant) => variant>=0 && variant<ShopCatalog.LureVariantCount && LureQuantity(variant)>0;
     public bool BuyLure(int variant)
     {
-        if(variant<=0 || variant>=ShopCatalog.LureVariantCount || OwnsLure(variant) || !Spend(ShopCatalog.LurePrices[variant]))return false;
-        lureOwnedMask|=1<<variant;lureEquipped=variant;baitEquipped=ShopCatalog.StarterLure;return true;
+        EnsureLures();
+        if(variant<0 || variant>=ShopCatalog.LureVariantCount || LureQuantity(variant)==int.MaxValue || !Spend(ShopCatalog.LurePrices[variant]))return false;
+        lureQuantities[variant]++;lureOwnedMask|=1<<variant;
+        return true; // Stock purchases do not change the selected bait/lure.
     }
     public bool EquipLure(int variant)
     {
         if(!OwnsLure(variant))return false;
         lureEquipped=variant;baitEquipped=ShopCatalog.StarterLure;return true;
+    }
+    public bool BeginLureFight(int variant)
+    {
+        if(lureFightPending || !OwnsLure(variant))return false;
+        fightLureVariant=variant;lureFightPending=true;return true;
+    }
+    public bool ResolveLureFight(bool caught)
+    {
+        if(!lureFightPending)return false;
+        lureFightPending=false;
+        if(!caught && OwnsLure(fightLureVariant))lureQuantities[fightLureVariant]--;
+        EnsureLures();return true;
     }
 
     public bool EnsureCatchStats()
@@ -205,7 +238,7 @@ using System.Collections.Generic;
     public int ConsumeBait()
     {
         int id=baitEquipped;
-        if(id==ShopCatalog.StarterLure)return id;
+        if(id==ShopCatalog.StarterLure && OwnsLure(lureEquipped))return id;
         if (id < 2 || id > 3 || bait[id] <= 0) { baitEquipped=0; return 0; }
         bait[id]--; if (bait[id]==0) baitEquipped=0; return id;
     }

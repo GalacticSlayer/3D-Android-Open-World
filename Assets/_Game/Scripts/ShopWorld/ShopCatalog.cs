@@ -43,20 +43,20 @@ public static class ShopCatalog
 
     public static readonly int[] LurePrices =
     {
-        500,
-        500,
-        500,
-        500,
-        500
+        650,
+        400,
+        400,
+        200,
+        650
     };
 
     public static readonly string[] LureDescriptions =
     {
-        "Balanced permanent heavy jig. Strong Sea Bass and Red Snapper focus.",
+        "Balanced heavy jig. Strong Sea Bass and Red Snapper focus.",
         "Quick-strike light jig. Highest Sea Bass odds and 15% more strike chance.",
         "Red Snapper specialist crankbait. Strongly favors Red Snapper while keeping the same tuna odds.",
         "Metal spoon. Slower strikes, larger fish, and the strongest tuna secondary odds.",
-        "Permanent popper. Uses the same balanced fishing behavior as the Heavy Jig."
+        "Popper. Uses the same balanced fishing behavior as the Heavy Jig."
     };
 
     public static int ActiveLureVariant { get; private set; }

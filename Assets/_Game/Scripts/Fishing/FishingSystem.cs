@@ -1048,6 +1048,7 @@ public class FishingSystem : MonoBehaviour
         castHotspotMultiplier=!pondCast && hotspots!=null ? hotspots.LandingMultiplier(target) : 1f;
         TryGetTerrainWaterDepth(target,out _,out _,out castDepth);
         activeBait=shopProgress!=null ? shopProgress.TakeBait() : 0;
+        activeLureVariant=shopProgress!=null ? shopProgress.Data.lureEquipped : 0;
         if (rodView != null) rodView.SetCastPose(1f);
         castPoint = target;
         SnapBobberToSurface();
@@ -1084,6 +1085,7 @@ public class FishingSystem : MonoBehaviour
     private string HotspotStatus() => castHotspotMultiplier > 1f
         ? "  HOTSPOT: +" + Mathf.RoundToInt((castHotspotMultiplier - 1f) * 100f) + "% fish size" : "";
 
+    private int activeLureVariant;
     private int fightBiome;
     private int RollBaitSpecies() => ReefCatalog.Roll(Random.value,activeBait,fightBiome);
 
@@ -1121,6 +1123,8 @@ public class FishingSystem : MonoBehaviour
     }
     private void BeginBite()
     {
+            if(activeBait==ShopCatalog.StarterLure && shopProgress!=null)
+                shopProgress.BeginLureFight(activeLureVariant);
             PlayFishingSound(biteSplashSound);
             // Species and weight are rolled once from the cast's original zone.
             fightBiome=CastBiome;
@@ -1632,6 +1636,8 @@ public class FishingSystem : MonoBehaviour
     private void CatchFish(
         bool shoreCatch)
     {
+        // Landing the fish recovers the lure, even when a full bag forces release.
+        shopProgress?.ResolveLureFight(true);
         // AddFish records the new best, so capture the comparison beforehand.
         // The saved ledger retains records even after a fish is sold or housed.
         bool personalBest=false;
@@ -1685,6 +1691,9 @@ public class FishingSystem : MonoBehaviour
 
     private void FailFishing(string message)
     {
+        bool lostLure=shopProgress!=null && shopProgress.Data.lureFightPending;
+        shopProgress?.ResolveLureFight(false);
+        if(lostLure)message+=" Lure lost.";
         ResetLine();
 
         state = FishingState.Idle;
@@ -1696,6 +1705,7 @@ public class FishingSystem : MonoBehaviour
 
     private void CancelFishing()
     {
+        shopProgress?.ResolveLureFight(false);
         StopReelSound();
         StopLinePullSound();
         StopAllCoroutines();

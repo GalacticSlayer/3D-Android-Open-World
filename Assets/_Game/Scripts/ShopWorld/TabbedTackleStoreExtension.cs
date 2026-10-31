@@ -319,18 +319,13 @@ public sealed class TabbedTackleStoreExtension : MonoBehaviour
         bool owned=progress.Data.OwnsLure(variant);
         bool equipped=owned && progress.Data.baitEquipped==ShopCatalog.StarterLure && progress.Data.lureEquipped==variant;
         int price=ShopCatalog.LurePrices[variant];
-        string action=equipped?"EQUIPPED":owned?"EQUIP":"BUY "+price.ToString("N0");
-        bool enabled=!progress.ReadOnly && !equipped && (owned || progress.Data.coins>=price);
+        string action=equipped?"EQUIPPED":"EQUIP";
+        bool enabled=!progress.ReadOnly && !equipped && owned;
         int selectedVariant=variant;
-        CreateItemRow(parent,ShopCatalog.LureNames[variant],"Permanent lure • "+ShopCatalog.LureDescriptions[variant],action,enabled,ShopCatalog.LurePreviewKey(variant),()=>
+        CreateItemRow(parent,ShopCatalog.LureNames[variant],progress.Data.LureQuantity(variant)+" owned • Kept on catch; lost on escape.",action,enabled,ShopCatalog.LurePreviewKey(variant),()=>
         {
-            bool result=owned?progress.EquipLure(selectedVariant):progress.BuyLure(selectedVariant);
-            if(result)
-            {
-                ShopCatalog.SetActiveLureVariant(progress.Data.lureEquipped);
-                rebuild=true;
-            }
-        });
+            if(progress.EquipLure(selectedVariant))rebuild=true;
+        },()=>{if(progress.BuyLure(selectedVariant))rebuild=true;},price);
     }
 
     private int BuildBaitRows(Transform parent)
@@ -374,7 +369,7 @@ public sealed class TabbedTackleStoreExtension : MonoBehaviour
         });
     }
 
-    private void CreateItemRow(Transform parent,string title,string detail,string action,bool enabled,string previewKey,Action callback)
+    private void CreateItemRow(Transform parent,string title,string detail,string action,bool enabled,string previewKey,Action callback,Action buyMore=null,int price=0)
     {
         GameObject row=Panel(title,parent,Color.white);
         FishingHudTheme.Panel(row);
@@ -398,6 +393,14 @@ public sealed class TabbedTackleStoreExtension : MonoBehaviour
 
         Button button=CreateButton(row.transform,action,callback);
         Rect(button.GetComponent<RectTransform>(),new Vector2(1,.5f),new Vector2(1,.5f),new Vector2(1,.5f),new Vector2(-24,0),new Vector2(238,90));
+        if(buyMore!=null)
+        {
+            Rect(button.GetComponent<RectTransform>(),new Vector2(1,.5f),new Vector2(1,.5f),new Vector2(1,.5f),new Vector2(-24,45),new Vector2(238,70));
+            Button buy=CreateButton(row.transform,"BUY 1 / "+price.ToString("N0"),buyMore);
+            Rect(buy.GetComponent<RectTransform>(),new Vector2(1,.5f),new Vector2(1,.5f),new Vector2(1,.5f),new Vector2(-24,-45),new Vector2(238,70));
+            buy.interactable=!progress.ReadOnly && progress.Data.coins>=price;
+            FishingHudTheme.Panel(buy.gameObject,buy.interactable?1:0);
+        }
         button.interactable=enabled;
         FishingHudTheme.Panel(button.gameObject,enabled?1:0);
         button.GetComponent<Image>().color=enabled?Color.white:new Color(.60f,.77f,.82f,1f);

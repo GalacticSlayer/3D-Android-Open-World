@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-// Adds permanent lure variants to the existing Tackle Store without replacing
+// Adds stocked lure variants to the existing Tackle Store without replacing
 // ShopWorldHUD. The lure rows intentionally mirror ShopWorldHUD.Row so bought
 // and owned tackle look like part of the same menu rather than a second UI.
 public sealed class TackleLureShopExtension : MonoBehaviour
@@ -13,6 +13,8 @@ public sealed class TackleLureShopExtension : MonoBehaviour
         public int variant;
         public Button button;
         public Text buttonLabel;
+        public Text nameLabel;
+        public Button buyButton;
         public Image buttonImage;
     }
 
@@ -109,10 +111,10 @@ public sealed class TackleLureShopExtension : MonoBehaviour
         LayoutElement sectionSize=section.GetComponent<LayoutElement>();
         sectionSize.preferredHeight=58f+visibleRows*210f;
 
-        GameObject titleRow=new GameObject(shop?"PermanentLuresHeading":"OwnedLuresHeading",typeof(RectTransform),typeof(LayoutElement));
+        GameObject titleRow=new GameObject(shop?"LuresHeading":"OwnedLuresHeading",typeof(RectTransform),typeof(LayoutElement));
         titleRow.transform.SetParent(section.transform,false);
         titleRow.GetComponent<LayoutElement>().preferredHeight=48f;
-        Text title=CreateText(titleRow.transform,shop?"PERMANENT LURES":"OWNED LURES",30,Gold,TextAnchor.MiddleLeft);
+        Text title=CreateText(titleRow.transform,shop?"LURES • KEPT ON CATCH, LOST ON ESCAPE":"OWNED LURES",30,Gold,TextAnchor.MiddleLeft);
         Full(title.rectTransform);
         title.rectTransform.offsetMin=new Vector2(8f,0f);
         title.rectTransform.offsetMax=new Vector2(-8f,0f);
@@ -155,7 +157,7 @@ public sealed class TackleLureShopExtension : MonoBehaviour
         name.fontStyle=FontStyle.Bold;
         Anchor(name.rectTransform,0,.56f,1,1,216,0,-286,-18);
 
-        Text description=CreateText(row.transform,ShopCatalog.LureDescriptions[variant],25,Detail,TextAnchor.MiddleLeft);
+        Text description=CreateText(row.transform,"Kept on catch; lost if a hooked fish escapes.",25,Detail,TextAnchor.MiddleLeft);
         description.color=new Color(.70f,.90f,.96f);
         Anchor(description.rectTransform,0,0,1,.53f,216,20,-286,0);
 
@@ -165,6 +167,13 @@ public sealed class TackleLureShopExtension : MonoBehaviour
 
         LureRowView view=new LureRowView();
         view.variant=variant;
+        view.nameLabel=name;
+        if(sectionIsShop)
+        {
+            Rect(button.GetComponent<RectTransform>(),new Vector2(1,.5f),new Vector2(1,.5f),new Vector2(1,.5f),new Vector2(-24,45),new Vector2(238,70));
+            view.buyButton=CreateButton(row.transform,"BUY 1 / "+ShopCatalog.LurePrices[variant],()=>{progress.BuyLure(selected);RefreshRows();});
+            Rect(view.buyButton.GetComponent<RectTransform>(),new Vector2(1,.5f),new Vector2(1,.5f),new Vector2(1,.5f),new Vector2(-24,-45),new Vector2(238,70));
+        }
         view.button=button;
         view.buttonImage=button.GetComponent<Image>();
         view.buttonLabel=button.GetComponentInChildren<Text>();
@@ -179,6 +188,8 @@ public sealed class TackleLureShopExtension : MonoBehaviour
             if(view==null || view.button==null)continue;
 
             int variant=view.variant;
+            view.nameLabel.text=ShopCatalog.LureNames[variant]+" ×"+progress.Data.LureQuantity(variant);
+            if(view.buyButton!=null)view.buyButton.interactable=!progress.ReadOnly && progress.Data.coins>=ShopCatalog.LurePrices[variant];
             bool owned=progress.Data.OwnsLure(variant);
             bool equipped=owned && progress.Data.baitEquipped==ShopCatalog.StarterLure && progress.Data.lureEquipped==variant;
             string action;
@@ -194,14 +205,9 @@ public sealed class TackleLureShopExtension : MonoBehaviour
                 action="EQUIP";
                 interactable=!progress.ReadOnly;
             }
-            else if(sectionIsShop)
-            {
-                action="BUY "+ShopCatalog.LurePrices[variant].ToString("N0");
-                interactable=!progress.ReadOnly && progress.Data.coins>=ShopCatalog.LurePrices[variant];
-            }
             else
             {
-                action="LOCKED";
+                action="EQUIP";
                 interactable=false;
             }
 
@@ -214,8 +220,7 @@ public sealed class TackleLureShopExtension : MonoBehaviour
 
     private void SelectLure(int variant)
     {
-        bool owned=progress.Data.OwnsLure(variant);
-        bool changed=owned ? progress.EquipLure(variant) : progress.BuyLure(variant);
+        bool changed=progress.EquipLure(variant);
         if(!changed)
         {
             RefreshRows();

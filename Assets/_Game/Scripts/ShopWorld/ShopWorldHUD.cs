@@ -517,22 +517,22 @@ public sealed class ShopWorldHUD : MonoBehaviour
     {
         if(baitShortcut==null || progress==null)return;
         int id=progress.Data.baitEquipped;if(id==1)id=0;
-        int quantity=ShopCatalog.PermanentBait(id)?-1:progress.Data.bait[id];
+        int quantity=id==ShopCatalog.StarterLure?progress.Data.LureQuantity(progress.Data.lureEquipped):ShopCatalog.PermanentBait(id)?-1:progress.Data.bait[id];
         if(shownBait!=id)
         {
             shownBait=id;shownBaitQuantity=int.MinValue;
             baitName.text=ShopCatalog.BaitNames[id].ToUpperInvariant();
             baitPreview.Attach(baitPicture,0,1,"Bait"+id);
         }
-        if(shownBaitQuantity!=quantity){shownBaitQuantity=quantity;baitQuantity.text=ShopCatalog.PermanentBait(id)?"∞":quantity.ToString();}
+        if(shownBaitQuantity!=quantity){shownBaitQuantity=quantity;baitQuantity.text=quantity<0?"∞":quantity.ToString();}
     }
     private void BaitPage(bool shop)
     {
         for(int i=0;i<ShopCatalog.BaitNames.Length;i++)
         {
-            if(i==1)continue; // Worms are now the free, infinite default.
+            if(i==1 || i==ShopCatalog.StarterLure)continue; // Lure variants have their own quantity-aware rows.
             int id=i;if(!shop && !ShopCatalog.PermanentBait(id) && progress.Data.bait[id]<=0)continue;
-            string effect=id==ShopCatalog.StarterLure?"Permanent lure. Rare-fish focus. Hold REEL for bites; longer casts favor larger fish.":id==0?"Infinite worms. Standard catch chances.":id==1?"35% shorter wait; one worm per cast.":id==2?"20% shorter wait; favors snapper and goatfish.":"Favors yellowtail and tuna; one squid per cast.";
+            string effect=id==ShopCatalog.StarterLure?"Lost if a hooked fish escapes. Rare-fish focus. Hold REEL for bites; longer casts favor larger fish.":id==0?"Infinite worms. Standard catch chances.":id==1?"35% shorter wait; one worm per cast.":id==2?"20% shorter wait; favors snapper and goatfish.":"Favors yellowtail and tuna; one squid per cast.";
             string count=ShopCatalog.PermanentBait(id)?"Unlimited":$"{progress.Data.bait[id]} remaining";
             if(shop && !ShopCatalog.PermanentBait(id)) Row(ShopCatalog.BaitNames[id]+" / PACK OF 10",effect+" "+count,$"BUY {ShopCatalog.BaitPrices[id]}",()=>Result(progress.BuyBait(id),"Bait purchased and selected."),progress.Data.coins>=ShopCatalog.BaitPrices[id] && !progress.ReadOnly,gear:"Bait"+id);
             if(!shop)Row(ShopCatalog.BaitNames[id],count+" / "+effect,progress.Data.baitEquipped==id?"SELECTED":"SELECT",()=>
