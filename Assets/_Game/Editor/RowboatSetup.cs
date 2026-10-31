@@ -43,7 +43,7 @@ public static class RowboatSetup
         var data=existing;
         if(data==null)
         {
-            data=ScriptableObject.CreateInstance<BoatData>();data.name="Rowboat";data.ID="rowboat";data.Cost=900;data.Speed=4.5f;
+            data=ScriptableObject.CreateInstance<BoatData>();data.name="Rowboat";data.ID="rowboat";data.Cost=1500;data.Speed=4.5f;
             data.MaxCapacity=2;
             AssetDatabase.CreateAsset(data,DataPath);
         }

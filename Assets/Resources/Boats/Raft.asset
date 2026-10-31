@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Raft
   m_EditorClassIdentifier: 
   ID: raft
-  Cost: 150
+  Cost: 500
   Speed: 3.5
   MaxCapacity: 1
   HullSize: {x: 4.6807213, y: 1.7538714, z: 4.740077}

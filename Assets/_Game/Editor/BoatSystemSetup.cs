@@ -33,7 +33,7 @@ public static class BoatSystemSetup
         wood=Material("Teak",new Color(.43f,.25f,.1f));white=Material("Ivory Fiberglass",new Color(.9f,.88f,.75f));
         teal=Material("Marina Teal",new Color(.04f,.34f,.39f));metal=Material("Brass",new Color(.64f,.49f,.22f));
         BoatData[] boats=new BoatData[3];
-        string[] names={"Raft","Sailboat","Yacht"};int[] costs={150,1800,9000};float[] speeds={3.5f,27,9};int[] capacities={1,4,8};
+        string[] names={"Raft","Sailboat","Yacht"};int[] costs={500,12000,15000};float[] speeds={3.5f,27,9};int[] capacities={1,4,8};
         Vector3[] sizes={new Vector3(3,1,5),new Vector3(4,1.2f,7),new Vector3(5,1.4f,10)};
         for(int i=0;i<3;i++)
         {

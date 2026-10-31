@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Rowboat
   m_EditorClassIdentifier: Assembly-CSharp::BoatData
   ID: rowboat
-  Cost: 900
+  Cost: 1500
   Speed: 4.5
   MaxCapacity: 2
   HullSize: {x: 1.8216, y: 0.6696, z: 5.6592}
