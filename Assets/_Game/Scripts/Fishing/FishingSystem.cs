@@ -1376,11 +1376,7 @@ public class FishingSystem : MonoBehaviour
                         0.42f,
                         0.88f
                     ) *
-                    Mathf.Lerp(
-                        0.82f,
-                        1.34f,
-                        effectiveDifficulty
-                    ) *
+                    Mathf.LerpUnclamped(0.82f, 1.34f, effectiveDifficulty) *
                     temperamentResistance;
 
                 surgeTimer =
@@ -1448,11 +1444,7 @@ public class FishingSystem : MonoBehaviour
             {
                 fightTension -=
                     Time.deltaTime *
-                    Mathf.Lerp(
-                        0.52f,
-                        0.32f,
-                        effectiveDifficulty
-                    ) * FishingDragRules.RecoveryMultiplier(CurrentDrag);
+                    Mathf.Max(0.08f, Mathf.LerpUnclamped(0.52f, 0.32f, effectiveDifficulty)) * FishingDragRules.RecoveryMultiplier(CurrentDrag);
             }
 
             fightTension +=
@@ -1827,6 +1819,8 @@ public class FishingSystem : MonoBehaviour
             );
     }
 
+    // The per-species Difficulty field is the only species difficulty tuning input.
+    // Keep the size and cast-quality modifiers, but do not cap values above 1.
     private float GetEffectiveFightDifficulty(
         FishSpeciesDefinition species,
         float weightKg)
@@ -1835,38 +1829,16 @@ public class FishingSystem : MonoBehaviour
         float fightQuality = castQuality != null ? castQuality.DifficultyMultiplier : 1f;
         if(castQuality != null && castQuality.OriginalWeight > 0f)
             weightKg = castQuality.OriginalWeight;
-        float sizeDifficulty =
-            Mathf.InverseLerp(
-                species.MinWeightKg,
-                species.MaxWeightKg,
-                weightKg
-            );
 
-        // Match Red Snapper at the same size percentile, then multiply AFTER
-        // its normal clamp. Raising the base stat alone caps large groupers.
-        if(hookedSpeciesId==FishCatalog.PantherGrouperId || hookedSpeciesId==FishCatalog.DussumieriTangId)
-            return Mathf.Clamp01(FishCatalog.Get(FishCatalog.RedSnapperId).Difficulty *
-                (pondCast ? .20f : .74f) + sizeDifficulty * .26f) * fightQuality * 2.5f;
+        float sizeDifficulty = Mathf.InverseLerp(
+            species.MinWeightKg, species.MaxWeightKg, weightKg);
 
-        if(hookedSpeciesId==FishCatalog.NapoleonWrasseId)
-            return Mathf.Clamp01(FishCatalog.Get(FishCatalog.RedSnapperId).Difficulty *
-                (pondCast ? .20f : .74f) + sizeDifficulty * .26f) * fightQuality * 6.5f;
-
-        if(hookedSpeciesId==FishCatalog.NassauGrouperId)
-            return Mathf.Clamp01(FishCatalog.Get(FishCatalog.RedSnapperId).Difficulty *
-                (pondCast ? .20f : .74f) + sizeDifficulty * .26f) * fightQuality * 4f;
-
-        if(hookedSpeciesId==FishCatalog.CoralGrouperId || hookedSpeciesId==FishCatalog.BlueLinedGrouperId)
-            return Mathf.Clamp01(FishCatalog.Get(FishCatalog.RedSnapperId).Difficulty *
-                (pondCast ? .20f : .74f) + sizeDifficulty * .26f) * fightQuality * 3f;
-
-        return
-            Mathf.Clamp01(
-                species.Difficulty *
-                (pondCast ? 0.20f : 0.74f) +
-                sizeDifficulty *
-                0.26f
-            ) * fightQuality * (hookedSpeciesId==FishCatalog.BattleScarredMakoSharkId?1.5f:1f);
+        // All species (including groupers, wrasse, tangs and Mako variants)
+        // share this calculation. Species.Difficulty is synchronized from
+        // the FISH STATS sheet into FishCatalog on every balance import.
+        return Mathf.Max(0f,
+            (species.Difficulty * (pondCast ? 0.20f : 0.74f) +
+             sizeDifficulty * 0.26f) * fightQuality);
     }
 
     private FishTemperament RollTemperament(
@@ -2024,11 +1996,7 @@ public class FishingSystem : MonoBehaviour
         // keeps a non-zero chance to switch through all three moods.
         float angryShift =
             size *
-            Mathf.Lerp(
-                0.08f,
-                0.24f,
-                species.Difficulty
-            );
+            Mathf.Clamp(Mathf.LerpUnclamped(0.08f, 0.24f, species.Difficulty), 0.08f, 0.40f);
 
         calm =
             Mathf.Max(
@@ -2203,11 +2171,7 @@ public class FishingSystem : MonoBehaviour
         float weave =
             Mathf.Sin(
                 fightTime *
-                Mathf.Lerp(
-                    0.85f,
-                    1.45f,
-                    effectiveDifficulty
-                ) +
+                Mathf.LerpUnclamped(0.85f, 1.45f, effectiveDifficulty) +
                 fightMovePhase
             );
 
