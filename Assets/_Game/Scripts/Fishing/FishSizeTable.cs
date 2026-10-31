@@ -181,9 +181,10 @@ public static class FishSizeTable
                 return LengthMetres(FishCatalog.LeopardStingrayId,kg);
             float leopardLength=LengthMetres(FishCatalog.LeopardStingrayId,
                 RoughtailCutoffKg);
-            float t=(float)Math.Max(0.0,Math.Min(1.0,
+            float roughtailSizeRatio=(float)Math.Max(0.0,Math.Min(1.0,
                 (kg-RoughtailCutoffKg)/(RoughtailMaximumKg-RoughtailCutoffKg)));
-            return leopardLength+(RoughtailMaximumMetres-leopardLength)*t*t;
+            return leopardLength+(RoughtailMaximumMetres-leopardLength)*
+                roughtailSizeRatio*roughtailSizeRatio;
         }
         if(species==FishCatalog.BattleScarredMakoSharkId)return 1.5f*LengthMetres(FishCatalog.MakoSharkId,kg/1.5f);
         if(species==FishCatalog.GiantTrevallyId)return 1.8f*LengthMetres(FishCatalog.BluefinTrevallyId,kg/1.8f);
