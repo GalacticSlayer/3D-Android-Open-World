@@ -1,0 +1,56 @@
+# Per-biome HP and coin endpoints. Apply quadratically over that biome's weight limits.
+# Roughtail coins: matches Leopard through 85kg, then quadratic to 44000 at 360kg.
+# Scarred Mako ID20: 1.5x base Mako weight limits for each biome.
+biomeId,speciesId,speciesName,minHP,maxHP,minCoins,maxCoins
+suncrest-reef,6,Yellow Goatfish,87,266,34,174
+suncrest-reef,7,Black Spot Goatfish,82,237,31,161
+suncrest-reef,41,Blue Tang,115,342,40,300
+suncrest-reef,33,Emperor Angelfish,150,400,80,320
+suncrest-reef,31,Picasso Triggerfish,160,550,90,500
+suncrest-reef,32,Titan Triggerfish,160,1100,170,1200
+suncrest-reef,42,Dussumieri Tang,330,1100,170,1300
+suncrest-reef,35,Panther Grouper,330,1600,300,1800
+suncrest-reef,37,Blue Lined Grouper,340,1700,320,1800
+suncrest-reef,36,Coral Grouper,345,1700,330,1900
+suncrest-reef,39,Napoleon Wrasse,1000,25000,1000,15000
+suncrest-reef,34,Juvenile Emperor Angelfish,150,400,80,320
+brinebreak-isle,27,Winter Flounder,600,1600,320,2200
+brinebreak-isle,10,Black Sea Bass,640,1600,440,1400
+brinebreak-isle,12,Spotted Sand Bass,700,1800,440,1400
+brinebreak-isle,2,Sea Bass,700,1800,440,1600
+brinebreak-isle,11,Striped Bass,700,12000,440,10000
+brinebreak-isle,14,Greater Amberjack,740,18000,520,16000
+brinebreak-isle,40,White Skate,9000,50000,3000,20000
+brinebreak-isle,29,Leopard Stingray,10000,60000,3500,20000
+brinebreak-isle,28,Roughtail Stingray,10000,160000,3500,44000
+deep-ocean,0,Blue Mackerel,338,1014,152,422
+deep-ocean,9,Bonito,676,2535,304,845
+deep-ocean,10,Black Sea Bass,541,1352,372,1183
+deep-ocean,3,Yellowtail,946,3380,507,2535
+deep-ocean,13,Albacore,946,7605,338,6760
+deep-ocean,8,Bigeye Tuna,2873,30420,575,15210
+deep-ocean,5,Yellowfin Tuna,2535,30420,676,16900
+deep-ocean,15,Blacktip Shark,15210,33800,2028,20280
+deep-ocean,19,Mako Shark,25350,40560,3042,30420
+deep-ocean,20,Battle Scarred Mako Shark,43940,64220,4563,45630
+bluewater-cay,0,Blue Mackerel,260,780,117,325
+bluewater-cay,9,Bonito,520,1950,234,650
+bluewater-cay,3,Yellowtail,728,2600,390,1950
+bluewater-cay,13,Albacore,728,5850,260,5200
+bluewater-cay,25,Golden Trevally,1300,19500,338,10400
+bluewater-cay,24,Bluefin Trevally,1300,22100,372,11440
+bluewater-cay,8,Bigeye Tuna,2210,23400,442,11700
+bluewater-cay,5,Yellowfin Tuna,1950,23400,520,13000
+bluewater-cay,26,Giant Trevally,3900,26000,744,22880
+bluewater-cay,15,Blacktip Shark,11700,26000,1560,15600
+bluewater-cay,19,Mako Shark,19500,31200,2340,23400
+bluewater-cay,20,Battle Scarred Mako Shark,33800,49400,3510,35100
+snapper-island,16,Yellowtail Snapper,180,510,120,480
+snapper-island,30,Mahogany Snapper,225,540,135,495
+snapper-island,1,Red Snapper,240,1050,120,1050
+snapper-island,17,Mutton Snapper,345,1500,135,1650
+snapper-island,21,Mangrove Snapper,248,1072,135,1500
+snapper-island,38,Nassau Grouper,900,5250,300,4500
+snapper-island,22,Blackfin Barracuda,1200,9000,675,6750
+snapper-island,23,Great Barracuda,1800,12000,1080,10800
+snapper-island,18,Blacktip Reef Shark,9000,21000,1800,12000

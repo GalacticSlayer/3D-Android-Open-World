@@ -23,6 +23,11 @@ public static class FishingTuning
         public float YellowSpeedMps;
     }
 
+    public sealed class BiomeSpeciesStats
+    {
+        public int MinHealth, MaxHealth, MinCoins, MaxCoins;
+    }
+
     public sealed class WeightDistribution
     {
         public string BiomeId;
@@ -33,6 +38,7 @@ public static class FishingTuning
     }
 
     private const string StatsResource="FishingTuning/FishStats";
+    private const string BiomeStatsResource="FishingTuning/BiomeFishStats";
     private const string WeightResource="FishingTuning/BiomeFishWeights";
     private const string ChanceResource="FishingTuning/BiomeBaitSpeciesChance";
 
@@ -53,6 +59,7 @@ public static class FishingTuning
     };
 
     private static readonly Dictionary<int,SpeciesStats> Stats=new Dictionary<int,SpeciesStats>();
+    private static readonly Dictionary<string,BiomeSpeciesStats> BiomeStats=new Dictionary<string,BiomeSpeciesStats>();
     private static readonly Dictionary<string,WeightDistribution> WeightRows=new Dictionary<string,WeightDistribution>();
     private static readonly Dictionary<string,float[]> ChanceRows=new Dictionary<string,float[]>();
 
@@ -287,8 +294,68 @@ public static class FishingTuning
         coins=0;
         SpeciesStats stats;
         if(!TryGetSpeciesStats(species,out stats))return false;
-        coins=Mathf.Max(1,Mathf.RoundToInt(QuadraticByWeight(
-            weightKg,stats.MinWeightKg,stats.MaxWeightKg,stats.MinCostCoins,stats.MaxCostCoins)));
+        coins=species==FishCatalog.RoughtailStingrayId
+            ? RoughtailCoins(weightKg)
+            : Mathf.Max(1,Mathf.RoundToInt(QuadraticByWeight(
+                weightKg,stats.MinWeightKg,stats.MaxWeightKg,stats.MinCostCoins,stats.MaxCostCoins)));
+        return true;
+    }
+
+    // The Leopard and Roughtail values are identical until Leopard's max 85kg.
+    // Only the additional Roughtail tail is quadratic, ending at its own max coins.
+    private static int RoughtailCoins(float kg)
+    {
+        SpeciesStats leopard,roughtail;
+        if(!Stats.TryGetValue(FishCatalog.LeopardStingrayId,out leopard) ||
+           !Stats.TryGetValue(FishCatalog.RoughtailStingrayId,out roughtail))return 1;
+        float value=kg<=leopard.MaxWeightKg
+            ? QuadraticByWeight(kg,leopard.MinWeightKg,leopard.MaxWeightKg,
+                leopard.MinCostCoins,leopard.MaxCostCoins)
+            : QuadraticByWeight(kg,leopard.MaxWeightKg,roughtail.MaxWeightKg,
+                leopard.MaxCostCoins,roughtail.MaxCostCoins);
+        return Mathf.Max(1,Mathf.RoundToInt(value));
+    }
+
+    private static bool TryBiomeBalance(int species,string biomeId,
+        out BiomeSpeciesStats stat,out float minimum,out float maximum)
+    {
+        stat=null;minimum=maximum=0f;
+        EnsureLoaded();
+        if(!valid || string.IsNullOrEmpty(biomeId))return false;
+        int id=Canonical(species);
+        if(!BiomeStats.TryGetValue(WeightKey(biomeId,id),out stat))return false;
+        WeightDistribution distribution;
+        int rangeId=id==FishCatalog.BattleScarredMakoSharkId
+            ? FishCatalog.MakoSharkId:id;
+        if(!WeightRows.TryGetValue(WeightKey(biomeId,rangeId),out distribution) ||
+            distribution.Unavailable)return false;
+        float factor=id==FishCatalog.BattleScarredMakoSharkId ? 1.5f:1f;
+        minimum=distribution.MinKg*factor;
+        maximum=distribution.MaxKg*factor;
+        return maximum>minimum;
+    }
+
+    public static bool TryGetBiomeHealth(int species,float kg,int biome,out int hp)
+    {
+        hp=0;
+        BiomeSpeciesStats stat;float min,max;
+        if(!TryBiomeBalance(species,BiomeId(biome),out stat,out min,out max))
+            return false;
+        hp=Mathf.Max(1,Mathf.RoundToInt(QuadraticByWeight(
+            kg,min,max,stat.MinHealth,stat.MaxHealth)));
+        return true;
+    }
+
+    public static bool TryGetBiomeCost(int species,float kg,string biomeId,out int coins)
+    {
+        coins=0;
+        BiomeSpeciesStats stat;float min,max;
+        if(!TryBiomeBalance(species,biomeId,out stat,out min,out max))
+            return false;
+        coins=species==FishCatalog.RoughtailStingrayId
+            ? RoughtailCoins(kg)
+            : Mathf.Max(1,Mathf.RoundToInt(QuadraticByWeight(
+                kg,min,max,stat.MinCoins,stat.MaxCoins)));
         return true;
     }
 
@@ -310,21 +377,25 @@ public static class FishingTuning
         valid=false;
         validationError=null;
         Stats.Clear();
+        BiomeStats.Clear();
         WeightRows.Clear();
         ChanceRows.Clear();
 
         try
         {
             TextAsset statsAsset=Resources.Load<TextAsset>(StatsResource);
+            TextAsset biomeStatsAsset=Resources.Load<TextAsset>(BiomeStatsResource);
             TextAsset weightAsset=Resources.Load<TextAsset>(WeightResource);
             TextAsset chanceAsset=Resources.Load<TextAsset>(ChanceResource);
             if(statsAsset==null){Fail("Missing Resources/FishingTuning/FishStats.csv");return;}
+            if(biomeStatsAsset==null){Fail("Missing Resources/FishingTuning/BiomeFishStats.csv");return;}
             if(weightAsset==null){Fail("Missing Resources/FishingTuning/BiomeFishWeights.csv");return;}
             if(chanceAsset==null){Fail("Missing Resources/FishingTuning/BiomeBaitSpeciesChance.csv");return;}
 
             if(!ParseStats(statsAsset.text))return;
             if(!ParseWeights(weightAsset.text))return;
             if(!ParseChances(chanceAsset.text))return;
+            if(!ParseBiomeStats(biomeStatsAsset.text))return;
             if(!ValidateCompleteness())return;
             valid=true;
         }
@@ -392,7 +463,10 @@ public static class FishingTuning
             bool unavailable=min==0f && max==0f;
             if(!unavailable && (min<=0f || max<=min))
                 return Fail("BiomeFishWeights.csv "+biome+" species "+id+" requires either minKg=0 and maxKg=0 (unavailable), or 0 < minKg < maxKg.");
-            if(!unavailable && (min<stats.MinWeightKg || max>stats.MaxWeightKg))
+            // Deep Ocean deliberately extends beyond the ordinary species size
+            // limit. Every other biome must remain inside its global range.
+            if(!unavailable && biome!="deep-ocean" &&
+               (min<stats.MinWeightKg || max>stats.MaxWeightKg))
                 return Fail("BiomeFishWeights.csv "+biome+" species "+id+" min/max must stay inside FishStats species min/max ("+
                     stats.MinWeightKg.ToString("0.###",CultureInfo.InvariantCulture)+"–"+
                     stats.MaxWeightKg.ToString("0.###",CultureInfo.InvariantCulture)+" kg).");
@@ -400,6 +474,40 @@ public static class FishingTuning
             string key=WeightKey(biome,id);
             if(WeightRows.ContainsKey(key))return Fail("BiomeFishWeights.csv has duplicate row for "+biome+" species "+id+".");
             WeightRows[key]=new WeightDistribution{BiomeId=biome,SpeciesId=id,MinKg=min,MaxKg=max};
+        }
+        return true;
+    }
+
+    private static bool ParseBiomeStats(string text)
+    {
+        string[] lines=Lines(text);
+        for(int lineIndex=0;lineIndex<lines.Length;lineIndex++)
+        {
+            string line=lines[lineIndex].Trim();
+            if(Ignore(line) || line.StartsWith("biomeId,"))continue;
+            string[] c=line.Split(',');
+            if(c.Length!=7)return Fail("BiomeFishStats.csv line "+(lineIndex+1)+" must have 7 columns.");
+            string biome=c[0].Trim();int id,minHP,maxHP,minCoins,maxCoins;
+            if(BiomeIndex(biome)<0 || !Int(c[1],out id) ||
+               !Int(c[3],out minHP) || !Int(c[4],out maxHP) ||
+               !Int(c[5],out minCoins) || !Int(c[6],out maxCoins))
+                return Fail("BiomeFishStats.csv line "+(lineIndex+1)+" has an invalid value.");
+            id=Canonical(id);
+            SpeciesStats species;
+            if(!Stats.TryGetValue(id,out species) || species.SpeciesName!=c[2].Trim())
+                return Fail("BiomeFishStats.csv species name/id mismatch at line "+(lineIndex+1)+".");
+            if(minHP<1 || maxHP<minHP || minCoins<1 || maxCoins<minCoins)
+                return Fail("BiomeFishStats.csv invalid HP/coin range for "+biome+" species "+id+".");
+            string key=WeightKey(biome,id);
+            if(BiomeStats.ContainsKey(key))
+                return Fail("BiomeFishStats.csv duplicate "+key+".");
+            WeightDistribution weights;
+            int weightId=id==FishCatalog.BattleScarredMakoSharkId
+                ?FishCatalog.MakoSharkId:id;
+            if(!WeightRows.TryGetValue(WeightKey(biome,weightId),out weights) || weights.Unavailable)
+                return Fail("BiomeFishStats.csv "+key+" is unavailable in the weight table.");
+            BiomeStats[key]=new BiomeSpeciesStats{
+                MinHealth=minHP,MaxHealth=maxHP,MinCoins=minCoins,MaxCoins=maxCoins};
         }
         return true;
     }
@@ -456,8 +564,14 @@ public static class FishingTuning
         for(int b=0;b<Biomes.Length;b++)
         {
             for(int i=0;i<ActiveSpecies.Length;i++)
-                if(!WeightRows.ContainsKey(WeightKey(Biomes[b],ActiveSpecies[i])))
+            {
+                string key=WeightKey(Biomes[b],ActiveSpecies[i]);
+                WeightDistribution available;
+                if(!WeightRows.TryGetValue(key,out available))
                     return Fail("BiomeFishWeights.csv is missing "+Biomes[b]+" species "+ActiveSpecies[i]+".");
+                if(!available.Unavailable && !BiomeStats.ContainsKey(key))
+                    return Fail("BiomeFishStats.csv missing "+Biomes[b]+" species "+ActiveSpecies[i]+".");
+            }
 
             for(int k=0;k<RequiredBaits.Length;k++)
                 if(!ChanceRows.ContainsKey(ChanceKey(Biomes[b],RequiredBaits[k])))

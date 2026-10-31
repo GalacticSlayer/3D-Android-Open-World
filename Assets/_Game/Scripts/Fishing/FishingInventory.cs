@@ -7,6 +7,8 @@ public class CaughtFishRecord
 {
     public int speciesId;
     public float weightKg;
+    // Save-safe biome ID: null/empty on old catches, which retain global value.
+    public string biomeId;
     public long caughtUtcTicks;
 }
 
@@ -43,7 +45,7 @@ public class FishingInventory : MonoBehaviour
 
     public int AddFish(
         int speciesId,
-        float weightKg, bool countAsCatch=false)
+        float weightKg, bool countAsCatch=false,string biomeId=null)
     {
         if(IsFull || (shop!=null && shop.ReadOnly)) return -1;
         CaughtFishRecord record =
@@ -51,6 +53,7 @@ public class FishingInventory : MonoBehaviour
             {
                 speciesId = FishCatalog.CanonicalId(speciesId),
                 weightKg = weightKg,
+                biomeId = biomeId,
                 caughtUtcTicks =
                     DateTime.UtcNow.Ticks
             };

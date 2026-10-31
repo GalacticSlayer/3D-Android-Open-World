@@ -159,6 +159,28 @@ public static class BluewaterCayRockRegion
         return false;
     }
 
+    /// <summary>
+    /// True when the player's position is within 'metres' of the physical
+    /// surface of ANY authored Bluewater rock collider. Unlike biome anchors,
+    /// this tests rock geometry rather than distance to the rock's centre.
+    /// </summary>
+    public static bool WithinDistanceOfRock(Vector3 point,float metres)
+    {
+        if(!Ensure())return false;
+        float radius=Mathf.Max(0f,metres);
+        float radiusSq=radius*radius;
+        for(int i=0;i<rocks.Count;i++)
+        {
+            Collider collider=rocks[i];
+            if(collider==null || !collider.enabled ||
+               !collider.gameObject.activeInHierarchy)continue;
+            if(collider.bounds.SqrDistance(point)>radiusSq)continue;
+            Vector3 nearest=collider.ClosestPoint(point);
+            if((nearest-point).sqrMagnitude<=radiusSq)return true;
+        }
+        return false;
+    }
+
     private static float SeaLevel()
     {
         if (water == null)

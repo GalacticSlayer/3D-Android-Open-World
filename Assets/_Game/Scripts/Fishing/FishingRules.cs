@@ -76,7 +76,13 @@ public static class FishingRules
         // Catch callers pass their frozen biome; preserve legacy callers' default.
         if(biome<0)biome=FishingTuning.LastBiome;
         float desired;
-        if(!FishingTuning.TryRollWeight(species,biome,random01,out desired))return false;
+        // The battle-scarred Mako shares the normal Mako bite and
+        // biome weight distribution, then scales its caught weight by 1.5x.
+        // This also preserves Deep Ocean's 30% extra size for both variants.
+        int rollSpecies=species==FishCatalog.BattleScarredMakoSharkId
+            ? FishCatalog.MakoSharkId:species;
+        if(!FishingTuning.TryRollWeight(rollSpecies,biome,random01,out desired))return false;
+        if(species==FishCatalog.BattleScarredMakoSharkId)desired*=1.5f;
 
         // FishingSystem still contains a historical Brinebreak-only remap after this
         // call. Feed that remap its inverse so the FINAL caught weight remains the
@@ -128,9 +134,11 @@ public static class FishingRules
         return 1f-Mathf.Pow(1f-fullChance,Mathf.Clamp01(retrievedFraction));
     }
 
-    public static int MaxHealth(int species,float kg)
+    public static int MaxHealth(int species,float kg,int biome=-1)
     {
         int configured;
+        if(biome>=0 && FishingTuning.TryGetBiomeHealth(species,kg,biome,out configured))
+            return configured;
         if(FishingTuning.TryGetHealth(species,kg,out configured))return configured;
 
         var fish=FishCatalog.Get(species);

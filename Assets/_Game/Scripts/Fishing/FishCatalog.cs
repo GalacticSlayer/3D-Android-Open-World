@@ -74,37 +74,37 @@ public static class FishCatalog
     // Editable min/max weight, health, value and catch odds live in Resources/FishingTuning.
     private static readonly FishSpeciesDefinition[] Species=
     {
-        new FishSpeciesDefinition("Blue Mackerel",new Color(.20f,.42f,.58f),new Color(.72f,.86f,.90f),0.25f,5f,0.25f,42f,90),
-        new FishSpeciesDefinition("Red Snapper",new Color(.72f,.20f,.16f),new Color(.96f,.54f,.34f),0.7f,7.2f,0.6f,26f,80),
-        new FishSpeciesDefinition("Sea Bass",new Color(.25f,.38f,.31f),new Color(.65f,.72f,.58f),0.9f,10.8f,1.2f,18f,220),
-        new FishSpeciesDefinition("Yellowtail",new Color(.18f,.38f,.56f),new Color(.94f,.76f,.18f),1.4f,14.625f,0.68f,10f,300),
+        new FishSpeciesDefinition("Blue Mackerel",new Color(.20f,.42f,.58f),new Color(.72f,.86f,.90f),0.25f,5f,1.2f,42f,117),
+        new FishSpeciesDefinition("Red Snapper",new Color(.72f,.20f,.16f),new Color(.96f,.54f,.34f),0.7f,7.2f,1.2f,26f,120),
+        new FishSpeciesDefinition("Sea Bass",new Color(.25f,.38f,.31f),new Color(.65f,.72f,.58f),0.9f,10.8f,1.3f,18f,440),
+        new FishSpeciesDefinition("Yellowtail",new Color(.18f,.38f,.56f),new Color(.94f,.76f,.18f),1.4f,14.625f,1.2f,10f,390),
         default, // Retired species ID 4; never reuse saved IDs.
-        new FishSpeciesDefinition("Yellowfin Tuna",new Color(.07f,.18f,.30f),new Color(.96f,.72f,.08f),1f,63f,0.9f,2f,400),
+        new FishSpeciesDefinition("Yellowfin Tuna",new Color(.07f,.18f,.30f),new Color(.96f,.72f,.08f),1f,63f,1.5f,2f,520),
         new FishSpeciesDefinition("Yellow Goatfish",new Color(.78f,.76f,.62f),new Color(.96f,.78f,.08f),0.35f,2f,0.46f,13f,34),
         new FishSpeciesDefinition("Black Spot Goatfish",new Color(.72f,.73f,.70f),new Color(.22f,.18f,.15f),0.3f,2f,0.43f,14f,31),
-        new FishSpeciesDefinition("Bigeye Tuna",new Color(.10f,.22f,.32f),new Color(.75f,.80f,.80f),1f,90f,0.86f,4f,340),
-        new FishSpeciesDefinition("Bonito",new Color(.08f,.23f,.38f),new Color(.72f,.82f,.86f),0.5f,11.25f,0.58f,6f,180),
-        new FishSpeciesDefinition("Black Sea Bass",new Color(.10f,.14f,.18f),new Color(.50f,.57f,.62f),0.35f,4.5f,0.9f,6f,220),
-        new FishSpeciesDefinition("Striped Bass",new Color(.34f,.40f,.39f),new Color(.76f,.78f,.69f),0.9f,56.25f,1.2f,13f,220),
-        new FishSpeciesDefinition("Spotted Sand Bass",new Color(.42f,.37f,.28f),new Color(.76f,.66f,.43f),0.25f,4.5f,0.9f,6f,220),
-        new FishSpeciesDefinition("Albacore",new Color(.12f,.24f,.36f),new Color(.8f,.85f,.9f),2f,45f,0.84f,4f,200),
-        new FishSpeciesDefinition("Greater Amberjack",new Color(.3f,.4f,.42f),new Color(.84f,.72f,.3f),1f,70f,1.4f,4f,260),
-        new FishSpeciesDefinition("Blacktip Shark",new Color(.38f,.42f,.43f),new Color(.12f,.14f,.15f),5f,30f,1f,0f,1200),
-        new FishSpeciesDefinition("Yellowtail Snapper",new Color(.64f,.70f,.72f),new Color(.98f,.82f,.16f),0.25f,4.1f,0.6f,13f,80),
-        new FishSpeciesDefinition("Mutton Snapper",new Color(.58f,.32f,.24f),new Color(.88f,.62f,.38f),0.5f,13f,0.6f,5f,90),
-        new FishSpeciesDefinition("Blacktip Reef Shark",new Color(.4f,.45f,.46f),new Color(.1f,.12f,.13f),3f,18f,1.8f,0f,1200),
-        new FishSpeciesDefinition("Mako Shark",new Color(.12f,.27f,.36f),new Color(.7f,.75f,.78f),20f,150f,1f,0f,1800),
-        new FishSpeciesDefinition("Battle Scarred Mako Shark",new Color(.12f,.27f,.36f),new Color(.6f,.65f,.68f),30f,225f,1f,0f,2700),
-        new FishSpeciesDefinition("Mangrove Snapper",new Color(.42f,.34f,.25f),new Color(.88f,.58f,.24f),0.5f,10.5f,0.6f,3f,90),
-        new FishSpeciesDefinition("Blackfin Barracuda",new Color(.25f,.35f,.39f),new Color(.66f,.70f,.68f),2f,30f,1.3f,0f,450),
-        new FishSpeciesDefinition("Great Barracuda",new Color(.64f,.70f,.72f),new Color(.20f,.26f,.28f),3.2f,48f,1.6f,0f,720),
-        new FishSpeciesDefinition("Bluefin Trevally",new Color(.18f,.43f,.64f),new Color(.33f,.75f,.80f),1f,70f,0.93f,0f,286),
-        new FishSpeciesDefinition("Golden Trevally",new Color(.91f,.68f,.22f),new Color(.97f,.86f,.42f),1f,70f,0.9f,0f,260),
-        new FishSpeciesDefinition("Giant Trevally",new Color(.27f,.32f,.36f),new Color(.67f,.73f,.76f),1.8f,126f,1f,0f,572),
-        new FishSpeciesDefinition("Winter Flounder",new Color(.35f,.27f,.16f),new Color(.85f,.83f,.75f),0.25f,5f,0.68f,26f,160),
-        new FishSpeciesDefinition("Roughtail Stingray",new Color(.16f,.15f,.14f),new Color(.83f,.81f,.76f),3f,360f,3f,26f,3600),
+        new FishSpeciesDefinition("Bigeye Tuna",new Color(.10f,.22f,.32f),new Color(.75f,.80f,.80f),1f,90f,1.5f,4f,442),
+        new FishSpeciesDefinition("Bonito",new Color(.08f,.23f,.38f),new Color(.72f,.82f,.86f),0.5f,11.25f,1.2f,6f,234),
+        new FishSpeciesDefinition("Black Sea Bass",new Color(.10f,.14f,.18f),new Color(.50f,.57f,.62f),0.35f,4.5f,1.3f,6f,440),
+        new FishSpeciesDefinition("Striped Bass",new Color(.34f,.40f,.39f),new Color(.76f,.78f,.69f),0.9f,56.25f,1.3f,13f,440),
+        new FishSpeciesDefinition("Spotted Sand Bass",new Color(.42f,.37f,.28f),new Color(.76f,.66f,.43f),0.25f,4.5f,1.3f,6f,440),
+        new FishSpeciesDefinition("Albacore",new Color(.12f,.24f,.36f),new Color(.8f,.85f,.9f),2f,45f,1.2f,4f,260),
+        new FishSpeciesDefinition("Greater Amberjack",new Color(.3f,.4f,.42f),new Color(.84f,.72f,.3f),1f,70f,1.8f,4f,520),
+        new FishSpeciesDefinition("Blacktip Shark",new Color(.38f,.42f,.43f),new Color(.12f,.14f,.15f),5f,30f,1.9f,0f,1560),
+        new FishSpeciesDefinition("Yellowtail Snapper",new Color(.64f,.70f,.72f),new Color(.98f,.82f,.16f),0.25f,4.1f,1.2f,13f,120),
+        new FishSpeciesDefinition("Mutton Snapper",new Color(.58f,.32f,.24f),new Color(.88f,.62f,.38f),0.5f,13f,1.2f,5f,135),
+        new FishSpeciesDefinition("Blacktip Reef Shark",new Color(.4f,.45f,.46f),new Color(.1f,.12f,.13f),3f,18f,2f,0f,1800),
+        new FishSpeciesDefinition("Mako Shark",new Color(.12f,.27f,.36f),new Color(.7f,.75f,.78f),20f,150f,1.9f,0f,2340),
+        new FishSpeciesDefinition("Battle Scarred Mako Shark",new Color(.12f,.27f,.36f),new Color(.6f,.65f,.68f),30f,225f,2f,0f,3510),
+        new FishSpeciesDefinition("Mangrove Snapper",new Color(.42f,.34f,.25f),new Color(.88f,.58f,.24f),0.5f,10.5f,1.2f,3f,135),
+        new FishSpeciesDefinition("Blackfin Barracuda",new Color(.25f,.35f,.39f),new Color(.66f,.70f,.68f),2f,30f,1.6f,0f,675),
+        new FishSpeciesDefinition("Great Barracuda",new Color(.64f,.70f,.72f),new Color(.20f,.26f,.28f),3.2f,48f,1.8f,0f,1080),
+        new FishSpeciesDefinition("Bluefin Trevally",new Color(.18f,.43f,.64f),new Color(.33f,.75f,.80f),1f,70f,1.5f,0f,372),
+        new FishSpeciesDefinition("Golden Trevally",new Color(.91f,.68f,.22f),new Color(.97f,.86f,.42f),1f,70f,1.5f,0f,338),
+        new FishSpeciesDefinition("Giant Trevally",new Color(.27f,.32f,.36f),new Color(.67f,.73f,.76f),1.8f,126f,1.5f,0f,744),
+        new FishSpeciesDefinition("Winter Flounder",new Color(.35f,.27f,.16f),new Color(.85f,.83f,.75f),0.25f,5f,1.1f,26f,320),
+        new FishSpeciesDefinition("Roughtail Stingray",new Color(.16f,.15f,.14f),new Color(.83f,.81f,.76f),3f,360f,3f,26f,3500),
         new FishSpeciesDefinition("Leopard Stingray",new Color(.16f,.15f,.14f),new Color(.83f,.81f,.76f),3f,85f,2.5f,26f,3500),
-        new FishSpeciesDefinition("Mahogany Snapper",new Color(.66f,.34f,.35f),new Color(.52f,.81f,.86f),0.25f,4.1f,0.6f,13f,90),
+        new FishSpeciesDefinition("Mahogany Snapper",new Color(.66f,.34f,.35f),new Color(.52f,.81f,.86f),0.25f,4.1f,1.2f,13f,135),
         new FishSpeciesDefinition("Picasso Triggerfish",new Color(.76f,.67f,.45f),new Color(.13f,.32f,.58f),0.06f,4f,0.42f,3f,90),
         new FishSpeciesDefinition("Titan Triggerfish",new Color(.55f,.45f,.24f),new Color(.85f,.70f,.35f),0.1f,12f,0.84f,3f,170),
         new FishSpeciesDefinition("Emperor Angelfish",new Color(.1f,.3f,.7f),new Color(1f,.8f,.1f),0.03f,1.8f,0.42f,30f,80),
@@ -112,8 +112,8 @@ public static class FishCatalog
         new FishSpeciesDefinition("Panther Grouper",new Color(.78f,.74f,.63f),new Color(.16f,.10f,.08f),0.3f,10f,1.05f,30f,300),
         new FishSpeciesDefinition("Coral Grouper",new Color(.9f,.2f,.08f),new Color(.1f,.6f,.9f),0.4f,10f,1.26f,30f,330),
         new FishSpeciesDefinition("Blue Lined Grouper",new Color(.4f,.22f,.10f),new Color(.05f,.5f,1f),0.3f,5f,1.26f,0f,320),
-        new FishSpeciesDefinition("Nassau Grouper",new Color(.45f,.30f,.18f),new Color(.8f,.7f,.5f),2f,25f,1f,0f,200),
-        new FishSpeciesDefinition("Napoleon Wrasse",new Color(.1f,.5f,.45f),new Color(.1f,.6f,.8f),2f,160f,2f,0f,1000),
+        new FishSpeciesDefinition("Nassau Grouper",new Color(.45f,.30f,.18f),new Color(.8f,.7f,.5f),2f,25f,1.2f,0f,300),
+        new FishSpeciesDefinition("Napoleon Wrasse",new Color(.1f,.5f,.45f),new Color(.1f,.6f,.8f),2f,160f,2.3f,0f,1000),
         new FishSpeciesDefinition("White Skate",new Color(.8f,.78f,.72f),new Color(.94f,.92f,.86f),3f,85f,2.2f,26f,3000),
         new FishSpeciesDefinition("Blue Tang",new Color(.03f,.2f,.9f),new Color(1f,.85f,.05f),0.02f,1f,0.42f,0f,40),
         new FishSpeciesDefinition("Dussumieri Tang",new Color(.3f,.45f,.55f),new Color(.95f,.8f,.1f),0.1f,5.5f,1.05f,0f,170)
@@ -176,9 +176,13 @@ public static class FishCatalog
         return Mathf.Lerp(definition.MinWeightKg,definition.MaxWeightKg,t);
     }
 
-    public static int GetSellValue(int speciesId,float weightKg)
+    // biomeId is frozen when a fish is caught so selling it from another
+    // location never changes its catch reward. Older saves default to global.
+    public static int GetSellValue(int speciesId,float weightKg,string biomeId=null)
     {
         int configured;
+        if(FishingTuning.TryGetBiomeCost(speciesId,weightKg,biomeId,out configured))
+            return configured;
         if(FishingTuning.TryGetCost(speciesId,weightKg,out configured))return configured;
 
         FishSpeciesDefinition species=Get(speciesId);

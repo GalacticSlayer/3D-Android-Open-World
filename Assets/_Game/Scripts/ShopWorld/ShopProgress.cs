@@ -174,7 +174,7 @@ public sealed class ShopProgress : MonoBehaviour
     public bool ResolveLureFight(bool caught) => !ReadOnly && Commit(Data.ResolveLureFight(caught));
     public bool EquipLure(int variant) => !ReadOnly && Commit(Data.EquipLure(variant));
     public bool BuyHabitat(string id) => CanTrade && ShopDimensionManager.Instance.Near(id) && Commit(Data.BuyHabitat(id));
-    public bool Sell(CaughtFishRecord fish) => CanTrade && ShopDimensionManager.Instance.Near("market") && Commit(Data.Sell(fish,FishCatalog.GetSellValue(fish.speciesId,fish.weightKg)));
+    public bool Sell(CaughtFishRecord fish) => CanTrade && ShopDimensionManager.Instance.Near("market") && Commit(Data.Sell(fish,FishCatalog.GetSellValue(fish.speciesId,fish.weightKg,fish.biomeId)));
     public bool CanManage => !ReadOnly && ShopDimensionManager.Instance!=null && ShopDimensionManager.Instance.InHome;
     public bool Deposit(string id,CaughtFishRecord fish) => CanManage && ShopDimensionManager.Instance.Near(id) && Commit(Data.Deposit(id,fish));
     public bool Withdraw(string id,CaughtFishRecord fish) => CanManage && ShopDimensionManager.Instance.Near(id) && Commit(Data.Withdraw(id,fish));

@@ -27,27 +27,27 @@ brinebreak-isle,9,Bonito,0,0
 brinebreak-isle,10,Black Sea Bass,0.35,4.5
 brinebreak-isle,11,Striped Bass,3,20
 brinebreak-isle,12,Spotted Sand Bass,0.25,4.5
-deep-ocean,0,Blue Mackerel,0.25,5
+deep-ocean,0,Blue Mackerel,0.325,6.5
 deep-ocean,1,Red Snapper,0,0
 deep-ocean,2,Sea Bass,0,0
-deep-ocean,3,Yellowtail,1.4,14.625
-deep-ocean,5,Yellowfin Tuna,1,63
+deep-ocean,3,Yellowtail,1.82,19.0125
+deep-ocean,5,Yellowfin Tuna,1.3,81.9
 deep-ocean,6,Yellow Goatfish,0,0
 deep-ocean,7,Black Spot Goatfish,0,0
-deep-ocean,8,Bigeye Tuna,1,90
-deep-ocean,9,Bonito,0.5,11.25
-deep-ocean,10,Black Sea Bass,0.35,4.5
+deep-ocean,8,Bigeye Tuna,1.3,117
+deep-ocean,9,Bonito,0.65,14.625
+deep-ocean,10,Black Sea Bass,0.455,5.85
 deep-ocean,11,Striped Bass,0,0
 deep-ocean,12,Spotted Sand Bass,0,0
 suncrest-reef,13,Albacore,0,0
 suncrest-reef,14,Greater Amberjack,0,0
 brinebreak-isle,13,Albacore,0,0
 brinebreak-isle,14,Greater Amberjack,1,70
-deep-ocean,13,Albacore,2,45
+deep-ocean,13,Albacore,2.6,58.5
 deep-ocean,14,Greater Amberjack,0,0
 suncrest-reef,15,Blacktip Shark,0,0
 brinebreak-isle,15,Blacktip Shark,0,0
-deep-ocean,15,Blacktip Shark,5,30
+deep-ocean,15,Blacktip Shark,6.5,39
 suncrest-reef,16,Yellowtail Snapper,0,0
 brinebreak-isle,16,Yellowtail Snapper,0,0
 deep-ocean,16,Yellowtail Snapper,0,0
@@ -78,7 +78,7 @@ brinebreak-isle,18,Blacktip Reef Shark,0,0
 brinebreak-isle,19,Mako Shark,0,0
 brinebreak-isle,20,Battle Scarred Mako Shark,0,0
 deep-ocean,18,Blacktip Reef Shark,0,0
-deep-ocean,19,Mako Shark,20,150
+deep-ocean,19,Mako Shark,26,195
 deep-ocean,20,Battle Scarred Mako Shark,0,0
 bluewater-cay,18,Blacktip Reef Shark,0,0
 bluewater-cay,19,Mako Shark,20,150
@@ -139,7 +139,7 @@ deep-ocean,27,Winter Flounder,0,0
 bluewater-cay,27,Winter Flounder,0,0
 snapper-island,27,Winter Flounder,0,0
 suncrest-reef,28,Roughtail Stingray,0,0
-brinebreak-isle,28,Roughtail Stingray,3,360
+brinebreak-isle,28,Roughtail Stingray,3,130
 deep-ocean,28,Roughtail Stingray,0,0
 bluewater-cay,28,Roughtail Stingray,0,0
 snapper-island,28,Roughtail Stingray,0,0

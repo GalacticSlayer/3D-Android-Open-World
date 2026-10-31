@@ -1121,7 +1121,7 @@ public class FishingSystem : MonoBehaviour
 
         fightTension = 0.24f;
         fragileBreakTimer=0f;
-        fishMaxHealth=Mathf.RoundToInt(FishingRules.MaxHealth(hookedSpeciesId,hookedWeightKg)*ReefCatalog.HealthMultiplier(fightBiome));
+        fishMaxHealth=Mathf.RoundToInt(FishingRules.MaxHealth(hookedSpeciesId,hookedWeightKg,pondCast?-1:fightBiome)*ReefCatalog.HealthMultiplier(fightBiome));
         fishHealthPoints=fishMaxHealth;fishHealth=1f;
         // Finalize depth-adjusted size before choosing the saved/rendered variant.
         // The quality runtime used to shrink adults after variant selection.
@@ -1548,7 +1548,7 @@ public class FishingSystem : MonoBehaviour
         int newIndex =
             inventory.AddFish(
                 hookedSpeciesId,
-                hookedWeightKg, true
+                hookedWeightKg, true, pondCast?null:FishingTuning.BiomeId(fightBiome)
             );
 
         if(newIndex<0) { FailFishing("FISH BAG FULL (50). Fish released. Sell or house fish to make room."); return; }
