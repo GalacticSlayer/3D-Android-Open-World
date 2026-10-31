@@ -181,9 +181,12 @@ public sealed class FishIndexView : MonoBehaviour
         else
         {
             bool emperorFamily=family==FishCatalog.EmperorAngelfishId;
+            bool makoFamily=family==FishCatalog.MakoSharkId;
             int baitSpecies=emperorFamily?FishCatalog.EmperorAngelfishId:variant;
             if(emperorFamily)
                 TextRow("Juveniles are the smallest 30% of the 10–50 cm range (22 cm or less).",18,muted,60,TextAnchor.MiddleLeft);
+            if(makoFamily)
+                TextRow("Mako sharks: 80% normal, 20% battle-scarred. The overall bite rate stays the same.",18,muted,60,TextAnchor.MiddleLeft);
             TextRow((emperorFamily?"Combined chance for both variants in ":"Chance in ")+ReefCatalog.Zones[biome].name+" when a fish bites.",18,muted,emperorFamily?60:46,TextAnchor.MiddleLeft);
             var options=FishIndexCatalog.Baits();
             options.Sort((a,b)=>Chance(baitSpecies,b.Key).CompareTo(Chance(baitSpecies,a.Key)));
@@ -196,7 +199,8 @@ public sealed class FishIndexView : MonoBehaviour
                 snapshots.Attach(icon,0,1f,bait.PreviewKey,false,true);
                 var name=Label(row,bait.Name,21,Color.white);
                 Anchor(name.rectTransform,.31f,0,.81f,1,0,6,-8,-6);
-                bool available=FishingTuning.TryGetChance(baitSpecies,bait.Key,biome,out float percent);
+                float percent=Chance(baitSpecies,bait.Key);
+                bool available=percent>=0f;
                 var odds=Label(row,available?percent.ToString("0.##")+"%":"—",25,available && percent>0?gold:muted,TextAnchor.MiddleRight);
                 Anchor(odds.rectTransform,.81f,0,1,1,0,0,-2,0);
             }
@@ -207,7 +211,17 @@ public sealed class FishIndexView : MonoBehaviour
     }
 
     private float Chance(int species,string key)
-    {return FishingTuning.TryGetChance(species,key,biome,out float odds)?odds:-1f;}
+    {
+        // The CSV's Mako column is a combined species chance; split it for the index.
+        if(species==FishCatalog.BattleScarredMakoSharkId)
+        {
+            return FishingTuning.TryGetChance(FishCatalog.MakoSharkId,key,biome,out float combinedOdds)
+                ?combinedOdds*FishCatalog.BattleScarredMakoVariantChance:-1f;
+        }
+        if(!FishingTuning.TryGetChance(species,key,biome,out float odds))return -1f;
+        return species==FishCatalog.MakoSharkId
+            ?odds*(1f-FishCatalog.BattleScarredMakoVariantChance):odds;
+    }
     private static float PreviewWeight(int species)
     {var fish=FishCatalog.Get(species);return (fish.MinWeightKg+fish.MaxWeightKg)*.5f;}
     private static string Measurements(int species,float kg)

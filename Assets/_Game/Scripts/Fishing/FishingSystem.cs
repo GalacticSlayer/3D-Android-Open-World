@@ -1128,6 +1128,10 @@ public class FishingSystem : MonoBehaviour
                 ? (fightBiome==2?IslandExpansionWorld.Active.OffshoreAt(castOrigin):0f) : FishingRules.OffshoreFactor;
             hookedSpeciesId =
                 RollBaitSpecies();
+            // Keep the configured overall Mako bite rate, then choose its variant.
+            // Only roll a second random number for Makos; all other fish are unchanged.
+            if(hookedSpeciesId==FishCatalog.MakoSharkId)
+                hookedSpeciesId=FishCatalog.RollMakoVariant(hookedSpeciesId,Random.value);
 
             hookedWeightKg =
                 activeBait==ShopCatalog.StarterLure

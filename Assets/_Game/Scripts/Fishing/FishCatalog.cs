@@ -37,6 +37,13 @@ public static class FishCatalog
     public const int BlacktipReefSharkId=18;
     public const int MakoSharkId=19;
     public const int BattleScarredMakoSharkId=20;
+    // The CSV determines total Mako odds; this independent roll only splits the two variants.
+    public const float BattleScarredMakoVariantChance=0.20f;
+    public static int RollMakoVariant(int speciesId,float random01)
+    {
+        return speciesId==MakoSharkId && random01<BattleScarredMakoVariantChance
+            ?BattleScarredMakoSharkId:speciesId;
+    }
     public const int MangroveSnapperId=21;
     public const int BlackfinBarracudaId=22;
     public const int GreatBarracudaId=23;
