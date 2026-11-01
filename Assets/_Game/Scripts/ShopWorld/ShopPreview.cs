@@ -43,15 +43,40 @@ public sealed class ShopPreview : MonoBehaviour
                 return;
             }
         }
-        // Authored 2D fishing-rod and fishing-line artwork takes precedence over
-        // the old offscreen model previews. Inventory/store cards have their
-        // own blue-water backgrounds; other previews retain their old behavior.
+        // These changes affect UI imagery only; rod/reel/line mechanics stay unchanged.
+        // Line artwork is displayed separately from the blue background so only
+        // the transparent spool can be made 15% smaller.
         if(resolvedGear!=null)
         {
             bool rod=resolvedGear.StartsWith("Rod",System.StringComparison.Ordinal) && resolvedGear!="RodAssembly";
             bool line=resolvedGear=="Line" || resolvedGear.StartsWith("Line",System.StringComparison.Ordinal);
+            bool reel=resolvedGear.StartsWith("Reel",System.StringComparison.Ordinal);
+            if(line)
+            {
+                Texture2D transparentLine=Resources.Load<Texture2D>("Fishing/ItemIcons/Line");
+                if(transparentLine!=null && SetWaterBackground(target))
+                {
+                    target.rectTransform.localScale=new Vector3(.85f,.85f,1f);
+                    target.rectTransform.localRotation=Quaternion.identity;
+                    target.texture=transparentLine;
+                    target.uvRect=new Rect(0f,0f,1f,1f);
+                    target.color=Color.white;
+                    target.enabled=true;
+                    return;
+                }
+            }
+            if(reel && SetWaterBackground(target))
+            {
+                // Unity UI positive Z is counterclockwise when viewed from the front.
+                // Rotate the rendered reel 30 degrees clockwise without rotating
+                // its water background, and enlarge the reel image by exactly 30%.
+                target.rectTransform.localRotation=Quaternion.Euler(0f,0f,-30f);
+                target.rectTransform.localScale=new Vector3(1.30f,1.30f,1f);
+                target.color=Color.white;
+            }
             if(rod || line)
             {
+                // Existing pre-composited artwork is retained as a fallback.
                 string asset=rod?resolvedGear:"Line";
                 Texture2D artwork=Resources.Load<Texture2D>("Fishing/ItemIcons/"+asset+"Card");
                 if(artwork!=null)
@@ -91,7 +116,12 @@ public sealed class ShopPreview : MonoBehaviour
             studio.clearFlags=CameraClearFlags.SolidColor;studio.backgroundColor=new Color(0.08f,0.18f,0.20f);
             studio.orthographic=true;studio.nearClipPlane=0.01f;studio.farClipPlane=15;studio.cullingMask=1<<30;studio.enabled=false;
         }
-        studio.backgroundColor=transparentBackground || gear=="RodAssembly"?Color.clear:new Color(0.08f,0.18f,0.20f);
+        // Reels render with alpha so the new blue water remains behind them.
+        bool reelWithBackdrop=gear!=null && gear.StartsWith("Reel",System.StringComparison.Ordinal)
+            && target!=null && target.transform.parent!=null
+            && target.transform.parent.Find("FishingItemWaterBackground")!=null;
+        studio.backgroundColor=transparentBackground || gear=="RodAssembly" || reelWithBackdrop
+            ?Color.clear:new Color(0.08f,0.18f,0.20f);
         float aspect=transparentBackground?2f:1f;
         studio.aspect=aspect;
         bool lurePreview=gear!=null && gear.StartsWith("Lure",System.StringComparison.Ordinal);
@@ -200,6 +230,48 @@ public sealed class ShopPreview : MonoBehaviour
         studio.enabled=false;studio.targetTexture=null;Destroy(model);model=null;
         cache[key]=texture;rendering=null;if(target!=null){target.texture=texture;target.enabled=true;}
         busy=false;
+    }
+
+    // Put the SAME water texture used by the authored rod/line cards behind a
+    // transparent item image. The sibling background is never rotated/scaled.
+    private static bool SetWaterBackground(RawImage target)
+    {
+        if(target==null || target.transform.parent==null)return false;
+        Texture2D water=Resources.Load<Texture2D>("Fishing/ItemIcons/WaterBackground");
+        if(water==null)return false;
+
+        Transform parent=target.transform.parent;
+        Transform existing=parent.Find("FishingItemWaterBackground");
+        GameObject background=existing!=null?existing.gameObject:
+            new GameObject("FishingItemWaterBackground",typeof(RectTransform),typeof(RawImage));
+        if(existing==null)background.transform.SetParent(parent,false);
+
+        RectTransform source=target.rectTransform;
+        RectTransform rect=background.GetComponent<RectTransform>();
+        rect.anchorMin=source.anchorMin;
+        rect.anchorMax=source.anchorMax;
+        rect.pivot=source.pivot;
+        rect.anchoredPosition=source.anchoredPosition;
+        rect.sizeDelta=source.sizeDelta;
+        rect.localScale=Vector3.one;
+        rect.localRotation=Quaternion.identity;
+
+        RawImage image=background.GetComponent<RawImage>();
+        image.texture=water;
+        image.color=Color.white;
+        image.uvRect=new Rect(0f,0f,1f,1f);
+        image.raycastTarget=false;
+        background.transform.SetSiblingIndex(target.transform.GetSiblingIndex());
+
+        // Existing shop/equipment cards already have a rounded Image frame.
+        // Use its exact alpha silhouette to clip both the water and the item.
+        if(parent.name=="ItemImageFrame" && parent.GetComponent<Image>()!=null)
+        {
+            Mask mask=parent.GetComponent<Mask>();
+            if(mask==null)mask=parent.gameObject.AddComponent<Mask>();
+            mask.showMaskGraphic=true;
+        }
+        return true;
     }
 
     private static string ResolveGearKey(RawImage target,string gear)
