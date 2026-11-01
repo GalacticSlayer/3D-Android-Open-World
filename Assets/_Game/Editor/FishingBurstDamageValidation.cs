@@ -29,10 +29,13 @@ public static class FishingBurstDamageValidation
             CheckTier(0,2,4,0f,0,0);
             CheckTier(1,4,8,.05f,8,16);
             CheckTier(2,6,12,.08f,12,24);
+            CheckTier(3,10,20,.10f,20,40);
+            CheckTier(4,25,35,.13f,50,70);
+            CheckTier(5,35,50,.13f,70,100);
 
             // Sweep the complete [0,1) damage-roll interval densely. This is not a
             // statistical test; it verifies the deterministic mapping bounds.
-            for(int tier=0;tier<=2;tier++)
+            for(int tier=0;tier<=ShopCatalog.MaxRodTier;tier++)
             {
                 int min=FishingBurstDamageRuntime.NormalMinimumForTier(tier);
                 int max=FishingBurstDamageRuntime.NormalMaximumForTier(tier);
@@ -57,7 +60,7 @@ public static class FishingBurstDamageValidation
             if(showSuccess)
                 EditorUtility.DisplayDialog(
                     "Fishing Damage Validated",
-                    "Woodland 2-4. Level 2 normal 4-8 and critical 8-16. Level 3 normal 6-12 and critical 12-24. 10,000 deterministic rolls per tier passed.",
+                    "All six rod tiers validated. Level 6: 35-50 normal, 70-100 critical, 13% critical chance. 10,000 deterministic rolls per tier passed.",
                     "OK");
         }
         catch(Exception exception)

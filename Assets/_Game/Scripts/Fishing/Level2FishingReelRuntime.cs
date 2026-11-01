@@ -4,10 +4,10 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Runtime support for all four fishing reels. Reel upgrades keep the starter
+/// Runtime support for all six fishing reels. Reel upgrades keep the starter
 /// reel's mechanics, hierarchy and authored animation; only the visible five reel
 /// meshes/materials and the reeling-speed multiplier change.
-/// Starter = 1.00x, Level 2 = 1.20x, Level 3 = 1.40x, Level 4 = 1.60x.
+/// Starter = 1.00x, Level 2 = 1.20x, Level 3 = 1.40x, Level 4 = 1.60x, Level 5 = 1.80x, Level 6 = 2.00x.
 /// </summary>
 [DefaultExecutionOrder(-420)]
 public sealed class Level2FishingReelRuntime : MonoBehaviour
@@ -61,12 +61,8 @@ public sealed class Level2FishingReelRuntime : MonoBehaviour
     // visible reel animation all read the exact tier multiplier in the same frame.
     private void Update(){Apply();}
 
-    // FishingSystem still contains a legacy placeholder gear tint. Catching a fish
-    // saves/changes ShopProgress, which calls that old tint code after our reel mesh
-    // has already been installed. On the authored blue Level 4 reel, the legacy
-    // yellow/gold _BaseColor property block makes the reel look green and persists
-    // until the reel visual is rebuilt. Clear only the reel property blocks in
-    // LateUpdate so authored reel materials always render their real colours.
+    // Defensive cleanup for stale property blocks from older equipment code.
+    // Authored materials retain their original colours across saves and fights.
     private void LateUpdate(){ClearReelTint();}
 
     private void Apply()
@@ -79,6 +75,8 @@ public sealed class Level2FishingReelRuntime : MonoBehaviour
 
     public static float ReelMultiplier(int tier)
     {
+        if(tier>=5)return 2.00f;
+        if(tier==4)return 1.80f;
         if(tier>=3)return 1.60f;
         if(tier==2)return 1.40f;
         if(tier==1)return 1.20f;

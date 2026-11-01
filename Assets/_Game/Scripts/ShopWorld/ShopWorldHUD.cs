@@ -553,13 +553,14 @@ public sealed class ShopWorldHUD : MonoBehaviour
                 int t=tier; GearKind k=kind; bool owned=t<=progress.Data.Owned(k), equipped=t==progress.Data.Equipped(k);
                 if((!shop && !owned) || (shop && owned)) continue;
                 string stats=k==GearKind.Rod?$"{FishingBurstDamageRuntime.NormalMinimumForTier(t)}–{FishingBurstDamageRuntime.NormalMaximumForTier(t)} damage / {FishingBurstDamageRuntime.CriticalChanceForTier(t)*100:0}% critical (2×)":k==GearKind.Reel?$"{(Level2FishingReelRuntime.ReelMultiplier(t)-1f)*100:0}% faster reeling":$"40 m line / 30 m maximum cast; {t*12}% more line tolerance";
+                if(k==GearKind.Rod)stats+=ShopCatalog.RodTensionControlDescription(t);
                 string action=equipped?"EQUIPPED":owned?"EQUIP":$"BUY {ShopCatalog.GearPrice(k,t):N0}";
                 bool can=owned?!equipped:t==progress.Data.Owned(k)+1 && progress.Data.coins>=ShopCatalog.GearPrice(k,t);
                 Row(ShopCatalog.GearName(k,t),stats+(owned?"":" / Requires previous tier"),action,()=>
                 {
                     bool result=owned?(!progress.ReadOnly && progress.Commit(progress.Data.Equip(k,t))):progress.BuyGear(k,t);
                     Result(result,owned?"Equipment updated.":"Purchased and equipped.");
-                },can && !progress.ReadOnly,gear:k.ToString());
+                },can && !progress.ReadOnly,gear:k.ToString()+t);
             }
         }
         if(shop)BaitPage(true);

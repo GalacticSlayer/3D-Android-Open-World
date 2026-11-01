@@ -194,12 +194,10 @@ public sealed class ShopPreview : MonoBehaviour
         for(int i=0;i<8 && row!=null;i++,row=row.parent)
         {
             Text[] labels=row.GetComponentsInChildren<Text>(true);
-            if(reel && labels.Any(t=>t!=null && t.text!=null && t.text.Contains("Level 4 Fishing Reel")))return "Reel3";
-            if(!reel && labels.Any(t=>t!=null && t.text!=null && t.text.Contains("Level 4 Fishing Rod")))return "Rod3";
-            if(reel && labels.Any(t=>t!=null && t.text!=null && t.text.IndexOf("Level 3 Fishing Reel",System.StringComparison.OrdinalIgnoreCase)>=0))return "Reel2";
-            if(reel && labels.Any(t=>t!=null && t.text!=null && t.text.IndexOf("Level 2 Fishing Reel",System.StringComparison.OrdinalIgnoreCase)>=0))return "Reel1";
-            if(!reel && labels.Any(t=>t!=null && t.text!=null && t.text.IndexOf("Level 3 Fishing Rod",System.StringComparison.OrdinalIgnoreCase)>=0))return "Rod2";
-            if(!reel && labels.Any(t=>t!=null && t.text!=null && t.text.IndexOf("Level 2 Fishing Rod",System.StringComparison.OrdinalIgnoreCase)>=0))return "Rod1";
+            string[] names=reel?ShopCatalog.ReelNames:ShopCatalog.RodNames;
+            for(int tier=names.Length-1;tier>=0;tier--)
+                if(labels.Any(t=>t!=null && string.Equals(t.text,names[tier],System.StringComparison.OrdinalIgnoreCase)))
+                    return (reel?"Reel":"Rod")+tier;
             if(row.GetComponent<LayoutElement>()!=null)break;
         }
         return reel?"Reel0":"Rod0";

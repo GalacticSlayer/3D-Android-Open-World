@@ -216,28 +216,17 @@ public class FishingSystem : MonoBehaviour
     {
         if(shopProgress==null) return;
         var gear=shopProgress.Data;
-        rodPower=1f+gear.rodEquipped*0.18f;
+        rodPower=1f; // Rod tension control is applied once to the total tension gain below.
         reelPower=Level2FishingReelRuntime.ReelMultiplier(gear.reelEquipped);
         lineGuard=1f+gear.lineEquipped*0.12f;
         float extension=0f; // Cast envelope stays 5–30 m and line stays 40 m for every loadout.
         maximumCastDistance=baseCastRange+extension;
         preferredCastDistance=basePreferredRange+extension*0.6f;
         maximumLineDistance=baseLineRange+extension;
-        if(rodRoot!=null)
-        {
-            foreach(var renderer in rodRoot.GetComponentsInChildren<MeshRenderer>(true))
-            {
-                // RodBlank uses the equipped rod's authored material and texture.
-                // Lure hook saves also trigger this callback during combat, when
-                // the legacy rod component (and its tint cleanup) is disabled.
-                // Never apply the old placeholder tier tint to the rod itself.
-                if(renderer.name=="RodBlank" || renderer.name=="ReelSeatCollar") continue;
-                var block=new MaterialPropertyBlock();renderer.GetPropertyBlock(block);
-                Color tint=Color.Lerp(Color.white,new Color(0.94f,0.78f,0.42f),gear.reelEquipped/3f);
-                block.SetColor("_BaseColor",tint);renderer.SetPropertyBlock(block);
-            }
-        }
+        // Authored rod/reel materials own their colours. Save notifications (including
+        // lure hooks) must never write placeholder tint property blocks to this model.
     }
+
     private CaughtFishRecord heldRecord;
     public int NetworkHeldSpecies => heldRecord != null && heldFishVisual != null && !rodEquipped && !shopMode
         ? heldRecord.speciesId : -1;
@@ -1419,8 +1408,12 @@ public class FishingSystem : MonoBehaviour
         }
 
         // +100% control halves positive tension gain; resting recovery is unchanged.
-        if(fightTension > tensionBefore && Progression != null)
-            fightTension = tensionBefore + (fightTension - tensionBefore) / Progression.Multiplier(3);
+        if(fightTension > tensionBefore)
+        {
+            float tensionControl=(Progression != null ? Progression.Multiplier(3) : 1f) *
+                ShopCatalog.RodTensionControlMultiplier(shopProgress != null ? shopProgress.Data.rodEquipped : 0);
+            fightTension = tensionBefore + (fightTension - tensionBefore) / tensionControl;
+        }
         fightTension =
             Mathf.Clamp01(
                 fightTension

@@ -38,7 +38,7 @@ export function createSessionServer({ clock = Date.now, timeout = 30000, ledgerP
     if (!value || !['x','y','z','yaw'].every(k => typeof value[k] === 'number' && Number.isFinite(value[k]))) fail(400, 'Invalid player position.');
     if (['x','y','z'].some(k => Math.abs(value[k]) > 100000) || ![0,1,2].includes(value.world)) fail(400, 'Invalid world position.');
     // Optional fields preserve compatibility with older walking-only clients.
-    for (const [key, max] of [['rodTier',4],['castSequence',2147483647]])
+    for (const [key, max] of [['rodTier',5],['castSequence',2147483647]])
       if (value[key] !== undefined && (!Number.isInteger(value[key]) || value[key] < 0 || value[key] > max)) fail(400, 'Invalid fishing animation state.');
     if (value.castAge !== undefined && (typeof value.castAge !== 'number' || !Number.isFinite(value.castAge) || value.castAge < -1 || value.castAge > 60)) fail(400, 'Invalid cast age.');
     if (value.castDuration !== undefined && (typeof value.castDuration !== 'number' || !Number.isFinite(value.castDuration) || value.castDuration < .1 || value.castDuration > 60)) fail(400, 'Invalid cast duration.');
