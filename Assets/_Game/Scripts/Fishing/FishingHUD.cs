@@ -881,7 +881,9 @@ public class FishingHUD : MonoBehaviour
         var image=icon.GetComponent<RawImage>();image.raycastTarget=false;
         image.rectTransform.anchorMin=Vector2.zero;image.rectTransform.anchorMax=Vector2.one;
         image.rectTransform.offsetMin=new Vector2(5,5);image.rectTransform.offsetMax=new Vector2(-5,-5);
-        var preview=icon.AddComponent<ShopPreview>();preview.Attach(image,0,0,"RodAssembly");
+        // The hotbar is the sole transparent-artwork variant.
+        // It follows the equipped tier when players switch rods.
+        icon.AddComponent<FishingHotbarRodArtwork>().Initialize(image);
     }
 
     private void BuildActionButton()
