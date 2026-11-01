@@ -58,6 +58,9 @@ public sealed class ShopPreview : MonoBehaviour
                 {
                     target.rectTransform.localScale=new Vector3(.85f,.85f,1f);
                     target.rectTransform.localRotation=Quaternion.identity;
+                    // Align the spool relative to the fixed, unshifted blue card.
+                    RectTransform lineBackground=target.transform.parent.Find("FishingItemWaterBackground") as RectTransform;
+                    if(lineBackground!=null)target.rectTransform.anchoredPosition=lineBackground.anchoredPosition+Vector2.right*9f;
                     target.texture=transparentLine;
                     target.uvRect=new Rect(0f,0f,1f,1f);
                     target.color=Color.white;
@@ -69,9 +72,11 @@ public sealed class ShopPreview : MonoBehaviour
             {
                 // Unity UI positive Z is counterclockwise when viewed from the front.
                 // Rotate the rendered reel 30 degrees clockwise without rotating
-                // its water background, and enlarge the reel image by exactly 30%.
+                // its water background. This is another 30% increase: 1.3 * 1.3 = 1.69.
                 target.rectTransform.localRotation=Quaternion.Euler(0f,0f,-30f);
-                target.rectTransform.localScale=new Vector3(1.30f,1.30f,1f);
+                target.rectTransform.localScale=new Vector3(1.69f,1.69f,1f);
+                RectTransform reelBackground=target.transform.parent.Find("FishingItemWaterBackground") as RectTransform;
+                if(reelBackground!=null)target.rectTransform.anchoredPosition=reelBackground.anchoredPosition;
                 target.color=Color.white;
             }
             if(rod || line)
@@ -183,6 +188,8 @@ public sealed class ShopPreview : MonoBehaviour
         else if(reelPreview)
         {
             OrientReelLikeReference(model);
+            // Show the opposite face by yawing the physical reel 180 degrees.
+            model.transform.rotation=Quaternion.AngleAxis(180f,Vector3.up)*model.transform.rotation;
         }
         else
         {
@@ -213,7 +220,7 @@ public sealed class ShopPreview : MonoBehaviour
             float required=Mathf.Max(bounds.extents.y/Mathf.Tan(halfFov),bounds.extents.x/Mathf.Tan(halfFov));
             float distance=(required+bounds.extents.z)*1.38f;
             Vector3 previewTarget=bounds.center;
-            studio.transform.position=previewTarget+Vector3.up*(bounds.size.y*0.075f)+Vector3.back*distance;
+            studio.transform.position=previewTarget+Vector3.back*distance;
             studio.transform.LookAt(previewTarget,Vector3.up);
         }
         else
@@ -248,13 +255,16 @@ public sealed class ShopPreview : MonoBehaviour
 
         RectTransform source=target.rectTransform;
         RectTransform rect=background.GetComponent<RectTransform>();
-        rect.anchorMin=source.anchorMin;
-        rect.anchorMax=source.anchorMax;
-        rect.pivot=source.pivot;
-        rect.anchoredPosition=source.anchoredPosition;
-        rect.sizeDelta=source.sizeDelta;
-        rect.localScale=Vector3.one;
-        rect.localRotation=Quaternion.identity;
+        if(existing==null)
+        {
+            rect.anchorMin=source.anchorMin;
+            rect.anchorMax=source.anchorMax;
+            rect.pivot=source.pivot;
+            rect.anchoredPosition=source.anchoredPosition;
+            rect.sizeDelta=source.sizeDelta;
+            rect.localScale=Vector3.one;
+            rect.localRotation=Quaternion.identity;
+        }
 
         RawImage image=background.GetComponent<RawImage>();
         image.texture=water;
