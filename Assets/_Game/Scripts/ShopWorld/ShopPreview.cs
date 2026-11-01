@@ -8,6 +8,7 @@ using UnityEngine.UI;
 public sealed class ShopPreview : MonoBehaviour
 {
     private readonly Dictionary<string,RenderTexture> cache=new Dictionary<string,RenderTexture>();
+    private readonly Dictionary<string,Vector2> reelImageCenters=new Dictionary<string,Vector2>();
     private readonly Queue<System.Action> requests=new Queue<System.Action>();
     private static int studioCount;
     private Camera studio;
@@ -101,7 +102,7 @@ public sealed class ShopPreview : MonoBehaviour
         {
             if(ready!=null && ready.IsCreated())
             {
-                target.texture=ready;target.enabled=true;return;
+                target.texture=ready;target.enabled=true;CenterReelArtwork(target,key);return;
             }
             cache.Remove(key);
             if(ready!=null)Destroy(ready);
@@ -231,12 +232,55 @@ public sealed class ShopPreview : MonoBehaviour
             studio.transform.position=bounds.center+Vector3.back*(bounds.size.z+5);
             studio.transform.rotation=Quaternion.identity;
         }
-        var texture=new RenderTexture(transparentBackground?384:192,192,16,RenderTextureFormat.ARGB32){name="Inventory "+key};texture.Create();rendering=texture;
+        var texture=new RenderTexture(transparentBackground?384:192,192,16,RenderTextureFormat.ARGB32){name="Inventory "+key,wrapMode=TextureWrapMode.Clamp};texture.Create();rendering=texture;
         studio.targetTexture=texture;studio.enabled=true;
         yield return new WaitForEndOfFrame();
+        // Use the actual visible reel pixels to centre asymmetric 3D silhouettes.
+        // One 192px readback per reel tier, cached for later shop/inventory visits.
+        if(reelPreview && reelWithBackdrop)reelImageCenters[key]=VisibleArtworkCenter(texture);
         studio.enabled=false;studio.targetTexture=null;Destroy(model);model=null;
-        cache[key]=texture;rendering=null;if(target!=null){target.texture=texture;target.enabled=true;}
+        cache[key]=texture;rendering=null;
+        if(target!=null){target.texture=texture;target.enabled=true;CenterReelArtwork(target,key);}
         busy=false;
+    }
+
+    // Centre the image content, not the fixed blue background or the card.
+    // UV panning remains correct even after the UI item is enlarged and rotated.
+    private void CenterReelArtwork(RawImage target,string key)
+    {
+        if(target==null || !reelImageCenters.TryGetValue(key,out Vector2 c))return;
+        target.uvRect=new Rect(c.x-.5f,c.y-.5f,1f,1f);
+    }
+
+    private static Vector2 VisibleArtworkCenter(RenderTexture texture)
+    {
+        if(texture==null)return new Vector2(.5f,.5f);
+        RenderTexture previous=RenderTexture.active;
+        Texture2D snapshot=new Texture2D(texture.width,texture.height,TextureFormat.RGBA32,false);
+        try
+        {
+            RenderTexture.active=texture;
+            snapshot.ReadPixels(new Rect(0,0,texture.width,texture.height),0,0,false);
+            snapshot.Apply(false,false);
+            Color32[] pixels=snapshot.GetPixels32();
+            int minX=texture.width,minY=texture.height,maxX=-1,maxY=-1;
+            for(int y=0;y<texture.height;y++)
+            for(int x=0;x<texture.width;x++)
+            {
+                if(pixels[y*texture.width+x].a<=32)continue;
+                minX=Mathf.Min(minX,x);maxX=Mathf.Max(maxX,x);
+                minY=Mathf.Min(minY,y);maxY=Mathf.Max(maxY,y);
+            }
+            if(maxX>=minX && maxY>=minY)
+                return new Vector2((minX+maxX+1f)/(2f*texture.width),
+                                   (minY+maxY+1f)/(2f*texture.height));
+        }
+        finally
+        {
+            RenderTexture.active=previous;
+            Destroy(snapshot);
+        }
+        return new Vector2(.5f,.5f);
     }
 
     // Put the SAME water texture used by the authored rod/line cards behind a
