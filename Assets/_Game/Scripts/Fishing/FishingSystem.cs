@@ -175,11 +175,9 @@ public class FishingSystem : MonoBehaviour
         bossClaimPending=false;hookedSpeciesId=FishCatalog.AbyssalLeviathanId;hookedWeightKg=kg;
         fightBiome=3;pondCast=false;shopProgress?.BeginLureFight(activeLureVariant);
         hookedTemperament=RollTemperament(FishCatalog.MakoSharkId,kg);
-        PlayFishingSound(biteSplashSound);StartFight();
-        // The shared encounter HP is the starting HP for every new lease, not a new full-health fish.
-        fishMaxHealth=150000;fishHealthPoints=Mathf.Clamp(hp,0,fishMaxHealth);
-        fishHealth=fishHealthPoints/(float)fishMaxHealth;
-        hud.SetFightMeters(fightTension,fishHealth,fishMaxHealth);
+        // Give StartFight the actual shared HP before it draws any combat meters,
+        // rather than opening at full HP and correcting the bar afterwards.
+        PlayFishingSound(biteSplashSound);StartFight(hp);
         if(fishHealthPoints==0)
         {
             fishUnconscious=true;surgeAmount=0f;lineBreakTimer=0f;
@@ -1141,14 +1139,17 @@ public class FishingSystem : MonoBehaviour
         }
     }
 
-    private void StartFight()
+    private void StartFight(int initialHealth=-1)
     {
         state = FishingState.Fighting;
 
         fightTension = 0.24f;
         fragileBreakTimer=0f;
         fishMaxHealth=hookedSpeciesId==FishCatalog.AbyssalLeviathanId?150000:Mathf.RoundToInt(FishingRules.MaxHealth(hookedSpeciesId,hookedWeightKg,pondCast?-1:fightBiome)*ReefCatalog.HealthMultiplier(fightBiome));
-        fishHealthPoints=fishMaxHealth;fishHealth=1f;
+        // Ordinary fish begin at full HP; a re-hooked boss starts with the
+        // authoritative shared HP from the accepted claim, including zero.
+        fishHealthPoints=initialHealth<0 ? fishMaxHealth : Mathf.Clamp(initialHealth,0,fishMaxHealth);
+        fishHealth=fishHealthPoints/(float)Mathf.Max(1,fishMaxHealth);
         // Finalize depth-adjusted size before choosing the saved/rendered variant.
         // The quality runtime used to shrink adults after variant selection.
         var castQuality = GetComponent<FishingCastQualityRuntime>();

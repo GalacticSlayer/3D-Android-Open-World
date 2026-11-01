@@ -119,6 +119,17 @@ public sealed class Level2FishingRodRuntime : MonoBehaviour
             return;
         }
 
+        // Boss HP belongs to the Leviathan encounter and is restored from its
+        // remaining shared health on every hook. The legacy rod opening-grace
+        // reset below writes MAX HP and would silently heal a damaged boss.
+        // The burst-damage runtime already owns rod upgrades during boss combat.
+        if(fishing.IsBossFight)
+        {
+            observedHp=current;
+            previousState=state;
+            return;
+        }
+
         // A lure starts the fight immediately while the player's existing REEL
         // press remains held. Previously that meant the first Update could remove
         // health before the full-health fight meter had even been visible. Give the
@@ -206,6 +217,9 @@ public sealed class Level2FishingRodRuntime : MonoBehaviour
 
     private void ResetOpeningDamage()
     {
+        // Defensive guard: never overwrite the encounter's carried-over HP,
+        // including when an optional damage component is disabled or delayed.
+        if(fishing!=null && fishing.IsBossFight)return;
         int max=Mathf.Max(1,(int)maxHpField.GetValue(fishing));
         hpField.SetValue(fishing,max);
         healthField.SetValue(fishing,1f);
