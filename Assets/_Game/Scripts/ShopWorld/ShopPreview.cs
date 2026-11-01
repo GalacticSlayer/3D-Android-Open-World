@@ -43,6 +43,27 @@ public sealed class ShopPreview : MonoBehaviour
                 return;
             }
         }
+        // Authored 2D fishing-rod and fishing-line artwork takes precedence over
+        // the old offscreen model previews. Inventory/store cards have their
+        // own blue-water backgrounds; other previews retain their old behavior.
+        if(resolvedGear!=null)
+        {
+            bool rod=resolvedGear.StartsWith("Rod",System.StringComparison.Ordinal) && resolvedGear!="RodAssembly";
+            bool line=resolvedGear=="Line" || resolvedGear.StartsWith("Line",System.StringComparison.Ordinal);
+            if(rod || line)
+            {
+                string asset=rod?resolvedGear:"Line";
+                Texture2D artwork=Resources.Load<Texture2D>("Fishing/ItemIcons/"+asset+"Card");
+                if(artwork!=null)
+                {
+                    target.texture=artwork;
+                    target.uvRect=new Rect(0,0,1,1);
+                    target.color=Color.white;
+                    target.enabled=true;
+                    return;
+                }
+            }
+        }
         // Cached render textures and lure/gear previews use their full UVs.
         target.uvRect=new Rect(0f,0f,1f,1f);
         string key=(transparentBackground?"clear:":"")+(faceRight?"right:":"")+(fitWholeFish?"index:":"")+(resolvedGear??(species+":"+kg.ToString("R",System.Globalization.CultureInfo.InvariantCulture)));
