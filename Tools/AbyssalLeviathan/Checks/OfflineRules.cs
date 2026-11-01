@@ -35,6 +35,14 @@ internal static class OfflineRules
         lease=b.Lease;Check(b.Damage(lease,130000,266) && b.Health==0,"zero HP before catch");
         Check(b.Catch(lease,130000,267) && b.Phase=="caught","offline catch completes");
         Check(!b.Catch(lease,130000,268),"catch cannot duplicate");
+        var half=new AbyssalLeviathanLocalState(0,.5f);
+        Check(half.TryHook(1,0,1),"first half-health cast hooks");
+        string firstLease=half.Lease;
+        Check(half.Damage(firstLease,75000,2) && half.Health==75000,"boss reaches half of 150000 HP");
+        Check(half.Release(firstLease,75000,2),"damage persists when fish is lost");
+        Check(half.TryHook(2,0,3) && half.Health==75000,"next hook begins at 75000 HP");
+        Check(half.Damage(half.Lease,75000,4) && half.Health==0,"rehooked boss can be subdued");
+        Check(half.Catch(half.Lease,75000,5) && half.Phase=="caught","subdued boss can be landed normally");
         var expiry=new AbyssalLeviathanLocalState(0,0);
         expiry.TryHook(1,0,1);lease=expiry.Lease;
         expiry.Tick(900);Check(expiry.Phase=="expired" && expiry.Lease=="","expiry releases hooked boss");

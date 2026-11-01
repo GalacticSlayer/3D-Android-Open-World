@@ -165,7 +165,8 @@ public class FishingSystem : MonoBehaviour
     private const float CatchDistance = 1.15f;
 
     private bool bossClaimPending,bossLandingPending,bossLandingApproved;
-    public bool IsBossFight => state==FishingState.Fighting && hookedSpeciesId==FishCatalog.AbyssalLeviathanId;
+    public bool HasHookedFish => state==FishingState.Fighting;
+    public bool IsBossFight => HasHookedFish && hookedSpeciesId==FishCatalog.AbyssalLeviathanId;
     public int CurrentFishHealth => fishHealthPoints;
     public bool BossCastWaiting(int cast)=>state==FishingState.Waiting && CastSequence==cast && bossClaimPending;
     public void BossClaimFinished(int cast){if(CastSequence==cast)bossClaimPending=false;}
@@ -175,7 +176,17 @@ public class FishingSystem : MonoBehaviour
         fightBiome=3;pondCast=false;shopProgress?.BeginLureFight(activeLureVariant);
         hookedTemperament=RollTemperament(FishCatalog.MakoSharkId,kg);
         PlayFishingSound(biteSplashSound);StartFight();
-        fishMaxHealth=150000;fishHealthPoints=hp;fishHealth=hp/150000f;
+        // The shared encounter HP is the starting HP for every new lease, not a new full-health fish.
+        fishMaxHealth=150000;fishHealthPoints=Mathf.Clamp(hp,0,fishMaxHealth);
+        fishHealth=fishHealthPoints/(float)fishMaxHealth;
+        hud.SetFightMeters(fightTension,fishHealth,fishMaxHealth);
+        if(fishHealthPoints==0)
+        {
+            fishUnconscious=true;surgeAmount=0f;lineBreakTimer=0f;
+            fightTension=Mathf.Min(fightTension,.18f);
+            EnsureUnconsciousFishVisual();
+            hud.SetStatus("UNCONSCIOUS - reel it in.");
+        }
     }
     public void AbortBossFight(string reason){if(IsBossFight)FailFishing(reason);}
     private int hookedSpeciesId;

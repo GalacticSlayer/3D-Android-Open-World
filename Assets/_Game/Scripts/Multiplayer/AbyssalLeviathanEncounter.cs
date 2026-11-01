@@ -146,7 +146,7 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
         {
             fightId=result.boss.id;lease=result.boss.lease;damage=0;
             if(fishing.BossCastWaiting(cast) && Active && current.owner==OwnerId && current.lease==lease)
-                fishing.BeginBossFight(InitialHealth,Weight);
+                fishing.BeginBossFight(Mathf.Clamp(result.boss.hp,0,result.boss.maxHp>0?result.boss.maxHp:150000),result.boss.kg);
             else Release();
         }
         fishing.BossClaimFinished(cast);
@@ -191,7 +191,9 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
         if(local!=null && Time.realtimeSinceStartup>=nextLocalSnapshot)
         {nextLocalSnapshot=Time.realtimeSinceStartup+.1f;RefreshLocal();}
         bool active=Active;
-        hudRoot.SetActive(active);
+        // Hide the universal bar only on this player's screen while they fight any fish.
+        // The encounter continues to tick and replicate for everyone else.
+        hudRoot.SetActive(active && (fishing==null || !fishing.HasHookedFish));
         if(active)
         {
             int hp=current.hp;

@@ -508,12 +508,15 @@ public class FishingHUD : MonoBehaviour
                 );
         }
 
+        bool bossHealth = system != null && system.IsBossFight;
         if (progressFill != null)
         {
             SetBarWidth(
                 progressFill.rectTransform,
                 health
             );
+            // Only the Abyssal Leviathan uses red fight HP; reset for ordinary catches.
+            progressFill.color = bossHealth ? new Color(.86f,.08f,.14f,1f) : new Color(.22f,.65f,.96f,1f);
         }
 
         if (tensionLabel != null)
@@ -528,7 +531,9 @@ public class FishingHUD : MonoBehaviour
 
         if (progressLabel != null)
         {
-            progressLabel.text = $"HP <color=#17F5FF>{Mathf.RoundToInt(health*maxHealth)}/{maxHealth}</color>";
+            progressLabel.text = bossHealth
+                ? $"HP <color=#FF334D>{Mathf.RoundToInt(health*maxHealth)}/{maxHealth}</color>"
+                : $"HP <color=#17F5FF>{Mathf.RoundToInt(health*maxHealth)}/{maxHealth}</color>";
         }
     }
 
