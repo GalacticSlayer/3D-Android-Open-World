@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="OfflineRules.cs" />
+    <Compile Include="../../../Assets/_Game/Scripts/Multiplayer/AbyssalLeviathanLocalState.cs" Link="AbyssalLeviathanLocalState.cs" />
+    <Compile Include="../../../Assets/_Game/Scripts/Multiplayer/FishingNetworkCompatibility.cs" Link="FishingNetworkCompatibility.cs" />
+  </ItemGroup>
+</Project>

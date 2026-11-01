@@ -454,3 +454,13 @@ test('right passenger seat is not enabled on yachts or rafts',async t=>{
     assert.notEqual(reply.players.find(p=>p.id===guest.id).rideSeat,2);
   }
 });
+
+test('server advertises the supported rod tier on open, join and polls',async t=>{
+  const post=await fixture(t);
+  const host=await post('/v1/open',{...hello,pose:{...pose(),rodEquipped:false,rodTier:0,castSequence:0}});
+  assert.equal(host.ok,true);assert.equal(host.maxRodTier,5);
+  const guest=await post('/v1/join',{...hello,code:host.code});assert.equal(guest.maxRodTier,5);
+  const update=await post('/v1/state',{pose:{...pose(),rodEquipped:true,rodTier:host.maxRodTier}},host.token);
+  assert.equal(update.ok,true);assert.equal(update.maxRodTier,5);
+  assert.equal(update.players.find(p=>p.id===host.id).rodTier,5);
+});

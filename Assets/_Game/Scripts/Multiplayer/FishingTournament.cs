@@ -231,7 +231,7 @@ public sealed partial class FishingTournament : MonoBehaviour
         bool unlocked=boss!=null && boss.Unlocked(out found,out required);
         body.text="Abyssal Leviathan: catch every species across all four islands. Variants count as one species.\n"+
             found+" / "+required+" species recorded. Summoning costs 10,000 coins.\n"+
-            (!session.Connected?"Open or join a multiplayer server first.":!session.BossReady?"The multiplayer server needs the Leviathan update.":boss!=null && boss.Active?"The Leviathan is already awake.":unlocked?"Summoning unlocked.":"Summoning locked until the island collection is complete.");
+            (boss!=null && boss.Active?"The Leviathan is already awake.":session.Connected && !session.BossReady?"This multiplayer room needs the Leviathan update. You can summon in offline play.":unlocked?(session.Connected?"Summoning unlocked for this room.":"Summoning unlocked for offline play."):"Summoning locked until the island collection is complete.");
         ActionButton("FISHING TOURNAMENTS",-20,OpenTournamentModes);
         ActionButton("SUMMON ABYSSAL LEVIATHAN • 10,000 COINS",-120,()=>{boss.Summon();Close();},boss!=null && boss.CanSummon);
     }

@@ -25,7 +25,7 @@ public sealed class FishingMultiplayer : MonoBehaviour
         public float rideX,rideY,rideZ,rideYaw,boatInputX,boatInputY,boatLookYaw;
  public float x,y,z,yaw; public int world; public bool swimming, sprinting, rodEquipped, reeling, hasFish, lureInWater; public float reelTime, heldFishWeight; public int heldFishSpecies = -1; public int rodTier, castSequence; public float castAge = -1f, castDuration = .72f; }
     [Serializable] public class Peer : Pose { public string id,name; }
-    [Serializable] public class Reply { public bool ok,bossReady; public string error,id,token,code,hostId; public Peer[] players; public FishingTournament.View tournament; public AbyssalLeviathanEncounter.View boss; }
+    [Serializable] public class Reply { public bool ok,bossReady; public int maxRodTier; public string error,id,token,code,hostId; public Peer[] players; public FishingTournament.View tournament; public AbyssalLeviathanEncounter.View boss; }
     [Serializable] private class Message
     {
         public string protocol=Protocol, build, code, name;
@@ -50,6 +50,7 @@ public sealed class FishingMultiplayer : MonoBehaviour
     internal string SessionToken => token;
     private FishingBoatMultiplayer boats;
     private string token, id;
+    private int serverMaximumRodTier=FishingNetworkCompatibility.LegacyMaximumRodTier;
     private bool previousBackground, backgroundOverride;
     private FirstPersonController player;
     private FishingSystem fishing;
@@ -77,6 +78,8 @@ public sealed class FishingMultiplayer : MonoBehaviour
     private void Begin(bool host,string code)
     {
         if(Busy || Connected || player==null)return;
+        if(GetComponent<AbyssalLeviathanEncounter>()?.BlocksMultiplayer==true)
+        {Status="Finish your offline Leviathan encounter before opening or joining multiplayer.";return;}
         if(!host && code.Length!=4){Status="Enter the host's 4-character room code.";return;}
         var travel=ShopDimensionManager.Instance;
         if(travel!=null && (travel.Traveling || travel.Destination!=0))
@@ -102,7 +105,9 @@ public sealed class FishingMultiplayer : MonoBehaviour
             hasFish=fishing!=null && fishing.NetworkHasFish,
             lureInWater=fishing!=null && fishing.NetworkLureInWater,
             reelTime=fishing!=null ? fishing.NetworkReelTime : 0f,
-            rodTier=equipment!=null && equipment.Data!=null ? equipment.Data.Equipped(GearKind.Rod) : 0,
+            rodTier=FishingNetworkCompatibility.RodTier(
+                equipment!=null && equipment.Data!=null ? equipment.Data.Equipped(GearKind.Rod) : 0,
+                fishing!=null && fishing.IsRodEquipped,serverMaximumRodTier),
             castSequence=fishing!=null ? fishing.CastSequence : 0,
             castAge=fishing!=null ? fishing.NetworkCastAge : -1f,
             castDuration=fishing!=null ? fishing.NetworkCastDuration : .72f};
@@ -147,6 +152,7 @@ public sealed class FishingMultiplayer : MonoBehaviour
         if(answer==null || !answer.ok || string.IsNullOrEmpty(answer.token))
         {ClearSession();Status=answer!=null?answer.error:"Connection failed.";loop=null;yield break;}
         token=answer.token;id=answer.id;Code=answer.code;IsHost=answer.hostId==id;
+        GetComponent<AbyssalLeviathanEncounter>()?.BeginMultiplayer();
         Apply(answer);
         int failures=0;
         while(Connected)
@@ -196,6 +202,7 @@ public sealed class FishingMultiplayer : MonoBehaviour
     private void Apply(Reply reply)
     {
         BossReady=reply.bossReady;
+        serverMaximumRodTier=FishingNetworkCompatibility.AdvertisedMaximum(reply.maxRodTier,ShopCatalog.MaxRodTier);
         GetComponent<FishingTournament>()?.Apply(reply.tournament);
         GetComponent<AbyssalLeviathanEncounter>()?.Apply(reply.boss);
         lastSnapshot=Time.realtimeSinceStartup;
@@ -247,7 +254,8 @@ public sealed class FishingMultiplayer : MonoBehaviour
     {
         if(backgroundOverride){Application.runInBackground=previousBackground;backgroundOverride=false;}
         if(boats!=null)boats.Clear();
-        token=null;id=null;Code="";PlayerCount=0;IsHost=false;
+        token=null;id=null;Code="";PlayerCount=0;IsHost=false;BossReady=false;
+        serverMaximumRodTier=FishingNetworkCompatibility.LegacyMaximumRodTier;
         foreach(var remote in remotes.Values)if(remote!=null)Destroy(remote.gameObject);
         remotes.Clear();
     }

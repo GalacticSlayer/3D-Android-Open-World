@@ -6,8 +6,8 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 
-// One server-owned encounter per room. The ordinary fishing system still owns
-// the angler's fight, rod, tension, abilities, landing and inventory presentation.
+// Server-owned in a room; local simulation when playing offline. Ordinary
+// fishing still owns the rod, tension, abilities, landing and presentation.
 public sealed class AbyssalLeviathanEncounter : MonoBehaviour
 {
     [Serializable] public sealed class View
@@ -32,15 +32,26 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
     private ShopProgress progress;
     private OceanWater ocean;
     private View current;
+    private AbyssalLeviathanLocalState local;
+    private Vector3 localPosition;
+    private bool Online => session!=null && session.Connected;
+    private string OwnerId => local!=null ? "offline" : session?.LocalId;
+    public bool BlocksMultiplayer => local!=null && (Active || HasLease || busy);
+    public void BeginMultiplayer()
+    {
+        // Called only after a successful connection; never import a private boss
+        // into another room or let a disconnected room boss become a local one.
+        local=null;current=null;announced="";lease="";fightId="";
+    }
     private string lease="",fightId="",announced="";
     private int damage;
-    private float receivedAt,nextReport,nextRipple,nextRecovery,noticeUntil;
+    private float receivedAt,nextReport,nextRipple,nextRecovery,noticeUntil,nextLocalSnapshot;
     private bool busy,landing;
     private GameObject hudRoot,noticeRoot;
     private Text status,notice;
     private Image health;
     public string Status {get;private set;}="";
-    public bool Active => session!=null && session.Connected && current!=null && current.phase=="active" && Remaining>0;
+    public bool Active => (local!=null || Online) && current!=null && current.phase=="active" && Remaining>0;
     public float Remaining => current==null?0:Mathf.Max(0,current.secondsLeft-(Time.realtimeSinceStartup-receivedAt));
     public bool HasLease => !string.IsNullOrEmpty(lease);
     public int InitialHealth => current!=null?current.hp:150000;
@@ -59,12 +70,20 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
         foreach(int id in ids)if(FishIndexCatalog.FoundVariants(progress?.Data,id)>0)found++;
         return requiredCount>0 && found==requiredCount;
     }
-    public bool CanSummon => session!=null && session.Connected && session.BossReady && !busy && !Active && progress!=null && !progress.ReadOnly &&
+    public bool CanSummon => (session==null || !session.Busy) && (!Online || session.BossReady) && !busy && !Active && progress!=null && !progress.ReadOnly &&
         string.IsNullOrEmpty(progress.Data.bossSummonTicket) && progress.Data.coins>=10000 && Unlocked(out _,out _);
     public void Summon()
     {
         if(!CanSummon)return;
         if(!BluewaterCayRockRegion.TryBossSpawn(out var point)){ShowNotice("Bluewater Cay rocks are not ready. Try again shortly.");return;}
+        if(!Online)
+        {
+            int previous=progress.Data.coins;
+            progress.Data.coins-=10000;
+            try{progress.Save();}catch(Exception){progress.Data.coins=previous;ShowNotice("Could not save the summon fee.");return;}
+            local=new AbyssalLeviathanLocalState(Time.realtimeSinceStartup,UnityEngine.Random.value);
+            localPosition=point;current=null;RefreshLocal();return;
+        }
         string ticket=Guid.NewGuid().ToString("N");int balance=progress.Data.coins;
         progress.Data.bossSummonTicket=ticket;progress.Data.coins-=10000;
         try{progress.Save();}catch(Exception){progress.Data.bossSummonTicket=null;progress.Data.coins=balance;ShowNotice("Could not save the summon fee.");return;}
@@ -98,7 +117,11 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
     }
     public void Apply(View view)
     {
-        if(view==null)return;
+        if(local!=null || view==null)return;
+        ApplyView(view);
+    }
+    private void ApplyView(View view)
+    {
         if(current!=null && view.serverTime<current.serverTime)return;
         current=view;receivedAt=Time.realtimeSinceStartup;
         if(view.phase=="active" && announced!=view.id)
@@ -122,7 +145,7 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
         if(result!=null && result.ok && result.hooked && result.boss!=null)
         {
             fightId=result.boss.id;lease=result.boss.lease;damage=0;
-            if(fishing.BossCastWaiting(cast) && Active && current.owner==session.LocalId && current.lease==lease)
+            if(fishing.BossCastWaiting(cast) && Active && current.owner==OwnerId && current.lease==lease)
                 fishing.BeginBossFight(InitialHealth,Weight);
             else Release();
         }
@@ -165,6 +188,8 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
         if(session==null)session=GetComponent<FishingMultiplayer>();
         if(fishing==null)fishing=GetComponent<FishingSystem>();
         if(progress==null)progress=GetComponent<ShopProgress>();
+        if(local!=null && Time.realtimeSinceStartup>=nextLocalSnapshot)
+        {nextLocalSnapshot=Time.realtimeSinceStartup+.1f;RefreshLocal();}
         bool active=Active;
         hudRoot.SetActive(active);
         if(active)
@@ -183,7 +208,7 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
             }
         }
         noticeRoot.SetActive(Time.realtimeSinceStartup<noticeUntil);
-        if(HasLease && !landing && (!active || current.owner!=session.LocalId || current.lease!=lease))
+        if(HasLease && !landing && (!active || current.owner!=OwnerId || current.lease!=lease))
         {lease="";fightId="";fishing.AbortBossFight("The Leviathan is no longer on your line.");}
         if(HasLease && !landing && !busy && Time.realtimeSinceStartup>=nextReport)
         {nextReport=Time.realtimeSinceStartup+.35f;StartCoroutine(Report());}
@@ -192,6 +217,12 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
     }
     private IEnumerator Send(Command command,Action<Reply> done)
     {
+        if(local!=null)
+        {
+            // Keep the same claim/damage/release/catch flow as multiplayer, but
+            // resolve it in memory without contacting or opening a server.
+            var result=LocalCommand(command);RefreshLocal();result.boss=current;done(result);yield break;
+        }
         Reply reply=null;
         for(int i=0;i<3 && session!=null && session.Connected;i++)
         {
@@ -200,6 +231,24 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
         }
         if(reply?.boss!=null)Apply(reply.boss);
         done(reply);
+    }
+    private void RefreshLocal()
+    {
+        double now=Time.realtimeSinceStartup;local.Tick(now);
+        ApplyView(new View{id=local.Id,phase=local.Phase,owner=string.IsNullOrEmpty(local.Lease)?"":"offline",lease=local.Lease,
+            hp=(int)Math.Ceiling(local.Health),maxHp=AbyssalLeviathanLocalState.MaximumHealth,kg=local.Weight,
+            x=localPosition.x,y=localPosition.y,z=localPosition.z,secondsLeft=(float)local.SecondsLeft(now),serverTime=now});
+    }
+    private Reply LocalCommand(Command command)
+    {
+        double now=Time.realtimeSinceStartup;
+        if(command.id!=local.Id)return new Reply{error="This encounter has ended."};
+        if(command.op=="claim")return new Reply{ok=true,hooked=local.TryHook(command.cast,UnityEngine.Random.value,now)};
+        bool ok=false;
+        if(command.op=="damage")ok=local.Damage(command.lease,command.damage,now);
+        else if(command.op=="release")ok=local.Release(command.lease,command.damage,now);
+        else if(command.op=="catch")ok=local.Catch(command.lease,command.damage,now);
+        return new Reply{ok=ok,caught=ok && command.op=="catch",error=ok?null:"The Leviathan is no longer on your line."};
     }
     private static IEnumerator Post(string path,string json,string token,Action<Reply> done)
     {
