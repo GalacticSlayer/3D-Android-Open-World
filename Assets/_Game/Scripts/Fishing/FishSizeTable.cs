@@ -151,6 +151,7 @@ public static class FishSizeTable
     // Inverse of LengthMetres, so tiny pond catches retain their size in every view/save.
     public static float WeightForLength(int species,float metres)
     {
+        if(species==FishCatalog.AbyssalLeviathanId)return 400f+40f*(float)Math.Max(0,Math.Min(1,(metres-3.2f)/.2f));
         if(species==FishCatalog.RoughtailStingrayId)
         {
             float cutoffLength=LengthMetres(FishCatalog.LeopardStingrayId,RoughtailCutoffKg);
@@ -174,6 +175,7 @@ public static class FishSizeTable
 
     public static float LengthMetres(int species,float kg)
     {
+        if(species==FishCatalog.AbyssalLeviathanId)return 3.2f+.2f*(float)Math.Max(0,Math.Min(1,(kg-400f)/40f));
         if(species==FishCatalog.RoughtailStingrayId)
         {
             if(float.IsNaN(kg)||kg<=0f)return .05f;

@@ -181,6 +181,17 @@ public static class BluewaterCayRockRegion
         return false;
     }
 
+    public static bool TryBossSpawn(out Vector3 point)
+    {
+        point=Vector3.zero;
+        if(!Ensure() || rocks.Count==0)return false;
+        float south=float.PositiveInfinity;
+        foreach(var rock in rocks)if(rock!=null)south=Mathf.Min(south,rock.bounds.min.z);
+        if(float.IsInfinity(south))return false;
+        point=new Vector3(main.transform.position.x,SeaLevel(),south-200f);
+        return true;
+    }
+
     private static float SeaLevel()
     {
         if (water == null)

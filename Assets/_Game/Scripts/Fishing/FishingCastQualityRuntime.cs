@@ -177,13 +177,14 @@ public sealed class FishingCastQualityRuntime : MonoBehaviour
     // Update remains a fallback; the guard prevents applying the penalty twice.
     public void PrepareHookedFish()
     {
-        if (!enabled || fishing == null || applied) return;
+        if (!enabled || fishing == null || applied || fishing.IsBossFight) return;
         if (!measured) MeasureLandingQuality();
         ApplyToHookedFish();
     }
 
     private void ApplyToHookedFish()
     {
+        if(fishing.IsBossFight){applied=true;return;}
         applied = true;
         if (pond) return;
 

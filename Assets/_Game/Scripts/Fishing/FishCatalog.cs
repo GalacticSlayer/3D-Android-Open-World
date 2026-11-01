@@ -66,6 +66,7 @@ public static class FishCatalog
     public const int WhiteSkateId=40;
     public const int BlueTangId=41;
     public const int DussumieriTangId=42;
+    public const int AbyssalLeviathanId=43;
     // Positive Unity yaw is clockwise viewed from above. Keep pitch/roll and mouth pinning unchanged.
     public static float HeldYaw(int id)=>id==RoughtailStingrayId || id==LeopardStingrayId || id==WhiteSkateId ? 16f : IsFlatfish(id) ? -4f : 86f;
     public static bool IsFlatfish(int id)=>id==WinterFlounderId || id==RoughtailStingrayId || id==LeopardStingrayId || id==WhiteSkateId;
@@ -116,11 +117,12 @@ public static class FishCatalog
         new FishSpeciesDefinition("Napoleon Wrasse",new Color(.1f,.5f,.45f),new Color(.1f,.6f,.8f),2f,160f,2.3f,0f,1000),
         new FishSpeciesDefinition("White Skate",new Color(.8f,.78f,.72f),new Color(.94f,.92f,.86f),3f,85f,2.2f,26f,3000),
         new FishSpeciesDefinition("Blue Tang",new Color(.03f,.2f,.9f),new Color(1f,.85f,.05f),0.02f,1f,0.42f,0f,40),
-        new FishSpeciesDefinition("Dussumieri Tang",new Color(.3f,.45f,.55f),new Color(.95f,.8f,.1f),0.1f,5.5f,1.05f,0f,170)
+        new FishSpeciesDefinition("Dussumieri Tang",new Color(.3f,.45f,.55f),new Color(.95f,.8f,.1f),0.1f,5.5f,1.05f,0f,170),
+        new FishSpeciesDefinition("Abyssal Leviathan",new Color(.04f,.1f,.16f),Color.cyan,400f,440f,2.1f,0f,2340)
     };
 
     public static int Count=>Species.Length;
-    public static readonly int[] ActiveIds={0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42};
+    public static readonly int[] ActiveIds={0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43};
     public static int CanonicalId(int id)=>id==4?YellowfinTunaId:id;
 
     // Tournament identity is deliberately separate from save/render identity.
@@ -149,6 +151,7 @@ public static class FishCatalog
     {
         int index=Mathf.Clamp(CanonicalId(id),0,Species.Length-1);
         var definition=Species[index];
+        if(index==AbyssalLeviathanId)return definition;
 
         FishingTuning.SpeciesStats stats;
         if(FishingTuning.TryGetSpeciesStats(index,out stats))

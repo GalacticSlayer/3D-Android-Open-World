@@ -10,7 +10,7 @@ using UnityEngine;
 [InitializeOnLoad]
 public static class SharkSpeciesSetup
 {
-    private static readonly string[] Models={"BlacktipReefShark","MakoShark","BattleScarredMakoShark"};
+    private static readonly string[] Models={"BlacktipReefShark","MakoShark","BattleScarredMakoShark","AbyssalLeviathan"};
     private static bool running;
     static SharkSpeciesSetup()
     {
@@ -54,7 +54,7 @@ public static class SharkSpeciesSetup
             foreach(string key in Models)
             {
                 string prefabPath="Assets/Resources/Fishing/"+key+".prefab";
-                SeaBassImporter.InstallModel(key,prefabPath);
+                SeaBassImporter.InstallModel(key,prefabPath,swimTakeContains:key=="AbyssalLeviathan"?"ArmatureAction":null);
                 if(!IsReady(AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath)))
                     throw new InvalidDataException(key+" model, swim animation, mouth anchor or texture is missing.");
             }

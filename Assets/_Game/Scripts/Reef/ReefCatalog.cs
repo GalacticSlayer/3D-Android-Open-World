@@ -212,6 +212,7 @@ public static class ReefCatalog
             int fallback=FishCatalog.ActiveIds[0];bool found=false;
             foreach(int id in FishCatalog.ActiveIds)
             {
+                if(id==FishCatalog.AbyssalLeviathanId)continue; // Summon-only species.
                 float chance;
                 if(!FishingTuning.TryGetChance(id,bait,biome,out chance)){found=false;break;}
                 if(chance<=0f)continue;

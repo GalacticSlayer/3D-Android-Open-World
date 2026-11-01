@@ -299,7 +299,7 @@ public sealed class FishingBurstDamageRuntime : MonoBehaviour
         if (!inFight)
         {
             inFight = true;
-            authoritativeHp = maxHp;
+            authoritativeHp = fishing.IsBossFight ? fishing.CurrentFishHealth : maxHp;
             ResetDrag();
             accumulatedReelSeconds = 0f;
             if(fishing.Progression != null && fishing.Progression.Unlocked(1))
@@ -415,6 +415,7 @@ public sealed class FishingBurstDamageRuntime : MonoBehaviour
         if (appliedDamage <= 0) return;
 
         authoritativeHp -= appliedDamage;
+        if(fishing.IsBossFight)fishing.GetComponent<AbyssalLeviathanEncounter>()?.ReportDamage(appliedDamage);
         WriteAuthoritativeHealth(maxHp);
 
         if (critical) FishingDamagePresentation.MarkCriticalHit();

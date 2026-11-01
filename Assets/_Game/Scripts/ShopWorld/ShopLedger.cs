@@ -17,6 +17,7 @@ using System.Collections.Generic;
 {
     public int version = 1, coins;
     public string playerName;
+    public string bossSummonTicket; // Saved before debit; recover through server receipt after interruption.
     public AnglerProgression angler = new AnglerProgression();
     public List<TournamentWager> tournamentWagers = new List<TournamentWager>();
     public bool brinebreakDiscovered;

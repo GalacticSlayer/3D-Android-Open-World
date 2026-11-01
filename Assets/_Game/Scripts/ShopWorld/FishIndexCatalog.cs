@@ -53,6 +53,7 @@ public static class FishIndexCatalog
 
     public static bool InRegion(int species,int biome)
     {
+        if(species==FishCatalog.AbyssalLeviathanId)return false;
         if(FishingTuning.IsValid)
         {
             foreach(var bait in Baits())

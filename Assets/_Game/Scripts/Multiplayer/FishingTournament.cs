@@ -225,6 +225,18 @@ public sealed partial class FishingTournament : MonoBehaviour
     }
     private void OpenStand()
     {
+        Open("stand","TOURNAMENTS & ABYSSAL LEVIATHAN");
+        var boss=GetComponent<AbyssalLeviathanEncounter>();
+        int found=0,required=0;
+        bool unlocked=boss!=null && boss.Unlocked(out found,out required);
+        body.text="Abyssal Leviathan: catch every species across all four islands. Variants count as one species.\n"+
+            found+" / "+required+" species recorded. Summoning costs 10,000 coins.\n"+
+            (!session.Connected?"Open or join a multiplayer server first.":!session.BossReady?"The multiplayer server needs the Leviathan update.":boss!=null && boss.Active?"The Leviathan is already awake.":unlocked?"Summoning unlocked.":"Summoning locked until the island collection is complete.");
+        ActionButton("FISHING TOURNAMENTS",-20,OpenTournamentModes);
+        ActionButton("SUMMON ABYSSAL LEVIATHAN • 10,000 COINS",-120,()=>{boss.Summon();Close();},boss!=null && boss.CanSummon);
+    }
+    private void OpenTournamentModes()
+    {
         if(!session.Connected){Open("info","FISHING TOURNAMENTS");body.text="Open or join a multiplayer server from MENU / TRAVEL first.";return;}
         if(current!=null && (current.phase=="inviting" || current.phase=="countdown" || current.phase=="running")){ShowLobby();return;}
         if(!session.IsHost){Open("info","FISHING TOURNAMENTS");body.text="Only the server host needs to visit this stand.\nThey choose the island and entry fee; everyone receives an invitation.";return;}

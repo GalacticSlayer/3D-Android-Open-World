@@ -164,6 +164,20 @@ public class FishingSystem : MonoBehaviour
 
     private const float CatchDistance = 1.15f;
 
+    private bool bossClaimPending,bossLandingPending,bossLandingApproved;
+    public bool IsBossFight => state==FishingState.Fighting && hookedSpeciesId==FishCatalog.AbyssalLeviathanId;
+    public int CurrentFishHealth => fishHealthPoints;
+    public bool BossCastWaiting(int cast)=>state==FishingState.Waiting && CastSequence==cast && bossClaimPending;
+    public void BossClaimFinished(int cast){if(CastSequence==cast)bossClaimPending=false;}
+    public void BeginBossFight(int hp,float kg)
+    {
+        bossClaimPending=false;hookedSpeciesId=FishCatalog.AbyssalLeviathanId;hookedWeightKg=kg;
+        fightBiome=3;pondCast=false;shopProgress?.BeginLureFight(activeLureVariant);
+        hookedTemperament=RollTemperament(FishCatalog.MakoSharkId,kg);
+        PlayFishingSound(biteSplashSound);StartFight();
+        fishMaxHealth=150000;fishHealthPoints=hp;fishHealth=hp/150000f;
+    }
+    public void AbortBossFight(string reason){if(IsBossFight)FailFishing(reason);}
     private int hookedSpeciesId;
     private float hookedWeightKg;
     private FishTemperament hookedTemperament;
@@ -962,6 +976,13 @@ public class FishingSystem : MonoBehaviour
         if(activeBait==ShopCatalog.StarterLure)
         {
             BeginLureRetrieve();hud.SetActionLabel("REEL");
+            if(!pondCast && activeLureVariant==ShopCatalog.PopperLureVariant)
+            {
+                var boss=GetComponent<AbyssalLeviathanEncounter>();
+                SetLinePositions();
+                bossClaimPending=true;
+                if(boss==null || !boss.TryHook(target,CastSequence))bossClaimPending=false;
+            }
             hud.SetStatus("Hold REEL to work the lure. No bites while resting." + HotspotStatus());yield break;
         }
         hud.SetActionLabel("WAIT");
@@ -994,6 +1015,7 @@ public class FishingSystem : MonoBehaviour
     }
     private void UpdateWaiting(bool reeling)
     {
+        if(bossClaimPending)return;
         SnapBobberToSurface();
         if(activeBait!=ShopCatalog.StarterLure)
         {
@@ -1114,12 +1136,12 @@ public class FishingSystem : MonoBehaviour
 
         fightTension = 0.24f;
         fragileBreakTimer=0f;
-        fishMaxHealth=Mathf.RoundToInt(FishingRules.MaxHealth(hookedSpeciesId,hookedWeightKg,pondCast?-1:fightBiome)*ReefCatalog.HealthMultiplier(fightBiome));
+        fishMaxHealth=hookedSpeciesId==FishCatalog.AbyssalLeviathanId?150000:Mathf.RoundToInt(FishingRules.MaxHealth(hookedSpeciesId,hookedWeightKg,pondCast?-1:fightBiome)*ReefCatalog.HealthMultiplier(fightBiome));
         fishHealthPoints=fishMaxHealth;fishHealth=1f;
         // Finalize depth-adjusted size before choosing the saved/rendered variant.
         // The quality runtime used to shrink adults after variant selection.
         var castQuality = GetComponent<FishingCastQualityRuntime>();
-        if (castQuality != null) castQuality.PrepareHookedFish();
+        if (castQuality != null && hookedSpeciesId!=FishCatalog.AbyssalLeviathanId) castQuality.PrepareHookedFish();
         hookedSpeciesId=FishCatalog.ResolveSizeVariant(hookedSpeciesId,hookedWeightKg);
         damageFraction=0;pendingDamage=0;damageDisplayTimer=0;
         lineBreakTimer = 0f;
@@ -1329,6 +1351,7 @@ public class FishingSystem : MonoBehaviour
                     damageFraction+=Time.deltaTime*8.5f*moodHealthFactor*reelPower;
                     int damage=Mathf.Min(fishHealthPoints,Mathf.FloorToInt(damageFraction));
                     damageFraction-=damage;fishHealthPoints-=damage;pendingDamage+=damage;
+                    if(IsBossFight)GetComponent<AbyssalLeviathanEncounter>()?.ReportDamage(damage);
                     fishHealth=fishHealthPoints/(float)fishMaxHealth;
                 }
             }
@@ -1528,6 +1551,22 @@ public class FishingSystem : MonoBehaviour
     private void CatchFish(
         bool shoreCatch)
     {
+        if(IsBossFight && !bossLandingApproved)
+        {
+            if(bossLandingPending)return;
+            if(inventory.IsFull || (shopProgress!=null && shopProgress.ReadOnly)){FailFishing("FISH BAG FULL (50). Boss released.");return;}
+            var boss=GetComponent<AbyssalLeviathanEncounter>();
+            if(boss==null || !boss.HasLease){FailFishing("Boss encounter ended.");return;}
+            bossLandingPending=true;
+            int sequence=CastSequence;
+            boss.Land(ok=>{
+                bossLandingPending=false;
+                if(!IsBossFight || CastSequence!=sequence)return;
+                if(!ok){FailFishing("Could not confirm the boss catch with the server.");return;}
+                bossLandingApproved=true;CatchFish(shoreCatch);
+            });
+            return;
+        }
         // Landing the fish recovers the lure, even when a full bag forces release.
         shopProgress?.ResolveLureFight(true);
         // AddFish records the new best, so capture the comparison beforehand.
@@ -1727,6 +1766,7 @@ public class FishingSystem : MonoBehaviour
         FishSpeciesDefinition species,
         float weightKg)
     {
+        if(hookedSpeciesId==FishCatalog.AbyssalLeviathanId)return 2.1f;
         var castQuality = GetComponent<FishingCastQualityRuntime>();
         float fightQuality = castQuality != null ? castQuality.DifficultyMultiplier : 1f;
         if(castQuality != null && castQuality.OriginalWeight > 0f)
@@ -2866,6 +2906,8 @@ public class FishingSystem : MonoBehaviour
 
     private void ResetLine()
     {
+        GetComponent<AbyssalLeviathanEncounter>()?.Release();
+        bossClaimPending=bossLandingPending=bossLandingApproved=false;
         skillStunUntil = 0f;
         StopReelSound();
         StopLinePullSound();

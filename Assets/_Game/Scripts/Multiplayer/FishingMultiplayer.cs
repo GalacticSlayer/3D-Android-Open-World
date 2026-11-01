@@ -25,12 +25,13 @@ public sealed class FishingMultiplayer : MonoBehaviour
         public float rideX,rideY,rideZ,rideYaw,boatInputX,boatInputY,boatLookYaw;
  public float x,y,z,yaw; public int world; public bool swimming, sprinting, rodEquipped, reeling, hasFish, lureInWater; public float reelTime, heldFishWeight; public int heldFishSpecies = -1; public int rodTier, castSequence; public float castAge = -1f, castDuration = .72f; }
     [Serializable] public class Peer : Pose { public string id,name; }
-    [Serializable] public class Reply { public bool ok; public string error,id,token,code,hostId; public Peer[] players; public FishingTournament.View tournament; }
+    [Serializable] public class Reply { public bool ok,bossReady; public string error,id,token,code,hostId; public Peer[] players; public FishingTournament.View tournament; public AbyssalLeviathanEncounter.View boss; }
     [Serializable] private class Message
     {
         public string protocol=Protocol, build, code, name;
         public Pose pose;
     }
+    public bool BossReady {get;private set;}
     public bool Connected => !string.IsNullOrEmpty(token);
     public bool Busy { get; private set; }
     public string Code { get; private set; } = "";
@@ -67,6 +68,7 @@ public sealed class FishingMultiplayer : MonoBehaviour
     private void Awake()
     {
         player=GetComponent<FirstPersonController>();
+        if(GetComponent<AbyssalLeviathanEncounter>()==null)gameObject.AddComponent<AbyssalLeviathanEncounter>();
         boats=GetComponent<FishingBoatMultiplayer>();
         if(boats==null)boats=gameObject.AddComponent<FishingBoatMultiplayer>();
     }
@@ -140,7 +142,7 @@ public sealed class FishingMultiplayer : MonoBehaviour
     private IEnumerator ConnectAndPoll(bool host,string code)
     {
         Reply answer=null;
-        yield return Post(host?"/v1/open":"/v1/join",new Message {build=Application.version+"|tournaments-v8",code=code,name=PlayerName,pose=LocalPose()},null,r=>answer=r);
+        yield return Post(host?"/v1/open":"/v1/join",new Message {build=Application.version+"|leviathan-v1",code=code,name=PlayerName,pose=LocalPose()},null,r=>answer=r);
         Busy=false;
         if(answer==null || !answer.ok || string.IsNullOrEmpty(answer.token))
         {ClearSession();Status=answer!=null?answer.error:"Connection failed.";loop=null;yield break;}
@@ -193,7 +195,9 @@ public sealed class FishingMultiplayer : MonoBehaviour
     }
     private void Apply(Reply reply)
     {
+        BossReady=reply.bossReady;
         GetComponent<FishingTournament>()?.Apply(reply.tournament);
+        GetComponent<AbyssalLeviathanEncounter>()?.Apply(reply.boss);
         lastSnapshot=Time.realtimeSinceStartup;
         Peer[] peers=reply.players ?? new Peer[0];
         if(boats!=null)boats.Apply(peers);

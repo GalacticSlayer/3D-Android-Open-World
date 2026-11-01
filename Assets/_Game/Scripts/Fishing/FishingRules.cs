@@ -136,6 +136,7 @@ public static class FishingRules
 
     public static int MaxHealth(int species,float kg,int biome=-1)
     {
+        if(species==FishCatalog.AbyssalLeviathanId)return 150000;
         int configured;
         if(biome>=0 && FishingTuning.TryGetBiomeHealth(species,kg,biome,out configured))
             return configured;

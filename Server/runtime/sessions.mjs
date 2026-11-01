@@ -1,4 +1,5 @@
 import http from 'node:http';
+import { createBosses } from './bosses.mjs';
 import { createTournaments } from './tournaments.mjs';
 import { boatPose, acceptBoatRide, pruneBoatRiders } from './boats.mjs';
 import { randomBytes, randomInt } from 'node:crypto';
@@ -6,8 +7,9 @@ import { randomBytes, randomInt } from 'node:crypto';
 export const PROTOCOL = 'fishing-walk-v1';
 const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const playerName = value => value.replace(/[^a-zA-Z0-9 _-]/g, '').trim().slice(0,20) || 'Angler';
-export function createSessionServer({ clock = Date.now, timeout = 30000, ledgerPath = null, tournamentRandom } = {}) {
+export function createSessionServer({ clock = Date.now, timeout = 30000, ledgerPath = null, tournamentRandom, bossRandom } = {}) {
   const tournaments=createTournaments({clock,ledgerPath,random:tournamentRandom});
+  const bosses=createBosses({clock,random:bossRandom,ledgerPath:ledgerPath?ledgerPath+'.bosses':null});
   const rooms = new Map(), sessions = new Map(), limits = new Map();
   const fail = (status, message) => { throw Object.assign(new Error(message), { status }); };
   const snapshot = room => [...room.players.values()].map(p => ({ id: p.id, name: p.name, ...p.pose,
@@ -18,7 +20,7 @@ export function createSessionServer({ clock = Date.now, timeout = 30000, ledgerP
     boatInputX:clock()-p.seen>1000?0:p.pose.boatInputX,
     boatInputY:clock()-p.seen>1000?0:p.pose.boatInputY }));
   function remove(p) {
-    tournaments.leave(p);
+    tournaments.leave(p);bosses.leave(p);
     sessions.delete(p.token);
     p.room.players.delete(p.id);
     pruneBoatRiders(p.room);
@@ -29,7 +31,7 @@ export function createSessionServer({ clock = Date.now, timeout = 30000, ledgerP
   }
   function expire() {
     const now = clock();
-    for(const room of rooms.values())tournaments.tick(room);
+    for(const room of rooms.values()){tournaments.tick(room);bosses.tick(room);}
     for (const p of sessions.values()) if (now - p.seen > timeout) remove(p);
     for (const [ip, limit] of limits) if (now - limit.start > 60000) limits.delete(ip);
   }
@@ -102,6 +104,7 @@ export function createSessionServer({ clock = Date.now, timeout = 30000, ledgerP
   }
   function dispatch(path, data, token) {
     expire();
+    if(path==='/v1/boss-receipt')return bosses.receipt(data);
     if(path==='/v1/tournament-receipt')return {ok:true,...tournaments.receipt(data)};
     if (path === '/v1/open' || path === '/v1/join') {
       if (data.protocol !== PROTOCOL || typeof data.build !== 'string' || data.build.length > 100) fail(409, 'Install the same updated game version on both devices.');
@@ -121,13 +124,13 @@ export function createSessionServer({ clock = Date.now, timeout = 30000, ledgerP
         if (room.players.size >= 8) fail(409, 'This room is full (8 players).');
       }
       const p = add(room, data);
-      return { ok:true, id:p.id, token:p.token, code:room.code, hostId:room.host, players:snapshot(room),tournament:tournaments.view(room) };
+      return { ok:true, id:p.id, token:p.token, code:room.code, hostId:room.host, players:snapshot(room),tournament:tournaments.view(room),boss:bosses.view(room),bossReady:true };
     }
     const p = sessions.get(token);
     if (!p) fail(401, 'Session ended. The host may have left. Open or join again.');
     if (path === '/v1/leave') { remove(p); return {ok:true}; }
     if (path === '/v1/tournament-catches') return tournaments.catches(p,data);
-    if (path !== '/v1/state' && path !== '/v1/tournament') fail(404, 'Not found.');
+    if (path !== '/v1/state' && path !== '/v1/tournament' && path !== '/v1/boss') fail(404, 'Not found.');
     const previous=p.pose;
     p.pose = pose(data.pose); p.seen = clock();
     if(typeof data.name==='string') {
@@ -141,7 +144,8 @@ export function createSessionServer({ clock = Date.now, timeout = 30000, ledgerP
     }
     acceptBoatRide(p,previous); pruneBoatRiders(p.room);
     if(path==='/v1/tournament')tournaments.action(p,data.tournament);
-    return { ok:true, code:p.room.code, hostId:p.room.host, players:snapshot(p.room),tournament:tournaments.view(p.room) };
+    const bossResult=path==='/v1/boss'?bosses.action(p,data.boss):{};
+    return { ok:true, code:p.room.code, hostId:p.room.host, players:snapshot(p.room),tournament:tournaments.view(p.room),boss:bosses.view(p.room),bossReady:true,...bossResult };
   }
   const server = http.createServer({ requestTimeout:5000, headersTimeout:5000, maxHeaderSize:8192 }, async (req, res) => {
     const reply = (status, value) => { if (!res.destroyed) { res.writeHead(status, {'Content-Type':'application/json','Cache-Control':'no-store'}); res.end(JSON.stringify(value)); } };
@@ -153,7 +157,7 @@ export function createSessionServer({ clock = Date.now, timeout = 30000, ledgerP
     }
     if (++limit.count > 100) { reply(429,{ok:false,error:'Too many requests.'});req.resume();return; }
     if (req.method === 'GET' && req.url === '/health') { reply(200,{ok:true,protocol:PROTOCOL});return; }
-    if (req.method !== 'POST' || !['/v1/open','/v1/join','/v1/state','/v1/leave','/v1/tournament','/v1/tournament-receipt','/v1/tournament-catches'].includes(req.url)) {reply(404,{ok:false,error:'Not found.'});req.resume();return;}
+    if (req.method !== 'POST' || !['/v1/open','/v1/join','/v1/state','/v1/leave','/v1/tournament','/v1/tournament-receipt','/v1/tournament-catches','/v1/boss','/v1/boss-receipt'].includes(req.url)) {reply(404,{ok:false,error:'Not found.'});req.resume();return;}
     if ((req.url === '/v1/open' || req.url === '/v1/join') && ++limit.opens > 4) {reply(429,{ok:false,error:'Wait a moment before trying again.'});req.resume();return;}
     if (!(req.headers['content-type'] || '').startsWith('application/json')) {reply(415,{ok:false,error:'JSON required.'});req.resume();return;}
     try {

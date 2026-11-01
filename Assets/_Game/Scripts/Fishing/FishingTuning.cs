@@ -51,7 +51,8 @@ public static class FishingTuning
 
     // Use the catalog's stable active IDs directly so adding a species in one place
     // cannot silently leave the editable tuning system one fish behind.
-    private static readonly int[] ActiveSpecies=FishCatalog.ActiveIds;
+    // Event-only bosses never enter ordinary biome probability tables.
+    private static readonly int[] ActiveSpecies=Array.FindAll(FishCatalog.ActiveIds,id=>id!=FishCatalog.AbyssalLeviathanId);
     private static readonly string[] Biomes={"suncrest-reef","brinebreak-isle","deep-ocean","bluewater-cay","snapper-island"};
     private static readonly string[] RequiredBaits={
         "worms","worms-legacy","shrimp","squid",
@@ -110,6 +111,7 @@ public static class FishingTuning
 
     public static float YellowSpeed(int species,float legacyDifficulty)
     {
+        if(species==FishCatalog.AbyssalLeviathanId)return 12f;
         SpeciesStats stats;
         return TryGetSpeciesStats(species,out stats)
             ? stats.YellowSpeedMps

@@ -10,7 +10,7 @@ public static class SeaBassImporter
     private const string Folder="Assets/_Game/Reef/Source";
     public const string PrefabPath="Assets/Resources/Fishing/SeaBass.prefab";
     public static void Install() => InstallModel("SeaBass",PrefabPath);
-    public static void InstallModel(string assetName,string prefabPath,string sourceFolder=null,string texturePath=null,bool preserveWorldUp=false,bool importHeldStruggle=false,bool useIndexedSwimAndStruggle=false)
+    public static void InstallModel(string assetName,string prefabPath,string sourceFolder=null,string texturePath=null,bool preserveWorldUp=false,bool importHeldStruggle=false,bool useIndexedSwimAndStruggle=false,string swimTakeContains=null)
     {
         string folder=sourceFolder??Folder;
         string fbx=folder+"/"+assetName+".fbx", png=texturePath??(folder+"/"+assetName+"Texture.png");
@@ -23,7 +23,7 @@ public static class SeaBassImporter
         importer.materialImportMode=ModelImporterMaterialImportMode.None;
         importer.optimizeGameObjects=false;importer.isReadable=true;importer.SaveAndReimport();
         var takes=importer.defaultClipAnimations;
-        var take=importHeldStruggle
+        var take=swimTakeContains!=null ? takes.FirstOrDefault(c=>c.takeName.IndexOf(swimTakeContains,StringComparison.OrdinalIgnoreCase)>=0) : importHeldStruggle
             ? (useIndexedSwimAndStruggle ? takes.FirstOrDefault() : takes.FirstOrDefault(c=>c.takeName.IndexOf("Swim",StringComparison.OrdinalIgnoreCase)>=0))
             : takes.OrderByDescending(c=>c.lastFrame-c.firstFrame).FirstOrDefault();
         if(take==null)throw new InvalidOperationException("Fish authored swim take is missing.");
