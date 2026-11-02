@@ -305,7 +305,7 @@ public sealed class FishingBurstDamageRuntime : MonoBehaviour
             if(fishing.Progression != null && fishing.Progression.Unlocked(1))
             {
                 abilityUsed[1]=true;
-                DealDamage(Mathf.Max(1,Mathf.RoundToInt(maxHp*fishing.Progression.HooksetDamageFraction)),maxHp,false);
+                DealDamage(Mathf.Min(4000,Mathf.Max(1,Mathf.RoundToInt(maxHp*fishing.Progression.HooksetDamageFraction))),maxHp,false);
             }
             // Do not wait for a pointer-up here. The action button deliberately stays
             // held when HOOK changes to REEL (and when a lure auto-hooks), so the
