@@ -89,7 +89,7 @@ public sealed class FishingMultiplayer : MonoBehaviour
         Status=host?"Opening server…":"Joining server…";
         loop=StartCoroutine(ConnectAndPoll(host,code));
     }
-    public Pose LocalPose()
+    public Pose LocalPose(bool forLocalPresentation = false)
     {
         Vector3 p=transform.position;
         if(fishing==null)fishing=GetComponent<FishingSystem>();
@@ -108,7 +108,9 @@ public sealed class FishingMultiplayer : MonoBehaviour
             reelTime=fishing!=null ? fishing.NetworkReelTime : 0f,
             rodTier=FishingNetworkCompatibility.RodTier(
                 equipment!=null && equipment.Data!=null ? equipment.Data.Equipped(GearKind.Rod) : 0,
-                fishing!=null && fishing.IsRodEquipped,serverMaximumRodTier),
+                // Server compatibility must not downgrade our own third-person model.
+                fishing!=null && fishing.IsRodEquipped,
+                forLocalPresentation ? ShopCatalog.MaxRodTier : serverMaximumRodTier),
             castSequence=fishing!=null ? fishing.CastSequence : 0,
             castAge=fishing!=null ? fishing.NetworkCastAge : -1f,
             castDuration=fishing!=null ? fishing.NetworkCastDuration : .72f};

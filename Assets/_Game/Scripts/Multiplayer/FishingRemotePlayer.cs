@@ -45,7 +45,7 @@ public sealed class FishingRemotePlayer : MonoBehaviour
         localSource = source;
         initialized = false;
         speed = 0f;
-        if (source != null) Receive(source.LocalPose());
+        if (source != null) Receive(source.LocalPose(forLocalPresentation: true));
     }
 
     private Vector3 target, previous;
@@ -361,7 +361,7 @@ public sealed class FishingRemotePlayer : MonoBehaviour
 
     private void Update()
     {
-        if (localSource != null) Receive(localSource.LocalPose());
+        if (localSource != null) Receive(localSource.LocalPose(forLocalPresentation: true));
         float dt = Time.unscaledDeltaTime;
         if (!initialized || dt <= 0f) return;
 
