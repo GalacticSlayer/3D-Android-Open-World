@@ -17,9 +17,24 @@ public static class FishHoldingPoseRules
     {
         var points = new System.Collections.Generic.List<Vector3>();
         var mesh = new Mesh();
+        Bounds visibleBounds = default;
+        bool hasVisibleBounds = false;
         foreach (var renderer in fish.GetComponentsInChildren<Renderer>(true))
         {
-            if (!renderer.enabled) continue;
+            if (!renderer.enabled || (!(renderer is MeshRenderer) && !(renderer is SkinnedMeshRenderer))) continue;
+            // Use the rendered envelope for centering. Baked vertices can have
+            // different FBX scale/origin conventions from the visible bounds.
+            // Transform local corners, avoiding rotation-dependent world AABBs.
+            Bounds envelope = renderer.localBounds;
+            for (int i = 0; i < 8; i++)
+            {
+                Vector3 corner = envelope.center + Vector3.Scale(envelope.extents,
+                    new Vector3((i & 1) == 0 ? -1f : 1f,
+                        (i & 2) == 0 ? -1f : 1f, (i & 4) == 0 ? -1f : 1f));
+                Vector3 local = fish.transform.InverseTransformPoint(renderer.transform.TransformPoint(corner));
+                if (!hasVisibleBounds) { visibleBounds = new Bounds(local, Vector3.zero); hasVisibleBounds = true; }
+                else visibleBounds.Encapsulate(local);
+            }
             Mesh source = null;
             if (renderer is SkinnedMeshRenderer skinned)
             {
@@ -52,7 +67,8 @@ public static class FishHoldingPoseRules
             }
         }
         Object.Destroy(mesh);
-        if (points.Count == 0) return Vector3.zero;
+        if (points.Count == 0)
+            return hasVisibleBounds ? new Vector3(visibleBounds.center.x, visibleBounds.min.y, visibleBounds.center.z) : Vector3.zero;
         Bounds bounds = new Bounds(points[0], Vector3.zero);
         foreach (var point in points) bounds.Encapsulate(point);
         var heights = new System.Collections.Generic.List<float>();
@@ -61,6 +77,7 @@ public static class FishHoldingPoseRules
                 heights.Add(point.y);
         heights.Sort();
         float belly = heights.Count > 0 ? heights[(heights.Count - 1) / 10] : bounds.min.y;
-        return new Vector3(bounds.center.x, belly, bounds.center.z);
+        Vector3 center = hasVisibleBounds ? visibleBounds.center : bounds.center;
+        return new Vector3(center.x, belly, center.z);
     }
 }

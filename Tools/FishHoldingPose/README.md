@@ -12,7 +12,11 @@ Normal held behavior resumes when the pose ends. Fish size and gameplay are unch
 
 Unity imports both supplied FBXs as Generic clips and updates FemaleRemoteAvatar
 on editor load, entering Play Mode, and before builds. The source FBX files are
-unchanged. The supplied poses are sampled at their starting pose.
+unchanged. Both supplied pose clips loop at authored speed while posing. The big
+pose adjusts only the visual root height after animation sampling, keeping its
+lowest foot at the calibrated standing foot clearance. Camera focus follows the
+posed hips. Fish centering uses the rendered bounds; belly clearance still uses
+the sampled mesh. The existing fish and character orientations are preserved.
 
 Multiplayer adds an optional `fishPosing` boolean. Update the server using its
 existing Server/ops/update.sh workflow to relay it; older servers ignore the

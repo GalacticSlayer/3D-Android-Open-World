@@ -14,7 +14,7 @@ public sealed class FishingRemotePlayer : MonoBehaviour
 
     public int World { get; private set; }
     public float BodyHeight { get; private set; } = 1.72f * AvatarScale;
-    public Vector3 BodyCenter => drivingBlend > .95f && leftHip != null && rightHip != null
+    public Vector3 BodyCenter => (drivingBlend > .95f || (fishPosing && bigFishPose)) && leftHip != null && rightHip != null
         ? (leftHip.position + rightHip.position) * .5f + transform.up * .65f
         : transform.position + Vector3.up * (FeetOffset + BodyHeight * .5f);
     public Transform RodTip => observerRodView != null ? observerRodView.RodTip : null;
@@ -60,6 +60,8 @@ public sealed class FishingRemotePlayer : MonoBehaviour
     private Transform label;
 
     private bool fishPosing, bigFishPose;
+    private float fishPoseClock, standingFootHeight;
+    private Transform leftFoot, rightFoot;
     private AnimationClip smallPoseClip, bigPoseClip;
     private AnimationClipPlayable smallPosePlayable, bigPosePlayable;
     private Vector3 fishSupportLocal;
@@ -127,6 +129,8 @@ public sealed class FishingRemotePlayer : MonoBehaviour
         if (headBone == null) headBone = FishingRemoteAvatarAsset.FindBone(visualRoot, "Neck");
         leftHip = FishingRemoteAvatarAsset.FindBone(visualRoot, "Pelvis.L");
         rightHip = FishingRemoteAvatarAsset.FindBone(visualRoot, "Pelvis.R");
+        leftFoot = FishingRemoteAvatarAsset.FindBone(visualRoot, "Foot.L");
+        rightFoot = FishingRemoteAvatarAsset.FindBone(visualRoot, "Foot.R");
         leftShin = FishingRemoteAvatarAsset.FindBone(visualRoot, "Shin.L");
         rightShin = FishingRemoteAvatarAsset.FindBone(visualRoot, "Shin.R");
         leftUpperArm = FishingRemoteAvatarAsset.FindBone(visualRoot, "UpperArm.L");
@@ -298,6 +302,8 @@ public sealed class FishingRemotePlayer : MonoBehaviour
         BodyHeight = bounds.size.y;
         visual.transform.position += Vector3.up * (transform.position.y + FeetOffset - bounds.min.y);
         restingVisualOffset = visual.transform.localPosition;
+        if (leftFoot != null && rightFoot != null)
+            standingFootHeight = Mathf.Min(leftFoot.position.y, rightFoot.position.y) - transform.position.y;
         return Mathf.Clamp(bounds.max.y - bounds.min.y + FeetOffset + .22f, 1.5f, 3f);
     }
 
@@ -325,10 +331,12 @@ public sealed class FishingRemotePlayer : MonoBehaviour
         riddenBoat=rideSeat>=0?MultiplayerBoat.Find(rideOwner,rideKey):null;
         bool holding = peer.heldFishSpecies >= 0 && peer.heldFishWeight > 0f && !peer.rodEquipped && !peer.swimming;
         UpdateHeldFish(holding ? peer.heldFishSpecies : -1, peer.heldFishWeight);
+        bool wasPosing = fishPosing, wasBigPose = bigFishPose;
         bigFishPose = FishHoldingPoseRules.UseBigPose(peer.heldFishSpecies,
             holding ? ShopCatalog.FishLength(peer.heldFishSpecies, peer.heldFishWeight) : 0f);
         fishPosing = holding && peer.fishPosing && peer.rideSeat <= 0 &&
             (bigFishPose ? bigPosePlayable.IsValid() : smallPosePlayable.IsValid());
+        if (!fishPosing || !wasPosing || wasBigPose != bigFishPose) fishPoseClock = 0f;
         if (heldFishFlop != null) heldFishFlop.SupportedPose = fishPosing && bigFishPose;
         bool motorboatDriver = (peer.rideSeat == 1 || peer.rideSeat == 2) && (riddenBoat == null || riddenBoat.Boat.IsMotorboat);
         UpdateHeldRod(peer.rodEquipped && !peer.swimming && !holding && !motorboatDriver, peer.rodTier);
@@ -487,6 +495,13 @@ public sealed class FishingRemotePlayer : MonoBehaviour
             float freeWeight = (1f - holdFishBlend) * (1f - castBlend);
             float stationaryWeight = freeWeight * (1f - walkReelBlend);
             float locomotionWeight = (1f - fishingWeight) * stationaryWeight;
+            // The graph is manually evaluated: advance both pose clips explicitly,
+            // just like the existing walking and holding clips, at authored speed.
+            if (fishPosing) fishPoseClock += dt;
+            if (smallPosePlayable.IsValid())
+                smallPosePlayable.SetTime(fishPoseClock % Mathf.Max(.01f, smallPoseClip.length));
+            if (bigPosePlayable.IsValid())
+                bigPosePlayable.SetTime(fishPoseClock % Mathf.Max(.01f, bigPoseClip.length));
             float poseWeight = fishPosing ? 1f - drivingBlend : 0f;
             float regularWeight = (1f - drivingBlend) * (fishPosing ? 0f : 1f);
             animationMixer.SetInputWeight(11, bigFishPose ? 0f : poseWeight);
@@ -512,6 +527,17 @@ public sealed class FishingRemotePlayer : MonoBehaviour
                 animationMixer.SetInputWeight(10, passengerPose ? drivingBlend : 0f);
             }
             animationGraph.Evaluate(0f);
+            // Keep the kneeling clip's lowest foot at the same floor clearance
+            // as the calibrated standing rig. Only the visual root moves; the
+            // player collider/network position and authored joint rotations do not.
+            // restingVisualOffset is restored above, so this never accumulates.
+            if (fishPosing && bigFishPose && !drivingMotorboat &&
+                visualRoot != null && leftFoot != null && rightFoot != null)
+            {
+                float posedFootHeight = Mathf.Min(leftFoot.position.y, rightFoot.position.y);
+                visualRoot.position += Vector3.up *
+                    (transform.position.y + standingFootHeight - posedFootHeight);
+            }
             if (drivingMotorboat && drivingBlend > .001f && visualRoot != null)
             {
                 // Align the animated pelvis to the actual seat cushion, rather
