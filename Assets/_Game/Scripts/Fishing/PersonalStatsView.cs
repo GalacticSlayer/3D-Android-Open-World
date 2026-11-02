@@ -134,7 +134,7 @@ public static class PersonalStatsView
         Label(right.transform,"ONE ABILITY UPGRADE POINT EVERY 20 LEVELS",16,.03f,.85f,.97f,.91f,Detail);
         string[] descriptionsAbility={
             "After every skill use, zaps the fish 8 times over 4 seconds, dealing "+(data.BurningTotalFraction*100f).ToString("0.#")+"% of its maximum health as damage, up to 2,000 damage. The first zap deals half; the remaining seven share the rest.",
-            "Automatically deals "+(data.HooksetDamageFraction*100f).ToString("0.#")+"% of max HP when hooking.",
+            "Automatically deals "+(data.HooksetDamageFraction*100f).ToString("0.#")+"% of max HP when hooking, up to 4,000 damage.",
             "Automatically triggers upon line reaching the maximum length. Exceed the limit and reel without tension gain or line breaks for "+data.ImmortalityDuration.ToString("0.#")+"s. Once per fight.",
             "The fish swims straight toward you at 2 m/s for "+data.SirenDuration.ToString("0.#")+"s after activation. Once per fight."
         };
