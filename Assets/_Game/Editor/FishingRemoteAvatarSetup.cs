@@ -16,6 +16,8 @@ public sealed class FishingRemoteAvatarSetup : IPreprocessBuildWithReport
     public const string ReelSourcePath = "Assets/Manually Added Assets/Female Reeling.fbx";
     public const string PullSourcePath = "Assets/Manually Added Assets/Female Pulling on Rod.fbx";
     public const string WalkReelSourcePath = "Assets/Manually Added Assets/Female Reeling and Walking.fbx";
+    public const string SmallFishPoseSourcePath = "Assets/Manually Added Assets/Female Holding a Small Fish Pose.fbx";
+    public const string BigFishPoseSourcePath = "Assets/Manually Added Assets/Female Holding a Big Fish Pose.fbx";
     public const string HoldFishSourcePath = "Assets/Manually Added Assets/Female Holding the Fish.fbx";
     public const string WalkHoldFishSourcePath = "Assets/Manually Added Assets/Female Holding the Fish while Walking.fbx";
     public const string DriveMotorboatSourcePath = "Assets/Manually Added Assets/Female Driving Motorboat.fbx";
@@ -133,6 +135,13 @@ public sealed class FishingRemoteAvatarSetup : IPreprocessBuildWithReport
             return false;
         }
         if (!ValidateBindings(model, walkReel) || !ValidateBindings(model, holdFish) || !ValidateBindings(model, walkHoldFish)) return false;
+        AnimationClip smallPose = FindAnimation(SmallFishPoseSourcePath, "pose", true);
+        AnimationClip bigPose = FindAnimation(BigFishPoseSourcePath, "pose", true);
+        if (smallPose == null || bigPose == null || !ValidateBindings(model, smallPose) || !ValidateBindings(model, bigPose))
+        {
+            Debug.LogError("Fish poses: missing or incompatible small/big fish pose FBX.");
+            return false;
+        }
         AnimationClip driveMotorboat = FindAnimation(DriveMotorboatSourcePath, "driv");
         if (driveMotorboat != null && !ValidateBindings(model, driveMotorboat)) return false;
         AnimationClip passengerMotorboat = FindAnimation(PassengerMotorboatSourcePath, "passenger");
@@ -165,7 +174,7 @@ public sealed class FishingRemoteAvatarSetup : IPreprocessBuildWithReport
             AssetDatabase.CreateAsset(catalog, CatalogPath);
         }
 
-        bool changed = catalog.ModelPrefab != model || catalog.WalkClip != walk || catalog.RunClip != run || catalog.IdleClip != idle || catalog.CastClip != cast || catalog.LeftHandPath != leftHandPath || catalog.ReelClip != reel || catalog.PullClip != pull || catalog.WalkReelClip != walkReel || catalog.HoldFishClip != holdFish || catalog.WalkHoldFishClip != walkHoldFish || catalog.DriveMotorboatClip != driveMotorboat || catalog.PassengerMotorboatClip != passengerMotorboat;
+        bool changed = catalog.SmallFishPoseClip != smallPose || catalog.BigFishPoseClip != bigPose || catalog.ModelPrefab != model || catalog.WalkClip != walk || catalog.RunClip != run || catalog.IdleClip != idle || catalog.CastClip != cast || catalog.LeftHandPath != leftHandPath || catalog.ReelClip != reel || catalog.PullClip != pull || catalog.WalkReelClip != walkReel || catalog.HoldFishClip != holdFish || catalog.WalkHoldFishClip != walkHoldFish || catalog.DriveMotorboatClip != driveMotorboat || catalog.PassengerMotorboatClip != passengerMotorboat;
         if (changed)
         {
             catalog.ModelPrefab = model;
@@ -177,6 +186,8 @@ public sealed class FishingRemoteAvatarSetup : IPreprocessBuildWithReport
             catalog.PullClip = pull;
             catalog.WalkReelClip = walkReel;
             catalog.HoldFishClip = holdFish;
+            catalog.SmallFishPoseClip = smallPose;
+            catalog.BigFishPoseClip = bigPose;
             catalog.WalkHoldFishClip = walkHoldFish;
             catalog.DriveMotorboatClip = driveMotorboat;
             catalog.PassengerMotorboatClip = passengerMotorboat;
@@ -211,7 +222,7 @@ public sealed class FishingRemoteAvatarSetup : IPreprocessBuildWithReport
         return boneCurves > 0;
     }
 
-    private static AnimationClip FindAnimation(string path, string preferredName)
+    private static AnimationClip FindAnimation(string path, string preferredName, bool allowStaticPose = false)
     {
         if (AssetDatabase.LoadAssetAtPath<GameObject>(path) == null)
             return null;
@@ -220,7 +231,7 @@ public sealed class FishingRemoteAvatarSetup : IPreprocessBuildWithReport
         foreach (UnityEngine.Object item in AssetDatabase.LoadAllAssetsAtPath(path))
         {
             AnimationClip clip = item as AnimationClip;
-            if (clip == null || clip.length < .05f ||
+            if (clip == null || (!allowStaticPose && clip.length < .05f) ||
                 clip.name.StartsWith("__preview__", StringComparison.OrdinalIgnoreCase))
                 continue;
 
@@ -244,6 +255,8 @@ public sealed class FishingRemoteIdleModelImport : AssetPostprocessor
             assetPath != FishingRemoteAvatarSetup.ReelSourcePath &&
             assetPath != FishingRemoteAvatarSetup.PullSourcePath &&
             assetPath != FishingRemoteAvatarSetup.WalkReelSourcePath &&
+            assetPath != FishingRemoteAvatarSetup.SmallFishPoseSourcePath &&
+            assetPath != FishingRemoteAvatarSetup.BigFishPoseSourcePath &&
             assetPath != FishingRemoteAvatarSetup.HoldFishSourcePath &&
             assetPath != FishingRemoteAvatarSetup.WalkHoldFishSourcePath &&
             assetPath != FishingRemoteAvatarSetup.DriveMotorboatSourcePath &&
@@ -277,6 +290,8 @@ public sealed class FishingRemoteAvatarImportWatcher : AssetPostprocessor
                 importedAssets[i] != FishingRemoteAvatarSetup.ReelSourcePath &&
                 importedAssets[i] != FishingRemoteAvatarSetup.PullSourcePath &&
                 importedAssets[i] != FishingRemoteAvatarSetup.WalkReelSourcePath &&
+                importedAssets[i] != FishingRemoteAvatarSetup.SmallFishPoseSourcePath &&
+                importedAssets[i] != FishingRemoteAvatarSetup.BigFishPoseSourcePath &&
                 importedAssets[i] != FishingRemoteAvatarSetup.HoldFishSourcePath &&
                 importedAssets[i] != FishingRemoteAvatarSetup.WalkHoldFishSourcePath &&
                 importedAssets[i] != FishingRemoteAvatarSetup.DriveMotorboatSourcePath &&

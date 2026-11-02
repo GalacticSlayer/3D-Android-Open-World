@@ -464,3 +464,20 @@ test('server advertises the supported rod tier on open, join and polls',async t=
   assert.equal(update.ok,true);assert.equal(update.maxRodTier,5);
   assert.equal(update.players.find(p=>p.id===host.id).rodTier,5);
 });
+
+test('fish pose replicates to observers, clears, and defaults off for older clients',async t=>{
+  const post=await fixture(t);
+  const a=await post('/v1/open',hello);
+  const b=await post('/v1/join',{...hello,code:a.code,name:'Observer'});
+  const held={...pose(),heldFishSpecies:19,heldFishWeight:90,fishPosing:true};
+  assert.equal((await post('/v1/state',{pose:held},a.token)).ok,true);
+  let seen=await post('/v1/state',{pose:pose()},b.token);
+  assert.equal(seen.players.find(p=>p.id===a.id).fishPosing,true);
+  for(const state of [{...held,fishPosing:false},pose(),{...held,rodEquipped:true},
+      {...held,swimming:true},{...held,heldFishSpecies:-1,heldFishWeight:0}]) {
+    assert.equal((await post('/v1/state',{pose:state},a.token)).ok,true);
+    seen=await post('/v1/state',{pose:pose()},b.token);
+    assert.equal(seen.players.find(p=>p.id===a.id).fishPosing,false);
+  }
+  assert.equal((await post('/v1/state',{pose:{...held,fishPosing:'true'}},a.token)).status,400);
+});

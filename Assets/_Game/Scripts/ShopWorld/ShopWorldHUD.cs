@@ -33,6 +33,8 @@ public sealed class ShopWorldHUD : MonoBehaviour
     private GameObject root, modal, nearbyButton;
     private GameObject storeHeader, storeBody;
     private Button menuClose, perspectiveToggle;
+    private GameObject poseShortcut;
+    private Text poseLabel;
     private GameObject profileNameRow;
     private InputField profileNameInput;
     private RectTransform list;
@@ -79,6 +81,8 @@ public sealed class ShopWorldHUD : MonoBehaviour
         // The animated catch-XP bar temporarily replaces MENU / TRAVEL only.
         // Keep the other shortcuts working and restore the menu button afterward.
         menuShortcut.SetActive(!MenuOpen && !FishingExperienceToast.IsShowingXp);
+        poseShortcut.SetActive(!MenuOpen && !travel.Traveling && fishing != null && fishing.CanPoseWithFish);
+        poseLabel.text = fishing != null && fishing.IsFishPosing ? "STOP POSING" : "POSE";
         indexShortcut.SetActive(!MenuOpen);baitShortcut.SetActive(!MenuOpen);RefreshBaitShortcut();
         bool independentPage=page=="bait" || page.StartsWith(HabitatAddPrefix,StringComparison.Ordinal);
         if(shopSession==null && !independentPage && Keyboard.current!=null && Keyboard.current.tabKey.wasPressedThisFrame) Open("bag");
@@ -131,6 +135,11 @@ public sealed class ShopWorldHUD : MonoBehaviour
         Button menu=ButtonAt(root.transform,"MENU / TRAVEL",()=>Open("travel"));
         menuShortcut=menu.gameObject;
         Rect(menu.GetComponent<RectTransform>(),new Vector2(1,1),new Vector2(1,1),new Vector2(1,1),new Vector2(-36,-32),new Vector2(380,92));
+        poseShortcut=ButtonAt(root.transform,"POSE",()=>fishing.ToggleFishPose()).gameObject;
+        Rect(poseShortcut.GetComponent<RectTransform>(),Vector2.one,Vector2.one,Vector2.one,new Vector2(-36,-136),new Vector2(380,76));
+        poseLabel=poseShortcut.GetComponentInChildren<Text>();
+        FishingHudTheme.Panel(poseShortcut);
+        poseShortcut.SetActive(false);
         indexShortcut=ButtonAt(root.transform,"ISLAND / FISH INDEX",()=>Open("islands")).gameObject;
         Rect(indexShortcut.GetComponent<RectTransform>(),new Vector2(0,1),new Vector2(0,1),new Vector2(0,1),new Vector2(36,-32),new Vector2(460,92));
         baitShortcut=ButtonAt(root.transform,"",()=>Open("bait")).gameObject;

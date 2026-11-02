@@ -23,7 +23,7 @@ public sealed class FishingMultiplayer : MonoBehaviour
         public string rideOwner="",rideKey="";
         public int rideSeat=-1,rideRevision;
         public float rideX,rideY,rideZ,rideYaw,boatInputX,boatInputY,boatLookYaw;
- public float x,y,z,yaw; public int world; public bool swimming, sprinting, rodEquipped, reeling, hasFish, lureInWater; public float reelTime, heldFishWeight; public int heldFishSpecies = -1; public int rodTier, castSequence; public float castAge = -1f, castDuration = .72f; }
+ public float x,y,z,yaw; public int world; public bool swimming, sprinting, rodEquipped, reeling, hasFish, lureInWater; public bool fishPosing; public float reelTime, heldFishWeight; public int heldFishSpecies = -1; public int rodTier, castSequence; public float castAge = -1f, castDuration = .72f; }
     [Serializable] public class Peer : Pose { public string id,name; }
     [Serializable] public class Reply { public bool ok,bossReady; public int maxRodTier; public string error,id,token,code,hostId; public Peer[] players; public FishingTournament.View tournament; public AbyssalLeviathanEncounter.View boss; }
     [Serializable] private class Message
@@ -101,6 +101,7 @@ public sealed class FishingMultiplayer : MonoBehaviour
             rodEquipped=fishing!=null && fishing.IsRodEquipped,
             heldFishSpecies=fishing!=null ? fishing.NetworkHeldSpecies : -1,
             heldFishWeight=fishing!=null ? fishing.NetworkHeldWeight : 0f,
+            fishPosing=fishing!=null && fishing.IsFishPosing,
             reeling=fishing!=null && fishing.NetworkIsReeling,
             hasFish=fishing!=null && fishing.NetworkHasFish,
             lureInWater=fishing!=null && fishing.NetworkLureInWater,

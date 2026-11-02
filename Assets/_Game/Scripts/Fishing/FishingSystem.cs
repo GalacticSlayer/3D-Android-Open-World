@@ -254,6 +254,19 @@ public class FishingSystem : MonoBehaviour
     public int NetworkHeldSpecies => heldRecord != null && heldFishVisual != null && !rodEquipped && !shopMode
         ? heldRecord.speciesId : -1;
     public float NetworkHeldWeight => NetworkHeldSpecies >= 0 ? heldRecord.weightKg : 0f;
+    public bool IsFishPosing { get; private set; }
+    public bool CanPoseWithFish => NetworkHeldSpecies >= 0 && !MustStowForSwimming();
+    public void ToggleFishPose()
+    {
+        if (!CanPoseWithFish) return;
+        IsFishPosing = !IsFishPosing;
+        if (IsFishPosing)
+        {
+            var owner = GetComponent<FirstPersonController>();
+            var view = FishingThirdPersonView.For(owner);
+            if (view != null && !view.IsThirdPerson) view.Toggle();
+        }
+    }
     public bool IsHolding(CaughtFishRecord record) => heldRecord==record && heldFishVisual!=null;
     public void PrepareForMenu()
     {
@@ -365,6 +378,16 @@ public class FishingSystem : MonoBehaviour
         fishPulledLineThisFrame = false;
         if(heldRecord!=null && inventory!=null && !System.Linq.Enumerable.Contains(inventory.Fish,heldRecord))
         {ClearHeldFish();RefreshHandHud();}
+        if (IsFishPosing)
+        {
+            var owner = GetComponent<FirstPersonController>();
+            var view = GetComponent<FishingThirdPersonView>();
+            var passenger = GetComponent<BoatPassenger>();
+            if (!CanPoseWithFish || ShopWorldHUD.MenuOpen ||
+                (owner != null && owner.BoatInput.sqrMagnitude > .0025f) ||
+                (passenger != null && passenger.Seated) || view == null || !view.IsThirdPerson)
+                IsFishPosing = false;
+        }
         UpdateHeldFishAnimation();
         if(rodEquipped && MustStowForSwimming())
         {UnequipHands();return;}
@@ -3955,6 +3978,7 @@ public class FishingSystem : MonoBehaviour
 
     private void ClearHeldFish()
     {
+        IsFishPosing = false;
         heldRecord=null;
         if (heldFishVisual != null)
         {

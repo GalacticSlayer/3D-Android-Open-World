@@ -45,6 +45,7 @@ export function createSessionServer({ clock = Date.now, timeout = 30000, ledgerP
     if (value.castAge !== undefined && (typeof value.castAge !== 'number' || !Number.isFinite(value.castAge) || value.castAge < -1 || value.castAge > 60)) fail(400, 'Invalid cast age.');
     if (value.castDuration !== undefined && (typeof value.castDuration !== 'number' || !Number.isFinite(value.castDuration) || value.castDuration < .1 || value.castDuration > 60)) fail(400, 'Invalid cast duration.');
     if (value.reelTime !== undefined && (typeof value.reelTime !== 'number' || !Number.isFinite(value.reelTime) || value.reelTime < 0 || value.reelTime > 10000000)) fail(400, 'Invalid reel animation time.');
+    if (value.fishPosing !== undefined && typeof value.fishPosing !== 'boolean') fail(400, 'Invalid fish pose.');
     if (value.heldFishSpecies !== undefined && (!Number.isInteger(value.heldFishSpecies) || value.heldFishSpecies < -1 || value.heldFishSpecies > 4096)) fail(400, 'Invalid held fish.');
     if (value.heldFishWeight !== undefined && (typeof value.heldFishWeight !== 'number' || !Number.isFinite(value.heldFishWeight) || value.heldFishWeight < 0 || value.heldFishWeight > 1000000)) fail(400, 'Invalid held fish weight.');
     if (value.heldFishSpecies >= 0 && !(value.heldFishWeight > 0)) fail(400, 'Missing held fish weight.');
@@ -91,6 +92,8 @@ export function createSessionServer({ clock = Date.now, timeout = 30000, ledgerP
       castDuration: value.castDuration ?? .72,
       reeling: value.reeling === true, hasFish: value.hasFish === true,
       lureInWater: value.lureInWater === true, reelTime: value.reelTime ?? 0,
+      fishPosing: value.fishPosing === true && value.heldFishSpecies >= 0 && value.heldFishWeight > 0 &&
+        value.rodEquipped !== true && value.swimming !== true && !(value.rideSeat > 0),
       heldFishSpecies: value.heldFishSpecies ?? -1, heldFishWeight: value.heldFishWeight ?? 0 };
   }
   function add(room, data) {
