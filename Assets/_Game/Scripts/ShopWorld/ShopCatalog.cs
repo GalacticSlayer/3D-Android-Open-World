@@ -137,7 +137,7 @@ public static class ShopCatalog
         new HabitatDefinition("reef", "Reef Gallery", 700, 6, 12f, 42f, 4.8f, 2.2f, 2.8f),
         new HabitatDefinition("lagoon", "Lagoon Suite", 2000, 10, 36f, 165f, 8f, 3.6f, 5f, false, true),
         new HabitatDefinition("grand", "Grand Ocean Gallery", 6500, 20, 105f, 660f, 14f, 5f, 9f, false, true),
-        new HabitatDefinition("ocean", "Oceanarium", 18000, 40, 360f, 3000f, 26f, 7f, 16f, false, true),
+        new HabitatDefinition("ocean", "Oceanarium", 18000, 40, 1000f, 3000f, 26f, 7f, 16f, false, true),
         new HabitatDefinition("pond", "Courtyard Pond", 1400, 12, 24f, 135f, 10f, 2.8f, 8f, true, true),
         new HabitatDefinition("garden", "Garden Lagoon", 5000, 25, 105f, 720f, 18f, 4f, 14f, true, true),
         new HabitatDefinition("lake", "Sanctuary Lake", 15000, 50, 360f, 3600f, 32f, 6f, 24f, true, true)
