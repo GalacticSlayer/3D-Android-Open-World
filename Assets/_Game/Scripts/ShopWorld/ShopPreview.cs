@@ -8,7 +8,8 @@ using UnityEngine.UI;
 public sealed class ShopPreview : MonoBehaviour
 {
     private readonly Dictionary<string,RenderTexture> cache=new Dictionary<string,RenderTexture>();
-    private readonly Dictionary<string,Vector2> reelImageCenters=new Dictionary<string,Vector2>();
+    // Static reel thumbnails are prepared once per tier and reused across UI cards.
+    private readonly Dictionary<string,Texture2D> reelIcons=new Dictionary<string,Texture2D>();
     private readonly Queue<System.Action> requests=new Queue<System.Action>();
     private static int studioCount;
     private Camera studio;
@@ -71,11 +72,11 @@ public sealed class ShopPreview : MonoBehaviour
             }
             if(reel && SetWaterBackground(target))
             {
-                // Unity UI positive Z is counterclockwise when viewed from the front.
-                // Rotate the rendered reel 30 degrees clockwise without rotating
-                // its water background. This is another 30% increase: 1.3 * 1.3 = 1.69.
-                target.rectTransform.localRotation=Quaternion.Euler(0f,0f,-30f);
-                target.rectTransform.localScale=new Vector3(1.69f,1.69f,1f);
+                // No large or rotated RectTransform: that was moving the reel
+                // outside the icon mask. Instead the rendered reel is rotated,
+                // centred and enlarged WITHIN a square texture below.
+                target.rectTransform.localRotation=Quaternion.identity;
+                target.rectTransform.localScale=Vector3.one;
                 RectTransform reelBackground=target.transform.parent.Find("FishingItemWaterBackground") as RectTransform;
                 if(reelBackground!=null)target.rectTransform.anchoredPosition=reelBackground.anchoredPosition;
                 target.color=Color.white;
@@ -98,11 +99,18 @@ public sealed class ShopPreview : MonoBehaviour
         // Cached render textures and lure/gear previews use their full UVs.
         target.uvRect=new Rect(0f,0f,1f,1f);
         string key=(transparentBackground?"clear:":"")+(faceRight?"right:":"")+(fitWholeFish?"index:":"")+(resolvedGear??(species+":"+kg.ToString("R",System.Globalization.CultureInfo.InvariantCulture)));
+        // A reel's original 3D preview is captured once, then cropped,
+        // rotated and packed into this cache so each card stays centred.
+        if(resolvedGear!=null && resolvedGear.StartsWith("Reel",System.StringComparison.Ordinal)
+            && reelIcons.TryGetValue(key,out Texture2D reelIcon) && reelIcon!=null)
+        {
+            target.texture=reelIcon;target.enabled=true;return;
+        }
         if(cache.TryGetValue(key,out var ready))
         {
             if(ready!=null && ready.IsCreated())
             {
-                target.texture=ready;target.enabled=true;CenterReelArtwork(target,key);return;
+                target.texture=ready;target.enabled=true;return;
             }
             cache.Remove(key);
             if(ready!=null)Destroy(ready);
@@ -235,52 +243,102 @@ public sealed class ShopPreview : MonoBehaviour
         var texture=new RenderTexture(transparentBackground?384:192,192,16,RenderTextureFormat.ARGB32){name="Inventory "+key,wrapMode=TextureWrapMode.Clamp};texture.Create();rendering=texture;
         studio.targetTexture=texture;studio.enabled=true;
         yield return new WaitForEndOfFrame();
-        // Use the actual visible reel pixels to centre asymmetric 3D silhouettes.
-        // One 192px readback per reel tier, cached for later shop/inventory visits.
-        if(reelPreview && reelWithBackdrop)reelImageCenters[key]=VisibleArtworkCenter(texture);
+        // Read back the actual visible silhouette rather than its mesh pivot.
+        // This corrects the bottom-heavy offset shown in the Equipment menu.
+        Texture2D centredReel=reelPreview && reelWithBackdrop ? MakeCentredReelIcon(texture) : null;
         studio.enabled=false;studio.targetTexture=null;Destroy(model);model=null;
-        cache[key]=texture;rendering=null;
-        if(target!=null){target.texture=texture;target.enabled=true;CenterReelArtwork(target,key);}
+        if(centredReel!=null)
+        {
+            reelIcons[key]=centredReel;
+            texture.Release();
+            Destroy(texture);
+        }
+        else cache[key]=texture;
+        rendering=null;
+        if(target!=null){target.texture=centredReel!=null?(Texture)centredReel:texture;target.enabled=true;}
         busy=false;
     }
 
-    // Centre the image content, not the fixed blue background or the card.
-    // UV panning remains correct even after the UI item is enlarged and rotated.
-    private void CenterReelArtwork(RawImage target,string key)
+    // Composites the already-rendered 3D reel into a fixed 256px transparent
+    // square. The final orientation is 90 degrees CCW from the prior -30
+    // degree UI presentation, i.e. +60 degrees. Reels remain 1.69x the
+    // original icon scale unless that would cause them to leave the card.
+    private static Texture2D MakeCentredReelIcon(RenderTexture source)
     {
-        if(target==null || !reelImageCenters.TryGetValue(key,out Vector2 c))return;
-        target.uvRect=new Rect(c.x-.5f,c.y-.5f,1f,1f);
-    }
-
-    private static Vector2 VisibleArtworkCenter(RenderTexture texture)
-    {
-        if(texture==null)return new Vector2(.5f,.5f);
+        if(source==null)return null;
         RenderTexture previous=RenderTexture.active;
-        Texture2D snapshot=new Texture2D(texture.width,texture.height,TextureFormat.RGBA32,false);
+        Texture2D snapshot=new Texture2D(source.width,source.height,TextureFormat.RGBA32,false);
+        Color32[] pixels;
         try
         {
-            RenderTexture.active=texture;
-            snapshot.ReadPixels(new Rect(0,0,texture.width,texture.height),0,0,false);
+            RenderTexture.active=source;
+            snapshot.ReadPixels(new Rect(0,0,source.width,source.height),0,0,false);
             snapshot.Apply(false,false);
-            Color32[] pixels=snapshot.GetPixels32();
-            int minX=texture.width,minY=texture.height,maxX=-1,maxY=-1;
-            for(int y=0;y<texture.height;y++)
-            for(int x=0;x<texture.width;x++)
-            {
-                if(pixels[y*texture.width+x].a<=32)continue;
-                minX=Mathf.Min(minX,x);maxX=Mathf.Max(maxX,x);
-                minY=Mathf.Min(minY,y);maxY=Mathf.Max(maxY,y);
-            }
-            if(maxX>=minX && maxY>=minY)
-                return new Vector2((minX+maxX+1f)/(2f*texture.width),
-                                   (minY+maxY+1f)/(2f*texture.height));
+            pixels=snapshot.GetPixels32();
         }
         finally
         {
             RenderTexture.active=previous;
             Destroy(snapshot);
         }
-        return new Vector2(.5f,.5f);
+
+        int width=source.width,height=source.height;
+        int minX=width,minY=height,maxX=-1,maxY=-1;
+        // Some graphics pipelines give an opaque black alpha channel to a
+        // clear camera background; account for that when finding the reel.
+        Color32 corner=pixels[0];
+        bool opaqueBlackBackground=corner.a>240 &&
+            corner.r<12 && corner.g<12 && corner.b<12;
+        for(int y=0;y<height;y++)
+        for(int x=0;x<width;x++)
+        {
+            Color32 p=pixels[y*width+x];
+            bool visible=opaqueBlackBackground
+                ? (p.r>18 || p.g>18 || p.b>18)
+                : p.a>28;
+            if(!visible)continue;
+            minX=Mathf.Min(minX,x);maxX=Mathf.Max(maxX,x);
+            minY=Mathf.Min(minY,y);maxY=Mathf.Max(maxY,y);
+        }
+        if(maxX<minX || maxY<minY)return null;
+
+        float cx=(minX+maxX)*.5f,cy=(minY+maxY)*.5f;
+        const float rotationDegrees=60f; // -30 degrees + 90 degrees CCW
+        float radians=rotationDegrees*Mathf.Deg2Rad;
+        float cos=Mathf.Cos(radians),sin=Mathf.Sin(radians);
+        float spanX=Mathf.Abs(cos)*(maxX-minX+1)+Mathf.Abs(sin)*(maxY-minY+1);
+        float spanY=Mathf.Abs(sin)*(maxX-minX+1)+Mathf.Abs(cos)*(maxY-minY+1);
+        // At most 169% of the original size; fit safely within 90% of the
+        // blue square even for unusual reel models and different tiers.
+        float scale=Mathf.Min(1.69f,
+            .90f*Mathf.Min(width/Mathf.Max(spanX,1f),height/Mathf.Max(spanY,1f)));
+
+        const int outputSize=256;
+        Color32[] centred=new Color32[outputSize*outputSize];
+        for(int y=0;y<outputSize;y++)
+        for(int x=0;x<outputSize;x++)
+        {
+            // Inverse mapping: every output pixel asks where it originated.
+            float dx=((x+.5f)/outputSize-.5f)*width/scale;
+            float dy=((y+.5f)/outputSize-.5f)*height/scale;
+            int sx=Mathf.RoundToInt(cx+dx*cos+dy*sin);
+            int sy=Mathf.RoundToInt(cy-dx*sin+dy*cos);
+            if(sx>=0 && sx<width && sy>=0 && sy<height)
+            {
+                Color32 p=pixels[sy*width+sx];
+                // Avoid exposing an opaque black camera clear colour.
+                if(opaqueBlackBackground && p.r<=18 && p.g<=18 && p.b<=18)
+                    p.a=0;
+                centred[y*outputSize+x]=p;
+            }
+        }
+        Texture2D result=new Texture2D(outputSize,outputSize,TextureFormat.RGBA32,false);
+        result.name="CenteredReelPreview";
+        result.wrapMode=TextureWrapMode.Clamp;
+        result.filterMode=FilterMode.Bilinear;
+        result.SetPixels32(centred);
+        result.Apply(false,true);
+        return result;
     }
 
     // Put the SAME water texture used by the authored rod/line cards behind a
@@ -476,6 +534,8 @@ public sealed class ShopPreview : MonoBehaviour
     public void Clear()
     {
         Suspend();foreach(var t in cache.Values){if(t!=null){t.Release();Destroy(t);}}cache.Clear();
+        foreach(var icon in reelIcons.Values)if(icon!=null)Destroy(icon);
+        reelIcons.Clear();
     }
     private void OnDestroy(){Clear();if(stage!=null)Destroy(stage);if(itemMaterial!=null)Destroy(itemMaterial);}
 }
