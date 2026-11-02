@@ -55,7 +55,7 @@ root=Path(__file__).resolve().parents[2]/'Assets/Manually Added Assets'
 reference,_,_=inspect(root/'Female Holding the Fish.fbx')
 model,_,_=inspect(root/'Female Character Model.fbx')
 model_names={p.split('/')[-1] for p in model}
-for size in ['Small','Big']:
+for size in ['Small']:
     name=f'Female Holding a {size} Fish Pose.fbx'
     paths,takes,curves=inspect(root/name)
     assert paths == reference, sorted(paths ^ reference)

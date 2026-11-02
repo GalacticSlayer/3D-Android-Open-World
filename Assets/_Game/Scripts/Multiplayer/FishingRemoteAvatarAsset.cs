@@ -13,7 +13,6 @@ public sealed class FishingRemoteAvatarAsset : ScriptableObject
     public AnimationClip PullClip;
     public AnimationClip WalkReelClip;
     public AnimationClip SmallFishPoseClip;
-    public AnimationClip BigFishPoseClip;
     public AnimationClip HoldFishClip;
     public AnimationClip WalkHoldFishClip;
     public AnimationClip DriveMotorboatClip;

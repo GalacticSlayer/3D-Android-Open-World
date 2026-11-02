@@ -8,7 +8,6 @@ public sealed class CaughtFishFlop : MonoBehaviour
 {
     public const string HeldStruggleStateName = "HeldStruggle";
     public System.Action PoseUpdated;
-    public bool SupportedPose { get; set; }
     public float SwingBoost { get; private set; }
     private Transform[] bones;
     private Vector3[] restPositions, restScales;
@@ -157,23 +156,6 @@ public sealed class CaughtFishFlop : MonoBehaviour
     private void Awake() => Initialize();
     private void LateUpdate()
     {
-        if (playerHeld && SupportedPose)
-        {
-            SwingBoost = 0f;
-            // Restore the sampled neutral fish, including procedural bone motion.
-            // The root remains positioned by the avatar's two-arm attachment.
-            for (int i = 1; i < bones.Length; i++)
-            {
-                if (bones[i] == null) continue;
-                bones[i].localPosition = restPositions[i];
-                bones[i].localRotation = restRotations[i];
-                bones[i].localScale = restScales[i];
-            }
-            burstStart = -100f;
-            nextBurst = Time.time + 5f;
-            PoseUpdated?.Invoke();
-            return;
-        }
         if (playerHeld && authoredHeldClip != null && animator != null)
         {
             // Play the entire struggle at its authored speed, without the generic
