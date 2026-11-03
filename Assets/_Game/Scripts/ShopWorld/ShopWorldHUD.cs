@@ -515,7 +515,8 @@ public sealed class ShopWorldHUD : MonoBehaviour
         }
         islandThumbnail.SetPixels(pixels);islandThumbnail.Apply(false,true);return islandThumbnail;
     }
-    private void BagPage()
+    // Shared by the bag and market so their controls and ordering stay identical.
+    private bool BagSortAndFilterControls()
     {
         var species=progress.Data.bag.Select(f=>f.speciesId).Distinct().OrderBy(id=>FishCatalog.Get(id).Name).ToList();
         if(speciesFilter!=-1 && !species.Contains(speciesFilter))speciesFilter=-1;
@@ -527,15 +528,18 @@ public sealed class ShopWorldHUD : MonoBehaviour
         if(bagPicker=="sort")
         {
             for(int i=0;i<SortNames.Length;i++){int choice=i;Row(SortNames[i],"Choose how catches are ordered.",bagSort==i?"SELECTED":"SELECT",()=>{bagSort=choice;bagPicker=null;Refresh(true);});}
-            return;
+            return true;
         }
         if(bagPicker=="species")
         {
             Row("All species","Show every catch.","SELECT",()=>{speciesFilter=-1;bagPicker=null;Refresh(true);});
             foreach(int id in species){int choice=id;Row(FishCatalog.Get(id).Name,$"{progress.Data.bag.Count(f=>f.speciesId==id)} in bag","SELECT",()=>{speciesFilter=choice;bagPicker=null;Refresh(true);});}
-            return;
+            return true;
         }
-        if(progress.Data.bag.Count==0) {Row("No catches yet","Your infinite worms are always available. Travel to the island and cast.","TRAVEL",()=>Open("travel"));return;}
+        return false;
+    }
+    private IEnumerable<CaughtFishRecord> SortedBagFish()
+    {
         IEnumerable<CaughtFishRecord> fish=progress.Data.bag.Where(f=>speciesFilter<0 || f.speciesId==speciesFilter);
         switch(bagSort)
         {
@@ -545,7 +549,13 @@ public sealed class ShopWorldHUD : MonoBehaviour
             case 4:fish=fish.OrderBy(f=>FishCatalog.Get(f.speciesId).Name).ThenByDescending(f=>f.weightKg);break;
             default:fish=fish.OrderByDescending(f=>f.caughtUtcTicks);break;
         }
-        foreach(var record in fish)
+        return fish;
+    }
+    private void BagPage()
+    {
+        if(BagSortAndFilterControls())return;
+        if(progress.Data.bag.Count==0) {Row("No catches yet","Your infinite worms are always available. Travel to the island and cast.","TRAVEL",()=>Open("travel"));return;}
+        foreach(var record in SortedBagFish())
         {
             var f=record;Row(FishCatalog.Get(f.speciesId).Name,$"{FishCatalog.FormatWeight(f.weightKg)} / {ShopCatalog.FishLength(f.speciesId,f.weightKg):0.00} m / value {FishCatalog.GetSellValue(f.speciesId,f.weightKg,f.biomeId)} coins",fishing.IsHolding(f)?"PUT AWAY":"HOLD",()=>{Close();int index=progress.Data.bag.IndexOf(f);if(index>=0)fishing.HoldFish(index);},fish:f);
         }
@@ -612,7 +622,8 @@ public sealed class ShopWorldHUD : MonoBehaviour
         if(!travel.Near("market")) { Row("Visit the fish market","Return to the market counter to sell fish.","CLOSE",Close); return; }
         if(progress.Data.bag.Count==0) { Row("Your bag is empty","Bring your next catch to the market.","CLOSE",Close); return; }
         Row("Sell bag contents","Review the total before selling all fish in the bag.","REVIEW ALL",()=>Open("sell-confirm"));
-        foreach(var fish in new List<CaughtFishRecord>(progress.Data.bag))
+        if(BagSortAndFilterControls())return;
+        foreach(var fish in SortedBagFish().ToList())
         {
             var f=fish; int value=FishCatalog.GetSellValue(f.speciesId,f.weightKg,f.biomeId);
             Row(FishCatalog.Get(f.speciesId).Name,$"{FishCatalog.FormatWeight(f.weightKg)} / {ShopCatalog.FishLength(f.speciesId,f.weightKg):0.00} m",$"SELL {value}",()=>{bool sold=progress.Sell(f);if(sold)PlaySaleSound();Result(sold,$"Sold for {value} coins.");},!progress.ReadOnly,fish:f);
