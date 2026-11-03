@@ -47,8 +47,11 @@ internal static class Program
         Check(!d.Deposit("nano",a),"Same fish deposited twice");
         Check(d.Withdraw("nano",a) && d.bag.Contains(a),"Withdrawal lost fish");
         Check(!d.Withdraw("nano",a),"Same fish withdrawn twice");
-        var tiny=Fish(0.1f);var tiny2=Fish(0.1f);var tiny3=Fish(0.1f);d.bag.AddRange(new[]{tiny,tiny2,tiny3});
-        Check(d.Deposit("nano",tiny) && d.Deposit("nano",tiny2) && !d.Deposit("nano",tiny3),"Fish count limit bypassed");
+        var tiny=Fish(0.1f);var tiny2=Fish(0.1f);var tiny3=Fish(0.1f);
+        var tiny4=Fish(0.1f);var tiny5=Fish(0.1f);var tiny6=Fish(0.1f);
+        d.bag.AddRange(new[]{tiny,tiny2,tiny3,tiny4,tiny5,tiny6});
+        Check(d.Deposit("nano",tiny) && d.Deposit("nano",tiny2) && d.Deposit("nano",tiny3) &&
+              d.Deposit("nano",tiny4) && d.Deposit("nano",tiny5) && !d.Deposit("nano",tiny6),"Fish count limit bypassed");
         Check(!d.Deposit("lake",heavy),"Deposit into unowned lake");
         var invalid=Fish(float.NaN);d.bag.Add(invalid);Check(!d.Deposit("nano",invalid),"NaN admitted");d.bag.Remove(invalid);
         Check(d.Sell(a,20) && !d.Sell(a,20),"Duplicate sale paid twice");
@@ -63,7 +66,7 @@ internal static class Program
         var options=new JsonSerializerOptions { IncludeFields=true };
         string json=JsonSerializer.Serialize(d,options);var restored=JsonSerializer.Deserialize<ShopLedger>(json,options);
         Check(restored.coins==d.coins && restored.bag.Count==d.bag.Count && restored.bag.Count>150,"Full bag save lost fish");
-        Check(restored.Habitat("nano").fish.Count==3 && restored.rodOwned==1 && restored.bait[2]==0,"Save lost ownership or bait");
+        Check(restored.Habitat("nano").fish.Count==6 && restored.rodOwned==1 && restored.bait[2]==0,"Save lost ownership or bait");
         foreach(var habitat in ShopCatalog.Habitats)
         {
             Check(habitat.price>0 && habitat.fishLimit>0 && habitat.maxFishKg<=habitat.totalKg,"Invalid habitat limits");
