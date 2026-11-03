@@ -86,6 +86,39 @@ public sealed class TabbedTackleStoreExtension : MonoBehaviour
         if(rebuild)BuildStore(rows);
         HideCoreRows(rows);
         FitThreeItems(rows);
+        AlignStoreLinePreviews();
+    }
+
+    // Equipment's transparent line artwork is offset 9 px inside a 144 px image.
+    // The store uses smaller card and category thumbnails, so preserve that same
+    // relative alignment without changing Equipment or any other store icons.
+    private void AlignStoreLinePreviews()
+    {
+        if(fixedTabs!=null && fixedTabs.transform.childCount>(int)TackleTab.Lines)
+        {
+            Transform tabIcon=fixedTabs.transform.GetChild((int)TackleTab.Lines).Find("CategoryItemImage");
+            if(tabIcon!=null)AlignStoreLinePreview(tabIcon.GetComponent<RawImage>());
+        }
+
+        if(selected!=TackleTab.Lines || section==null)return;
+        for(int i=0;i<section.transform.childCount;i++)
+        {
+            Transform frame=section.transform.GetChild(i).Find("ItemImageFrame");
+            if(frame==null)continue;
+            Transform picture=frame.Find("3D item preview");
+            if(picture!=null)AlignStoreLinePreview(picture.GetComponent<RawImage>());
+        }
+    }
+
+    private static void AlignStoreLinePreview(RawImage picture)
+    {
+        if(picture==null || picture.transform.parent==null)return;
+        RectTransform background=picture.transform.parent.Find("FishingItemWaterBackground") as RectTransform;
+        if(background==null || background.rect.width<=0f)return;
+        const float equipmentImageWidth=144f;
+        const float equipmentLineOffset=9f;
+        float proportionalOffset=equipmentLineOffset*background.rect.width/equipmentImageWidth;
+        picture.rectTransform.anchoredPosition=background.anchoredPosition+Vector2.right*proportionalOffset;
     }
 
     private void FitThreeItems(RectTransform rows)
