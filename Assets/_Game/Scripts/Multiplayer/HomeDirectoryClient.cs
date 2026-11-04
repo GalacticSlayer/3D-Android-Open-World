@@ -255,6 +255,12 @@ public sealed class HomeDirectoryClient : MonoBehaviour
         activeDownloads++;
         Reply check=null;
         yield return Post("/v1/homes/check",new Request{code=old.code},r=>check=r);
+        if(VisitingHome==old && check!=null && !check.ok &&
+           check.error=="Home not found or private.")
+        {
+            ReturnToMyHome();
+            Status="The owner has made this Home private.";
+        }
         if(VisitingHome==old && check!=null && check.ok && check.version!=old.version)
         {
             Reply updated=null;
