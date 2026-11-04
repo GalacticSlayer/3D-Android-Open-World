@@ -20,6 +20,7 @@ export function createSessionServer({ clock = Date.now, timeout = 30000, ledgerP
     fs.mkdtempSync(path.join(os.tmpdir(),'fishing-homes-')));
   const homes=createHomes({directory:homeFolder,clock});
   const rooms = new Map(), sessions = new Map(), limits = new Map();
+  const homeRegistrationLimits=new Map();
   const fail = (status, message) => { throw Object.assign(new Error(message), { status }); };
   const snapshot = room => [...room.players.values()].map(p => ({ id: p.id, name: p.name, ...p.pose,
     boat:clock()-p.seen>3000?null:p.pose.boat,
@@ -43,6 +44,8 @@ export function createSessionServer({ clock = Date.now, timeout = 30000, ledgerP
     for(const room of rooms.values()){tournaments.tick(room);bosses.tick(room);}
     for (const p of sessions.values()) if (now - p.seen > timeout) remove(p);
     for (const [ip, limit] of limits) if (now - limit.start > 60000) limits.delete(ip);
+    for (const [ip, limit] of homeRegistrationLimits)
+      if(now-limit.start>3600000)homeRegistrationLimits.delete(ip);
   }
   const timer = setInterval(expire, 5000); timer.unref();
   function pose(value) {
@@ -178,6 +181,17 @@ export function createSessionServer({ clock = Date.now, timeout = 30000, ledgerP
     if (req.method !== 'POST' || !['/v1/open','/v1/join','/v1/state','/v1/leave','/v1/tournament','/v1/tournament-receipt','/v1/tournament-catches','/v1/boss','/v1/boss-receipt',
       '/v1/homes/register','/v1/homes/update','/v1/homes/list','/v1/homes/get','/v1/homes/check'].includes(req.url)) {reply(404,{ok:false,error:'Not found.'});req.resume();return;}
     if ((req.url === '/v1/open' || req.url === '/v1/join') && ++limit.opens > 4) {reply(429,{ok:false,error:'Wait a moment before trying again.'});req.resume();return;}
+    if(req.url==='/v1/homes/register')
+    {
+      let registration=homeRegistrationLimits.get(ip);
+      if(!registration || clock()-registration.start>3600000)
+      {
+        registration={start:clock(),count:0};
+        homeRegistrationLimits.set(ip,registration);
+      }
+      if(++registration.count>4)
+      {reply(429,{ok:false,error:'Too many Home registrations from this connection.'});req.resume();return;}
+    }
     if (!(req.headers['content-type'] || '').startsWith('application/json')) {reply(415,{ok:false,error:'JSON required.'});req.resume();return;}
     try {
       let size=0; const chunks=[];
