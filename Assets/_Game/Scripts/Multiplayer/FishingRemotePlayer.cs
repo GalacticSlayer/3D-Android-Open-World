@@ -85,7 +85,7 @@ public sealed class FishingRemotePlayer : MonoBehaviour
     private GameObject heldRod;
     private FishingRodView observerRodView;
     private bool observerRodBent;
-    private int rodTier = -1, seenCastSequence;
+    private int rodTier = -1, displayedReelTier = -1, seenCastSequence;
     private bool rodEquipped, casting, receivedFishingState;
     private float castClock, castDuration = .72f, castBlend;
     private bool reeling, hasFish, lureInWater;
@@ -321,7 +321,7 @@ public sealed class FishingRemotePlayer : MonoBehaviour
         fishPosing = holding && peer.fishPosing && peer.rideSeat <= 0 && smallPosePlayable.IsValid();
         if (!fishPosing || !wasPosing) fishPoseClock = 0f;
         bool motorboatDriver = (peer.rideSeat == 1 || peer.rideSeat == 2) && (riddenBoat == null || riddenBoat.Boat.IsMotorboat);
-        UpdateHeldRod(peer.rodEquipped && !peer.swimming && !holding && !motorboatDriver, peer.rodTier);
+        UpdateHeldRod(peer.rodEquipped && !peer.swimming && !holding && !motorboatDriver, peer.rodTier, peer.reelTier);
         // The sequence survives the short local Casting state. HTTP polling can
         // miss that state entirely, so a new sequence must still play once even
         // when castAge is already -1. Do not abort playback on subsequent idle packets.
@@ -538,7 +538,7 @@ public sealed class FishingRemotePlayer : MonoBehaviour
             label.rotation = Camera.main.transform.rotation;
     }
 
-    private void UpdateHeldRod(bool equipped, int tier)
+    private void UpdateHeldRod(bool equipped, int tier, int equippedReelTier)
     {
         rodEquipped = equipped;
         if (!equipped)
@@ -548,7 +548,8 @@ public sealed class FishingRemotePlayer : MonoBehaviour
         }
         if (leftHand == null) return;
         tier = Mathf.Clamp(tier, 0, ShopCatalog.MaxRodTier);
-        if (heldRod == null || tier != rodTier)
+        equippedReelTier = Mathf.Clamp(equippedReelTier, 0, ShopCatalog.MaxReelTier);
+        if (heldRod == null || tier != rodTier || equippedReelTier != displayedReelTier)
         {
             GameObject prefab = Resources.Load<GameObject>(ShopCatalog.RodPrefabResource(tier));
             if (prefab == null) prefab = Resources.Load<GameObject>(ShopCatalog.RodPrefabResource(0));
@@ -562,6 +563,10 @@ public sealed class FishingRemotePlayer : MonoBehaviour
             if (rodSocket == null) CreateLeftHandSocket();
             heldRod = Instantiate(prefab, rodSocket, false);
             heldRod.name = "Remote Left Hand Fishing Rod";
+            // The same five meshes and exact ReelMount pivots as the local rod:
+            // the third-person camera and multiplayer observers both display
+            // the equipped Level 7 reel, not a default/starter placeholder.
+            ApplyRemoteReelVisual(heldRod, equippedReelTier);
             Transform reelMount = heldRod.transform.Find("ReelMount");
             if (reelMount != null)
             {
@@ -592,8 +597,39 @@ public sealed class FishingRemotePlayer : MonoBehaviour
             if (observerRodView != null) observerRodView.InitializePose();
             observerRodBent = false;
             rodTier = tier;
+            displayedReelTier = equippedReelTier;
         }
         heldRod.SetActive(true);
+    }
+
+    private static readonly string[] RemoteReelParts =
+        { "ReelFootAndBody", "Rotor", "ReelHousing", "Spool", "Handle" };
+
+    private static void ApplyRemoteReelVisual(GameObject rod, int tier)
+    {
+        GameObject source = Resources.Load<GameObject>(ShopCatalog.ReelPrefabResource(tier));
+        if (source == null)
+        {
+            Debug.LogWarning("Equipped reel tier " + tier +
+                " is missing its Resources prefab; using existing rod reel.");
+            return;
+        }
+        Transform sourceMount = source.transform.Find("ReelMount");
+        Transform targetMount = rod.transform.Find("ReelMount");
+        if (sourceMount == null || targetMount == null) return;
+        foreach (string part in RemoteReelParts)
+        {
+            Transform from = sourceMount.Find(part), to = targetMount.Find(part);
+            if (from == null || to == null) continue;
+            MeshFilter fm = from.GetComponent<MeshFilter>(), tm = to.GetComponent<MeshFilter>();
+            MeshRenderer fr = from.GetComponent<MeshRenderer>(), tr = to.GetComponent<MeshRenderer>();
+            if (fm != null && tm != null) tm.sharedMesh = fm.sharedMesh;
+            if (fr != null && tr != null)
+            {
+                tr.sharedMaterials = fr.sharedMaterials;
+                tr.SetPropertyBlock(null);
+            }
+        }
     }
 
     private void CreateLeftHandSocket()

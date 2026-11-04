@@ -23,7 +23,7 @@ public sealed class FishingMultiplayer : MonoBehaviour
         public string rideOwner="",rideKey="";
         public int rideSeat=-1,rideRevision;
         public float rideX,rideY,rideZ,rideYaw,boatInputX,boatInputY,boatLookYaw;
- public float x,y,z,yaw; public int world; public bool swimming, sprinting, rodEquipped, reeling, hasFish, lureInWater; public bool fishPosing; public float reelTime, heldFishWeight; public int heldFishSpecies = -1; public int rodTier, castSequence; public float castAge = -1f, castDuration = .72f; }
+ public float x,y,z,yaw; public int world; public bool swimming, sprinting, rodEquipped, reeling, hasFish, lureInWater; public bool fishPosing; public float reelTime, heldFishWeight; public int heldFishSpecies = -1; public int rodTier, reelTier, castSequence; public float castAge = -1f, castDuration = .72f; }
     [Serializable] public class Peer : Pose { public string id,name; }
     [Serializable] public class Reply { public bool ok,bossReady; public int maxRodTier; public string error,id,token,code,hostId; public Peer[] players; public FishingTournament.View tournament; public AbyssalLeviathanEncounter.View boss; }
     [Serializable] private class Message
@@ -111,6 +111,8 @@ public sealed class FishingMultiplayer : MonoBehaviour
                 // Server compatibility must not downgrade our own third-person model.
                 fishing!=null && fishing.IsRodEquipped,
                 forLocalPresentation ? ShopCatalog.MaxRodTier : serverMaximumRodTier),
+            reelTier=equipment!=null && equipment.Data!=null
+                ? Mathf.Clamp(equipment.Data.Equipped(GearKind.Reel),0,ShopCatalog.MaxReelTier) : 0,
             castSequence=fishing!=null ? fishing.CastSequence : 0,
             castAge=fishing!=null ? fishing.NetworkCastAge : -1f,
             castDuration=fishing!=null ? fishing.NetworkCastDuration : .72f};

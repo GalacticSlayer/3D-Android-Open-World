@@ -40,7 +40,7 @@ export function createSessionServer({ clock = Date.now, timeout = 30000, ledgerP
     if (!value || !['x','y','z','yaw'].every(k => typeof value[k] === 'number' && Number.isFinite(value[k]))) fail(400, 'Invalid player position.');
     if (['x','y','z'].some(k => Math.abs(value[k]) > 100000) || ![0,1,2].includes(value.world)) fail(400, 'Invalid world position.');
     // Optional fields preserve compatibility with older walking-only clients.
-    for (const [key, max] of [['rodTier',6],['castSequence',2147483647]])
+    for (const [key, max] of [['rodTier',6],['reelTier',6],['castSequence',2147483647]])
       if (value[key] !== undefined && (!Number.isInteger(value[key]) || value[key] < 0 || value[key] > max)) fail(400, 'Invalid fishing animation state.');
     if (value.castAge !== undefined && (typeof value.castAge !== 'number' || !Number.isFinite(value.castAge) || value.castAge < -1 || value.castAge > 60)) fail(400, 'Invalid cast age.');
     if (value.castDuration !== undefined && (typeof value.castDuration !== 'number' || !Number.isFinite(value.castDuration) || value.castDuration < .1 || value.castDuration > 60)) fail(400, 'Invalid cast duration.');
@@ -88,6 +88,7 @@ export function createSessionServer({ clock = Date.now, timeout = 30000, ledgerP
       world: value.world, swimming: value.swimming === true,
       sprinting: value.sprinting === true && value.swimming !== true,
       rodEquipped: value.rodEquipped === true, rodTier: value.rodTier ?? 0,
+      reelTier: value.reelTier ?? 0,
       castSequence: value.castSequence ?? 0, castAge: value.castAge ?? -1,
       castDuration: value.castDuration ?? .72,
       reeling: value.reeling === true, hasFish: value.hasFish === true,
