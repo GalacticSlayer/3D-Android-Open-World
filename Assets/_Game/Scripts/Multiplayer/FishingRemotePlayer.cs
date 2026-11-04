@@ -13,6 +13,7 @@ public sealed class FishingRemotePlayer : MonoBehaviour
     private const float DefaultHeight = 2.05f * AvatarScale;
 
     public int World { get; private set; }
+    public string HomeCode { get; private set; }
     public float BodyHeight { get; private set; } = 1.72f * AvatarScale;
     public Vector3 BodyCenter => drivingBlend > .95f && leftHip != null && rightHip != null
         ? (leftHip.position + rightHip.position) * .5f + transform.up * .65f
@@ -296,6 +297,7 @@ public sealed class FishingRemotePlayer : MonoBehaviour
     public void Receive(FishingMultiplayer.Pose peer)
     {
         World = peer.world;
+        HomeCode = peer.homeCode;
         if(label!=null && peer is FishingMultiplayer.Peer namedPeer)
         {
             var nameText=label.GetComponent<TextMesh>();
