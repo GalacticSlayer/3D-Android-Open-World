@@ -58,7 +58,11 @@ public sealed class ShopWorldEnvironment : MonoBehaviour
             {
                 instance.transform.localPosition=new Vector3(ownership.localX,ownership.localY,ownership.localZ);
                 instance.transform.localRotation=Quaternion.Euler(0,ownership.yaw,0);
-                if(!instance.gameObject.activeSelf)instance.gameObject.SetActive(true);
+                // Keep residents invisible during a move, even if XP/coins
+                // trigger an unrelated save while the preview is active.
+                if(!instance.gameObject.activeSelf &&
+                   !(HomeAquariumPlacement.IsPlacing && HomeAquariumPlacement.PreviewKey==ownership.instanceKey))
+                    instance.gameObject.SetActive(true);
             }
         }
         foreach(var key in new List<string>(aquariumInstances.Keys))
