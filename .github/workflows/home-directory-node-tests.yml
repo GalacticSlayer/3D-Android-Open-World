@@ -1,0 +1,24 @@
+name: Home Directory and Multiplayer Server Tests
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Server/runtime/**'
+      - 'Server/tests/**'
+      - '.github/workflows/home-directory-node-tests.yml'
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Syntax check
+        run: |
+          node --check Server/runtime/homes.mjs
+          node --check Server/runtime/sessions.mjs
+      - name: Server regression tests
+        run: node --test Server/tests/*.test.mjs
