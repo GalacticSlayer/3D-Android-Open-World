@@ -42,6 +42,10 @@ public sealed class ShopWorldEnvironment : MonoBehaviour
                 var template=Template(ownership.id);
                 if(template==null)continue;
                 var clone=Instantiate(template.gameObject,transform,false);
+                // The authored showcase props are static-batched. Owned Home
+                // instances must be movable, so clear the static flags.
+                foreach(var part in clone.GetComponentsInChildren<Transform>(true))
+                    part.gameObject.isStatic=false;
                 clone.name=definition.name+" ["+ownership.instanceKey+"]";
                 instance=clone.GetComponent<ShopHabitat>();
                 instance.instanceKey=ownership.instanceKey;
