@@ -136,8 +136,9 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         // The Home arrival is local (0, 0.25, -16), facing the courtyard.
         // This container is directly ahead, not a new teleport destination.
         storageBox.transform.localPosition=new Vector3(0,0,-9f);
-        boxMaterial=new Material(Shader.Find("Universal Render Pipeline/Lit") ??
-            Shader.Find("Standard") ?? Shader.Find("Sprites/Default"));
+        if(boxMaterial==null)
+            boxMaterial=new Material(Shader.Find("Universal Render Pipeline/Lit") ??
+                Shader.Find("Standard") ?? Shader.Find("Sprites/Default"));
         if(boxMaterial.HasProperty("_BaseColor"))boxMaterial.SetColor("_BaseColor",new Color(.12f,.42f,.48f));
         if(boxMaterial.HasProperty("_Color"))boxMaterial.color=new Color(.12f,.42f,.48f);
         BoxPart("Storage Crate",new Vector3(0,.55f,0),new Vector3(2.6f,1.1f,1.5f));
