@@ -35,7 +35,11 @@ public sealed class ShopDimensionManager : MonoBehaviour
     {
         if(!InDimension || World==null) return null;
         if(Near("gear")) return "gear"; if(Near("market")) return "market";
-        foreach(var h in World.habitats) if(h.gameObject.activeInHierarchy && Near(h.id)) return h.id;
+        foreach(var h in World.ActiveHabitats())
+        {
+            string key=string.IsNullOrEmpty(h.instanceKey)?h.id:h.instanceKey;
+            if(Near(key))return key;
+        }
         return null;
     }
     // The total-weight tournament restricts teleport destinations, not movement
@@ -150,14 +154,14 @@ public sealed class ShopDimensionManager : MonoBehaviour
     {
         if(!InHome || !Near(id)) return;
         var h=World.Habitat(id); var progress=GetComponent<ShopProgress>();
-        if(h==null || progress.Data.Habitat(id)==null || !ShopCatalog.Habitat(id).swimmable) return;
+        if(h==null || progress.Data.Habitat(id)==null || !ShopCatalog.Habitat(h.id).swimmable) return;
         Teleport(h.entrance.position,h.entrance.rotation);
     }
     public void ExitWater()
     {
         if(!InDimension || World==null) return;
         ShopHabitat nearest=null; float distance=float.MaxValue;
-        foreach(var h in World.habitats)
+        foreach(var h in World.ActiveHabitats())
         { float d=(h.transform.position-transform.position).sqrMagnitude; if(d<distance) { distance=d; nearest=h; } }
         if(nearest!=null) Teleport(nearest.exit.position,nearest.exit.rotation);
     }
