@@ -55,6 +55,8 @@ public sealed class FishingMenuSafetyRuntime : MonoBehaviour
 
     private bool bound;
     private bool safeIndexOpen;
+    // The passive Fish Index does not set ShopWorldHUD.MenuOpen.
+    public bool IsIndexOpen => safeIndexOpen;
     private bool shopHudDisabledByUs;
     private bool boatSystemDisabledByUs;
 
