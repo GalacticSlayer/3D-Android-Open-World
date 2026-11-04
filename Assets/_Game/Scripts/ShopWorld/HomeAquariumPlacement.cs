@@ -15,11 +15,14 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
 
     private const float InteractionRange=5.5f;
     private const float PreviewDistance=20f;
+    private const float StoragePlacementExclusionRadius=2.5f;
+    private const float StorageSignVisibilityRange=25f;
     private ShopDimensionManager travel;
     private ShopProgress progress;
     private FirstPersonController controller;
     private ShopWorldEnvironment world;
     private GameObject storageBox,ghost,canvasRoot,storagePanel;
+    private MeshRenderer storageSignRenderer;
     private ShopHabitat hiddenSource,nearest;
     private Material previewMaterial,boxMaterial,storageSignMaterial;
     private Button contextButton,moveToStorageButton,placeButton,cancelButton;
@@ -59,7 +62,7 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         {
             CancelPlacement();CloseStorage();
             if(storageBox!=null)Destroy(storageBox);
-            storageBox=null;world=null;
+            storageBox=null;storageSignRenderer=null;world=null;
             contextButton.gameObject.SetActive(false);
             moveToStorageButton.gameObject.SetActive(false);
             return;
@@ -88,6 +91,12 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         placementHint.gameObject.SetActive(false);
 
         float boxDistance=storageBox!=null?Vector3.Distance(transform.position,storageBox.transform.position):float.MaxValue;
+        // Match other Home exhibit signs: do not draw label text across the courtyard.
+        if(storageSignRenderer!=null)
+        {
+            bool showSign=boxDistance<=StorageSignVisibilityRange;
+            if(storageSignRenderer.enabled!=showSign)storageSignRenderer.enabled=showSign;
+        }
         if(StorageOpen)
         {
             contextButton.gameObject.SetActive(false);
@@ -170,8 +179,8 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         if(world==null)return;
         storageBox=new GameObject("Aquarium Storage Box");
         storageBox.transform.SetParent(world.transform,false);
-        // The Home arrival is local (0, 0.25, -16), facing the courtyard.
-        // This container is directly ahead, not a new teleport destination.
+        // The Home arrival is positioned one metre in front of this crate's
+        // front edge, facing the label. No extra travel destination is needed.
         storageBox.transform.localPosition=new Vector3(0,0,-9f);
         if(boxMaterial==null)
             boxMaterial=new Material(Shader.Find("Universal Render Pipeline/Lit") ??
@@ -202,12 +211,25 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         var sign=new GameObject("Aquarium Storage Label",typeof(TextMesh));
         sign.transform.SetParent(storageBox.transform,false);
         sign.transform.localPosition=new Vector3(0,.68f,-.90f);
-        sign.transform.localRotation=Quaternion.Euler(0,180,0);
+        // ShopWorldSetup.Sign uses yaw 0 for front-facing aquarium labels.
+        // Rotating 180 degrees mirrors the text when viewed from the Home arrival.
+        sign.transform.localRotation=Quaternion.identity;
         var text=sign.GetComponent<TextMesh>();
         text.text="AQUARIUM\nSTORAGE";text.font=font;text.fontSize=68;text.characterSize=.015f;
-        text.color=new Color(.98f,.94f,.84f,1f);
-        sign.GetComponent<MeshRenderer>().sharedMaterial=font.material;
+        text.color=Color.white;
         text.alignment=TextAlignment.Center;text.anchor=TextAnchor.MiddleCenter;
+
+        // Use the actual aquarium sign shader instead of the font's default
+        // overlay material: front-face culling + depth testing prevent the text
+        // showing through the board or appearing backwards from behind it.
+        var example=world.Template("nano");
+        Material aquariumSign=example!=null && example.label!=null
+            ?example.label.GetComponent<MeshRenderer>().sharedMaterial:null;
+        storageSignRenderer=sign.GetComponent<MeshRenderer>();
+        storageSignRenderer.sharedMaterial=aquariumSign!=null?aquariumSign:font.material;
+        var fit=sign.AddComponent<ShopSign>();
+        fit.area=new Vector2(2.18f,.64f);
+        fit.Fit();
     }
     private void BoxPart(string name,Vector3 position,Vector3 size)
     {
@@ -343,6 +365,19 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         float back=d.depth*.5f+.55f;
         Vector3 center=new Vector3((left+right)*.5f,0,(front+back)*.5f);
         Vector3 half=new Vector3((right-left)*.5f,0,(back-front)*.5f);
+
+        // Block the FULL aquarium footprint (including steps/sign) from the
+        // 2.5 m area around the storage crate, not just the tank's pivot.
+        if(storageBox!=null)
+        {
+            Vector3 storageInPreview=ghost.transform.InverseTransformPoint(storageBox.transform.position);
+            float closestX=Mathf.Clamp(storageInPreview.x,left,right);
+            float closestZ=Mathf.Clamp(storageInPreview.z,front,back);
+            float dx=storageInPreview.x-closestX;
+            float dz=storageInPreview.z-closestZ;
+            if(dx*dx+dz*dz<StoragePlacementExclusionRadius*StoragePlacementExclusionRadius)
+                return false;
+        }
 
         // All corners, edges and the center need a real horizontal Home floor.
         // This excludes holes, slopes, objects and partly-off-plot placements.
