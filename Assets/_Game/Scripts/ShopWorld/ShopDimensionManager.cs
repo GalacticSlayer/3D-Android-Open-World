@@ -123,6 +123,14 @@ public sealed class ShopDimensionManager : MonoBehaviour
             oldFog=RenderSettings.fog; oldFogColor=RenderSettings.fogColor; oldFogDensity=RenderSettings.fogDensity;
         }
         Destination=destination; World=target;
+        if(destination==2 && target!=null && target.spawn!=null)
+        {
+            // The storage crate is centred at Home-local Z=-9, with its front
+            // lid edge at Z=-9.86. Spawn one metre in front of that edge so the
+            // player starts behind the crate, facing its readable front sign.
+            // Apply at runtime to existing installed Home scenes too.
+            target.spawn.localPosition=new Vector3(0f,.25f,-10.86f);
+        }
         if(destination==0)
         {
             var boats=GetComponent<BoatSystem>();
