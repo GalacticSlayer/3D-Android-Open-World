@@ -1,0 +1,292 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Text;
+using UnityEngine;
+using UnityEngine.Networking;
+
+// Public Home showcase networking is independent of the 10 Hz room protocol.
+// PlayerPrefs ownership and ShopProgress saves stay separate; no remote data
+// is ever written into a visitor's local aquarium/coin/fish ledger.
+[DisallowMultipleComponent]
+public sealed class HomeDirectoryClient : MonoBehaviour
+{
+    [Serializable] public sealed class FishInfo { public int speciesId,biomeId; public float weightKg; }
+    [Serializable] public sealed class TankInfo
+    {
+        public string key,id;
+        public float x,y,z,yaw;
+        public FishInfo[] fish;
+    }
+    [Serializable] public sealed class HomeInfo
+    {
+        public string code,name,visibility;
+        public long updatedAt;
+        public int version,aquariums,fish;
+        public FishInfo biggest;
+    }
+    [Serializable] public sealed class Reply
+    {
+        public bool ok,more;
+        public string error,code,ownerKey,name,visibility;
+        public int version,page,total,aquariums,fish;
+        public long updatedAt;
+        public FishInfo biggest;
+        public HomeInfo[] homes;
+        public TankInfo[] tanks;
+    }
+    [Serializable] private sealed class Request
+    {
+        public string code,ownerKey,name,visibility,query,sort;
+        public int page;
+        public TankInfo[] tanks;
+    }
+
+    private const string OwnerKeyPref="OpenWorld.Home.OwnerKey.v1";
+    private const string CodePref="OpenWorld.Home.Code.v1";
+    private const string VisibilityPref="OpenWorld.Home.Visibility.v1";
+    public static HomeDirectoryClient Instance { get; private set; }
+    public string OwnerCode { get; private set; }
+    public string Visibility { get; private set; } = "public";
+    public string Status { get; private set; } = "";
+    public bool Busy { get; private set; }
+    public HomeInfo[] Listings { get; private set; } = new HomeInfo[0];
+    public int TotalListings { get; private set; }
+    public int ListingPage { get; private set; }
+    public bool MoreListings { get; private set; }
+    public Reply VisitingHome { get; private set; }
+    public bool IsVisiting => VisitingHome!=null;
+    public string DisplayHomeCode => OwnerCode!=null && OwnerCode.Length==8
+        ?OwnerCode.Substring(0,4)+"-"+OwnerCode.Substring(4):"Registering...";
+    public event Action Changed;
+
+    private ShopProgress progress;
+    private ShopDimensionManager travel;
+    private string ownerKey,lastUploaded;
+    private bool dirty=true,sending,visitEntered;
+    private float nextSync, nextVisitPoll, retrySeconds=10f;
+    private int activeDownloads;
+    private void Awake()
+    {
+        if(Instance!=null && Instance!=this){Destroy(this);return;}
+        Instance=this;
+        ownerKey=PlayerPrefs.GetString(OwnerKeyPref,"");
+        OwnerCode=PlayerPrefs.GetString(CodePref,"");
+        Visibility=PlayerPrefs.GetString(VisibilityPref,"public");
+        if(Visibility!="private" && Visibility!="unlisted")Visibility="public";
+    }
+    private void Start()
+    {
+        progress=GetComponent<ShopProgress>();
+        travel=GetComponent<ShopDimensionManager>();
+        if(progress!=null)progress.Changed+=MarkDirty;
+        nextSync=Time.unscaledTime+2.5f;
+    }
+    private void OnDestroy()
+    {
+        if(progress!=null)progress.Changed-=MarkDirty;
+        if(Instance==this)Instance=null;
+    }
+    private void MarkDirty(){dirty=true;nextSync=Time.unscaledTime+2.5f;}
+    public void SetVisibility(string value)
+    {
+        if(value!="public" && value!="unlisted" && value!="private")return;
+        if(Visibility==value)return;
+        Visibility=value;PlayerPrefs.SetString(VisibilityPref,value);PlayerPrefs.Save();
+        MarkDirty();Changed?.Invoke();
+    }
+    private TankInfo[] CurrentTanks()
+    {
+        var result=new List<TankInfo>();
+        if(progress==null || progress.Data==null)return result.ToArray();
+        foreach(var own in progress.Data.habitats)
+        {
+            if(own==null || !own.placed || string.IsNullOrEmpty(own.instanceKey))continue;
+            var definition=ShopCatalog.Habitat(own.id);
+            if(definition==null || definition.pond)continue;
+            var fish=new List<FishInfo>();
+            if(own.fish!=null)foreach(var f in own.fish)
+                if(f!=null)fish.Add(new FishInfo{speciesId=f.speciesId,biomeId=f.biomeId,weightKg=f.weightKg});
+            result.Add(new TankInfo{key=own.instanceKey,id=own.id,x=own.localX,
+                y=own.localY,z=own.localZ,yaw=own.yaw,fish=fish.ToArray()});
+        }
+        return result.ToArray();
+    }
+    private Request CurrentUpload() => new Request{
+        code=OwnerCode,ownerKey=ownerKey,
+        name=progress!=null&&progress.Data!=null
+            ?ShopProgress.NormalizePlayerName(progress.Data.playerName):"Angler",
+        visibility=Visibility,tanks=CurrentTanks()
+    };
+    private void Update()
+    {
+        if(progress!=null && dirty && !sending && Time.unscaledTime>=nextSync)
+            StartCoroutine(Synchronize());
+        if(VisitingHome==null || travel==null)return;
+        if(travel.InHome && !travel.Traveling)visitEntered=true;
+        if(visitEntered && !travel.InHome && !travel.Traveling)
+        {
+            VisitingHome=null;visitEntered=false;Changed?.Invoke();
+            return;
+        }
+        if(visitEntered && Time.unscaledTime>=nextVisitPoll && activeDownloads==0)
+        {
+            nextVisitPoll=Time.unscaledTime+10f;
+            StartCoroutine(CheckVisitingHome());
+        }
+    }
+    private IEnumerator Synchronize()
+    {
+        sending=true;
+        // Register once per installation. No active multiplayer room required.
+        if(string.IsNullOrEmpty(OwnerCode) || string.IsNullOrEmpty(ownerKey))
+        {
+            Reply registered=null;
+            yield return Post("/v1/homes/register",new Request{
+                name=progress.Data.playerName},r=>registered=r);
+            if(registered==null || !registered.ok || string.IsNullOrEmpty(registered.ownerKey))
+            {
+                Status=registered!=null?registered.error:"Home registration is unavailable.";
+                Retry();yield break;
+            }
+            ownerKey=registered.ownerKey;
+            OwnerCode=registered.code;
+            PlayerPrefs.SetString(OwnerKeyPref,ownerKey);
+            PlayerPrefs.SetString(CodePref,OwnerCode);
+            PlayerPrefs.Save();
+            Changed?.Invoke();
+        }
+        var upload=CurrentUpload();
+        string fingerprint=JsonUtility.ToJson(upload);
+        if(fingerprint==lastUploaded)
+        {
+            dirty=false;sending=false;yield break;
+        }
+        Reply answer=null;
+        yield return Post("/v1/homes/update",upload,r=>answer=r);
+        if(answer==null || !answer.ok)
+        {
+            Status=answer!=null?answer.error:"Home synchronization unavailable.";
+            Retry();yield break;
+        }
+        lastUploaded=fingerprint;
+        // A save during an in-flight upload remains pending.
+        dirty=JsonUtility.ToJson(CurrentUpload())!=fingerprint;
+        retrySeconds=10f;sending=false;
+        Status="Home published • "+DisplayHomeCode;
+        Changed?.Invoke();
+        if(dirty)nextSync=Time.unscaledTime+2.5f;
+    }
+    private void Retry()
+    {
+        sending=false;dirty=true;
+        nextSync=Time.unscaledTime+retrySeconds;
+        retrySeconds=Mathf.Min(120f,retrySeconds*2f);
+        Changed?.Invoke();
+    }
+    public void Browse(string query,int page,string sort)
+    {
+        if(Busy)return;
+        StartCoroutine(DownloadList(query,page,sort));
+    }
+    private IEnumerator DownloadList(string query,int page,string sort)
+    {
+        Busy=true;Changed?.Invoke();
+        Reply answer=null;
+        yield return Post("/v1/homes/list",new Request{query=query,page=page,sort=sort},r=>answer=r);
+        Busy=false;
+        if(answer!=null&&answer.ok)
+        {
+            Listings=answer.homes??new HomeInfo[0];
+            ListingPage=answer.page;TotalListings=answer.total;MoreListings=answer.more;
+            Status=TotalListings+" public Homes";
+        }
+        else Status=answer!=null?answer.error:"Could not load public Homes.";
+        Changed?.Invoke();
+    }
+    public void Visit(string code)
+    {
+        if(Busy || travel==null || travel.Traveling ||
+           travel.TournamentTravelRestricted)return;
+        StartCoroutine(DownloadVisit(code));
+    }
+    private IEnumerator DownloadVisit(string code)
+    {
+        Busy=true;Changed?.Invoke();
+        string normalized=(code??"").Replace("-","").Replace(" ","").Trim().ToUpperInvariant();
+        Reply answer=null;
+        yield return Post("/v1/homes/get",new Request{code=normalized,
+            ownerKey=normalized==OwnerCode?ownerKey:null},r=>answer=r);
+        Busy=false;
+        if(answer==null||!answer.ok)
+        {
+            Status=answer!=null?answer.error:"Home is not reachable.";
+            Changed?.Invoke();yield break;
+        }
+        VisitingHome=answer;
+        visitEntered=false;
+        nextVisitPoll=Time.unscaledTime+10f;
+        Status="Visiting "+answer.name+"'s Home";
+        Changed?.Invoke();
+        if(travel.InHome && travel.World!=null)
+        {
+            travel.World.RefreshHomeView();
+            travel.ReturnToHomeSpawn();
+            var hud=FindFirstObjectByType<ShopWorldHUD>();
+            if(hud!=null)hud.Close();
+        }
+        else travel.Travel(2);
+    }
+    public void ReturnToMyHome()
+    {
+        if(!IsVisiting)return;
+        VisitingHome=null;visitEntered=false;
+        if(travel!=null && travel.InHome && travel.World!=null)
+        {
+            travel.World.RefreshHomeView();
+            travel.ReturnToHomeSpawn();
+        }
+        Changed?.Invoke();
+    }
+    private IEnumerator CheckVisitingHome()
+    {
+        var old=VisitingHome;
+        if(old==null)yield break;
+        activeDownloads++;
+        Reply check=null;
+        yield return Post("/v1/homes/check",new Request{code=old.code},r=>check=r);
+        if(VisitingHome==old && check!=null && check.ok && check.version!=old.version)
+        {
+            Reply updated=null;
+            yield return Post("/v1/homes/get",new Request{code=old.code},r=>updated=r);
+            if(VisitingHome==old && updated!=null && updated.ok)
+            {
+                VisitingHome=updated;
+                if(travel!=null && travel.InHome && travel.World!=null)
+                    travel.World.RefreshHomeView();
+                Changed?.Invoke();
+            }
+        }
+        activeDownloads--;
+    }
+    private IEnumerator Post(string path,object body,Action<Reply> done)
+    {
+        using(var request=new UnityWebRequest(FishingMultiplayer.Endpoint+path,"POST"))
+        {
+            request.uploadHandler=new UploadHandlerRaw(Encoding.UTF8.GetBytes(JsonUtility.ToJson(body)));
+            request.downloadHandler=new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type","application/json");
+            request.timeout=8;
+            yield return request.SendWebRequest();
+            Reply answer=null;
+            if(request.downloadHandler!=null&&!string.IsNullOrEmpty(request.downloadHandler.text))
+                try{answer=JsonUtility.FromJson<Reply>(request.downloadHandler.text);}
+                catch(ArgumentException){}
+            if(answer==null || (request.result!=UnityWebRequest.Result.Success && answer.ok))
+                answer=new Reply{ok=false,error="Cannot contact the Home directory server."};
+            if(!answer.ok && string.IsNullOrEmpty(answer.error))
+                answer.error="Home directory request failed.";
+            done(answer);
+        }
+    }
+}
