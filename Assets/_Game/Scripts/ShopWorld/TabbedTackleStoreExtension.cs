@@ -106,8 +106,27 @@ public sealed class TabbedTackleStoreExtension : MonoBehaviour
             Transform frame=section.transform.GetChild(i).Find("ItemImageFrame");
             if(frame==null)continue;
             Transform picture=frame.Find("3D item preview");
-            if(picture!=null)AlignStoreLinePreview(picture.GetComponent<RawImage>());
+            if(picture!=null)AlignLargeStoreLinePreview(picture.GetComponent<RawImage>());
         }
+    }
+
+    // Match the Equipment page's 144px line artwork placement exactly.
+    // Only the large line item cards in the Tackle Store call this method.
+    private static void AlignLargeStoreLinePreview(RawImage picture)
+    {
+        if(picture==null || picture.transform.parent==null)return;
+        RectTransform background=picture.transform.parent.Find("FishingItemWaterBackground") as RectTransform;
+        if(background==null)return;
+
+        RectTransform rect=picture.rectTransform;
+        rect.anchorMin=background.anchorMin;
+        rect.anchorMax=background.anchorMax;
+        rect.pivot=background.pivot;
+        rect.offsetMin=background.offsetMin;
+        rect.offsetMax=background.offsetMax;
+        rect.localScale=new Vector3(.85f,.85f,1f);
+        rect.localRotation=Quaternion.identity;
+        rect.anchoredPosition=background.anchoredPosition+Vector2.right*9f;
     }
 
     private static void AlignStoreLinePreview(RawImage picture)
