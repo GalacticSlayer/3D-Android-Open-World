@@ -208,6 +208,7 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         }
         foreach(var c in ghost.GetComponentsInChildren<Collider>(true))c.enabled=false;
         foreach(var w in ghost.GetComponentsInChildren<ShopWaterVolume>(true))w.enabled=false;
+        foreach(var light in ghost.GetComponentsInChildren<Light>(true))light.enabled=false;
         if(previewMaterial==null)
         {
             var shader=Shader.Find("Universal Render Pipeline/Unlit") ??
