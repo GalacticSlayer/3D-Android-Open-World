@@ -112,6 +112,8 @@ public sealed class ShopWorldEnvironment : MonoBehaviour
             var habitat=clone.GetComponent<ShopHabitat>();
             habitat.instanceKey=tank.key;
             habitat.enabled=false; // Never bind another player's fish to our save.
+            if(d.swimmable && clone.GetComponent<AquariumAccessStyle>()==null)
+                clone.AddComponent<AquariumAccessStyle>();
             if(habitat.water!=null)habitat.water.available=d.swimmable;
             if(habitat.purchaseBarrier!=null)habitat.purchaseBarrier.enabled=false;
             if(habitat.label!=null)
