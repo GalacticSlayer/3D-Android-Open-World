@@ -13,9 +13,12 @@ This first version is shared player presence, not full server-authoritative game
 simulation. The server owns room membership, tokens, capacity and lifecycle,
 validates message shape/world bounds, and relays client-reported positions. Local
 movement physics stays on each device. Boats are shared with owner-simulated physics
-and server-validated boarding/seat claims. Fish, catches, ripples, inventories,
-economy, home worlds and saves are not synchronized. No accounts or cloud saves.
-Other avatars are hidden in shop/home dimensions. There is no player collision.
+and server-validated boarding/seat claims. Fish, catches, ripples, inventories and
+economy are not synchronized through room snapshots. Local player saves remain
+device-owned. Published aquarium layouts and fish collections use a separate,
+persisted, read-only Home directory API (details below), not cloud saves.
+Other avatars are hidden in the shop and unrelated Homes; room members visiting
+the same Home can see each other. There is no player collision.
 
 The host must stay connected. Leaving as host closes the room. A disconnected
 host expires after 30 seconds. Transient request failures retry; after three
@@ -207,3 +210,61 @@ Pause deployment: `sudo systemctl stop fishing-update.timer`.
 Retry an unchanged failed version after fixing its environment:
 `sudo rm /var/lib/fishing-deployment/failed-release`, then start fishing-update.
 
+
+
+## Persistent public Home aquarium directory
+
+MENU / TRAVEL -> MULTIPLAYER -> **VIEW AQUARIUMS** shows up to 20 public
+Homes per page. Search by player name or eight-character Home code, sort by last
+updated, number of resident fish or biggest exhibited fish, and visit without
+opening a multiplayer room. Homes default to **Public**. Owners may set
+**Unlisted** (code-only visitor access) or **Private** (not visitable by others).
+The owner receives a random Home code and a private owner credential saved
+separately in device PlayerPrefs. This is a device-bound prototype identity:
+clearing app data or reinstalling without preserving PlayerPrefs loses ownership
+of that published Home. It is not a cross-device account or cloud backup.
+
+Only individual aquarium identity, type, local placement, rotation and resident
+species/biome/weight are published. Fish bags, coins, gear, progress, movement
+and full save files are not uploaded. Owners' changes upload after a 2.5-second
+debounce and retry after interruptions. An unchanged Home does not upload again,
+even if other game saves happen. Visitors download a snapshot once, then check
+only the small Home version every ten seconds; they download a new snapshot
+only when it changes. Fish animation and water physics remain local to the
+visitor's Unity device. Distant resident visuals are disabled just as in
+the owner's Home.
+
+Visitors cannot place, store, add, remove or sell fish from another player's
+aquariums. They may inspect resident species and weights, swim in supported
+aquariums, and click **RETURN TO MY HOME**. Normal multiplayer-room avatars
+appear only if both peers occupy the exact same published Home code. Visiting
+does not grant write permission or alter the visitor's original local aquarium
+save. If an owner changes their Home to Private, visitors leave after the next
+version check.
+
+Server API on existing TCP 3001:
+- POST /v1/homes/register  (new owner code + private credential)
+- POST /v1/homes/update    (owner-only atomic snapshot write, max 256 KiB)
+- POST /v1/homes/list      (public summaries, 20/page)
+- POST /v1/homes/get       (full snapshot on demand, public/unlisted)
+- POST /v1/homes/check     (lightweight revision check)
+
+Directory metadata is kept in memory; full tank and fish snapshots are read
+from disk only on a visit/update. Snapshots live in DATA_DIR/homes, separate
+from multiplayer sessions and tournament-escrow.json. Do not delete that
+directory when upgrading or restarting the Oracle VM. The existing 4 KiB
+limit is retained for normal 10 Hz movement requests; only owner snapshot
+uploads permit up to 256 KiB. New registrations are limited per IP and the
+directory has a bounded profile count.
+
+**Security note:** The existing multiplayer listener is still plain HTTP.
+Owner credentials must not be considered protected against network sniffing
+until HTTPS/TLS termination is configured and the Unity endpoint is updated.
+Do not publish sensitive personal information as a player name. Public
+listings are opt-out by design, per game requirements.
+
+Regression tests:
+\`node --test Server/tests/*.test.mjs\`
+A GitHub Actions job also runs the Node 24 server tests on relevant pushes.
+Unity compilation, editor Play Mode, Android build/run, and live Oracle
+verification require the Unity editor, connected devices, and VM access.
