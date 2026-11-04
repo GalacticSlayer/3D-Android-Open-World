@@ -200,12 +200,19 @@ public sealed class HomeVisitorTank : MonoBehaviour
         {
             var record=tank.fish[i];
             if(record==null)continue;
-            var fish=FishWorldSize.Create("VisitorResident_"+i,habitat.fishRoot,
-                record.speciesId,record.weightKg);
-            float length=ShopCatalog.FishLength(record.speciesId,record.weightKg);
-            var agent=fish.AddComponent<TankFishAgent>();
-            agent.Configure(i*1.73f,record.speciesId);
-            agent.ConfigureHabitat(habitat.water.size,length);
+            try
+            {
+                var fish=FishWorldSize.Create("VisitorResident_"+i,habitat.fishRoot,
+                    record.speciesId,record.weightKg);
+                float length=ShopCatalog.FishLength(record.speciesId,record.weightKg);
+                var agent=fish.AddComponent<TankFishAgent>();
+                agent.Configure(i*1.73f,record.speciesId);
+                agent.ConfigureHabitat(habitat.water.size,length);
+            }
+            catch(System.Exception ex)
+            {
+                Debug.LogWarning("Skipped invalid remote aquarium fish: "+ex.Message);
+            }
         }
     }
 }
