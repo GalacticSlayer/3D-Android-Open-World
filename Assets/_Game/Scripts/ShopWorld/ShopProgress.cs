@@ -42,6 +42,7 @@ public sealed class ShopProgress : MonoBehaviour
             ShopCatalog.SetActiveLureVariant(Data.lureEquipped);
             if(migrated)Save();
             if(!Data.homeMigrated) { Data.MigrateHome(); Save(); Notice="Your habitats now live at Home. Earlier smaller purchases were credited; all fish were preserved."; }
+            if(Data.EnsureAquariumInstances())Save();
         }
         catch(Exception ex)
         {
@@ -174,6 +175,8 @@ public sealed class ShopProgress : MonoBehaviour
     public bool ResolveLureFight(bool caught) => !ReadOnly && Commit(Data.ResolveLureFight(caught));
     public bool EquipLure(int variant) => !ReadOnly && Commit(Data.EquipLure(variant));
     public bool BuyHabitat(string id) => CanTrade && ShopDimensionManager.Instance.Near(id) && Commit(Data.BuyHabitat(id));
+    public bool PlaceAquarium(string key,float localX,float localY,float localZ,float yaw) =>
+        CanManage && Commit(Data.PlaceAquarium(key,localX,localY,localZ,yaw));
     public bool Sell(CaughtFishRecord fish) => CanTrade && ShopDimensionManager.Instance.Near("market") && Commit(Data.Sell(fish,FishCatalog.GetSellValue(fish.speciesId,fish.weightKg,fish.biomeId)));
     public bool CanManage => !ReadOnly && ShopDimensionManager.Instance!=null && ShopDimensionManager.Instance.InHome;
     public bool Deposit(string id,CaughtFishRecord fish) => CanManage && ShopDimensionManager.Instance.Near(id) && Commit(Data.Deposit(id,fish));
