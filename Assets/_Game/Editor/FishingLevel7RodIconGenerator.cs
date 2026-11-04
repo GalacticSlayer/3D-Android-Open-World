@@ -1,197 +1,145 @@
 #if UNITY_EDITOR
 using System;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
 /// <summary>
-/// Generates the new rod's transparent hotbar silhouette and blue-wave item
-/// card using its ACTUAL imported UV-mapped mesh. Existing Rod0..Rod5 icons,
-/// reels, equipment layout and all other artwork remain untouched.
+/// Imports the player's supplied transparent Level 7 fishing-rod artwork
+/// unchanged, instead of synthesizing an icon from the 3D model.
+/// Rod6.png is shared by the transparent hotbar and by shop/equipment, where
+/// ShopPreview draws the existing WaterBackground beneath it.
+/// Other rod/reel icons and gameplay assets are not touched.
 /// </summary>
+[InitializeOnLoad]
 public static class FishingLevel7RodIconGenerator
 {
-    private const string Folder = "Assets/Resources/Fishing/ItemIcons/";
-    private const int RenderSize = 512;
-    private const int IconSize = 256;
+    private const string IconName = "Level 7 Fishing Rod Icon.png";
+    private const string IconAssetPath = "Assets/Resources/Fishing/ItemIcons/Rod6.png";
 
-    public static void Generate(Mesh mesh, Texture2D originalTexture)
+    static FishingLevel7RodIconGenerator()
     {
-        if (mesh == null || originalTexture == null)
-            throw new ArgumentNullException("The Level 7 mesh and original texture are both required.");
-        Texture2D sampled = MakeReadable(originalTexture, originalTexture.width, originalTexture.height);
-        Texture2D hotbar;
-        try { hotbar = RenderIcon(mesh, sampled); }
-        finally { UnityEngine.Object.DestroyImmediate(sampled); }
-        try
-        {
-            Save(hotbar, Folder + "Rod6.png");
-            Texture2D background = AssetDatabase.LoadAssetAtPath<Texture2D>(Folder + "WaterBackground.png");
-            Texture2D water = background != null ? MakeReadable(background, IconSize, IconSize) : null;
-            try
-            {
-                Texture2D card = new Texture2D(IconSize, IconSize, TextureFormat.RGBA32, false);
-                Color[] image = hotbar.GetPixels();
-                Color[] backdrop = water != null ? water.GetPixels() : null;
-                for (int i = 0; i < image.Length; i++)
-                {
-                    Color front = image[i];
-                    Color back = backdrop != null ? backdrop[i] :
-                        new Color(.11f, .34f, .47f, 1f);
-                    image[i] = new Color(
-                        Mathf.Lerp(back.r, front.r, front.a),
-                        Mathf.Lerp(back.g, front.g, front.a),
-                        Mathf.Lerp(back.b, front.b, front.a), 1f);
-                }
-                card.SetPixels(image);
-                card.Apply(false, false);
-                try { Save(card, Folder + "Rod6Card.png"); }
-                finally { UnityEngine.Object.DestroyImmediate(card); }
-            }
-            finally { if (water != null) UnityEngine.Object.DestroyImmediate(water); }
-        }
-        finally { UnityEngine.Object.DestroyImmediate(hotbar); }
+        // Run after script compilation, independently of the heavier model
+        // importer. This also corrects an already-generated Rod6 icon.
+        EditorApplication.delayCall += () => InstallProvidedIcon(false);
     }
 
-    private static Texture2D MakeReadable(Texture texture, int width, int height)
+    [MenuItem("Tools/Open World/Import Level 7 Fishing Rod Icon (Downloads)")]
+    private static void ImportFromMenu()
     {
-        RenderTexture old = RenderTexture.active;
-        RenderTexture target = RenderTexture.GetTemporary(width,height,0,RenderTextureFormat.ARGB32);
-        try
-        {
-            Graphics.Blit(texture,target);
-            RenderTexture.active = target;
-            Texture2D readable = new Texture2D(width,height,TextureFormat.RGBA32,false);
-            readable.ReadPixels(new Rect(0,0,width,height),0,0,false);
-            readable.Apply(false,false);
-            return readable;
-        }
-        finally
-        {
-            RenderTexture.active = old;
-            RenderTexture.ReleaseTemporary(target);
-        }
+        InstallProvidedIcon(true);
     }
 
-    private static Texture2D RenderIcon(Mesh mesh, Texture2D texture)
+    public static void InstallProvidedIcon(bool showDialog = false)
     {
-        Vector3[] vertices = mesh.vertices;
-        Vector2[] uv = mesh.uv;
-        int[] tris = mesh.triangles;
-        if (vertices.Length < 3 || uv.Length != vertices.Length)
-            throw new InvalidDataException("Level 7 rod has invalid icon mesh UV coordinates.");
+        if (EditorApplication.isPlayingOrWillChangePlaymode) return;
 
-        // All rod icons appear diagonal inside their square, with the butt in
-        // the lower-left and the tip in the upper-right.
-        Quaternion pose = Quaternion.AngleAxis(-43f,Vector3.forward) *
-                          Quaternion.AngleAxis(18f,Vector3.right);
-        Vector3 centre = mesh.bounds.center;
-        Vector3[] projected = new Vector3[vertices.Length];
-        float minX=float.PositiveInfinity, minY=float.PositiveInfinity;
-        float maxX=float.NegativeInfinity, maxY=float.NegativeInfinity;
-        for (int i=0;i<vertices.Length;i++)
+        string source = FindProvidedIcon();
+        if (string.IsNullOrEmpty(source) && showDialog)
         {
-            Vector3 p = pose*(vertices[i]-centre);
-            projected[i]=p;
-            minX=Mathf.Min(minX,p.x);maxX=Mathf.Max(maxX,p.x);
-            minY=Mathf.Min(minY,p.y);maxY=Mathf.Max(maxY,p.y);
-        }
-        float scale = .83f*RenderSize/Mathf.Max(maxX-minX,maxY-minY,.001f);
-        Vector3[] screen = new Vector3[vertices.Length];
-        float mx=(minX+maxX)*.5f,my=(minY+maxY)*.5f;
-        for (int i=0;i<screen.Length;i++)
-            screen[i] = new Vector3(
-                (projected[i].x-mx)*scale+RenderSize*.5f,
-                (projected[i].y-my)*scale+RenderSize*.5f,
-                projected[i].z);
-
-        Color[] pixels = new Color[RenderSize*RenderSize];
-        float[] depths = new float[pixels.Length];
-        for (int i=0;i<depths.Length;i++) depths[i]=float.NegativeInfinity;
-
-        int texWidth=texture.width,texHeight=texture.height;
-        Color32[] atlas=texture.GetPixels32();
-        for (int t=0;t+2<tris.Length;t+=3)
-        {
-            int ia=tris[t],ib=tris[t+1],ic=tris[t+2];
-            if (ia<0||ib<0||ic<0||ia>=screen.Length||ib>=screen.Length||ic>=screen.Length)
-                continue;
-            Vector3 a=screen[ia],b=screen[ib],c=screen[ic];
-            float area=Edge(a,b,c.x,c.y);
-            if (Mathf.Abs(area)<.000001f) continue;
-            int x0=Mathf.Clamp(Mathf.FloorToInt(Mathf.Min(a.x,Mathf.Min(b.x,c.x))),0,RenderSize-1);
-            int x1=Mathf.Clamp(Mathf.CeilToInt(Mathf.Max(a.x,Mathf.Max(b.x,c.x))),0,RenderSize-1);
-            int y0=Mathf.Clamp(Mathf.FloorToInt(Mathf.Min(a.y,Mathf.Min(b.y,c.y))),0,RenderSize-1);
-            int y1=Mathf.Clamp(Mathf.CeilToInt(Mathf.Max(a.y,Mathf.Max(b.y,c.y))),0,RenderSize-1);
-            Vector3 normal=Vector3.Cross(projected[ib]-projected[ia],
-                projected[ic]-projected[ia]).normalized;
-            float lighting=Mathf.Clamp(1.1f+.20f*Vector3.Dot(normal,
-                new Vector3(-.35f,.55f,.75f).normalized),.88f,1.36f);
-            for (int y=y0;y<=y1;y++)
-            for (int x=x0;x<=x1;x++)
-            {
-                float px=x+.5f,py=y+.5f;
-                float wa=Edge(b,c,px,py)/area;
-                float wb=Edge(c,a,px,py)/area;
-                float wc=1f-wa-wb;
-                if (wa<-.00001f || wb<-.00001f || wc<-.00001f) continue;
-                int index=y*RenderSize+x;
-                float depth=wa*a.z+wb*b.z+wc*c.z;
-                if (depth<depths[index]) continue;
-                depths[index]=depth;
-                Vector2 st=wa*uv[ia]+wb*uv[ib]+wc*uv[ic];
-                int tx=Mathf.Clamp(Mathf.FloorToInt(Mathf.Repeat(st.x,1f)*texWidth),0,texWidth-1);
-                int ty=Mathf.Clamp(Mathf.FloorToInt(Mathf.Repeat(st.y,1f)*texHeight),0,texHeight-1);
-                Color32 sample=atlas[ty*texWidth+tx];
-                pixels[index]=new Color(
-                    Mathf.Clamp01(sample.r/255f*lighting),
-                    Mathf.Clamp01(sample.g/255f*lighting),
-                    Mathf.Clamp01(sample.b/255f*lighting),sample.a/255f);
-            }
+            string downloads = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                "Downloads");
+            source = EditorUtility.OpenFilePanel(
+                "Select your original " + IconName, downloads, "png");
         }
 
-        // Two-times downsample gives a smooth, centered silhouette suitable
-        // for the same 256px hotbar and square shop/equipment icon containers.
-        Color[] smaller=new Color[IconSize*IconSize];
-        for (int y=0;y<IconSize;y++)
-        for (int x=0;x<IconSize;x++)
+        if (string.IsNullOrEmpty(source) || !File.Exists(source))
         {
-            int sx=x*2,sy=y*2;
-            Color a=pixels[sy*RenderSize+sx];
-            Color b=pixels[sy*RenderSize+sx+1];
-            Color c=pixels[(sy+1)*RenderSize+sx];
-            Color d=pixels[(sy+1)*RenderSize+sx+1];
-            float alpha=(a.a+b.a+c.a+d.a)*.25f;
-            float weighted=Mathf.Max(.000001f,a.a+b.a+c.a+d.a);
-            smaller[y*IconSize+x]=new Color(
-                (a.r*a.a+b.r*b.a+c.r*c.a+d.r*d.a)/weighted,
-                (a.g*a.a+b.g*b.a+c.g*c.a+d.g*d.a)/weighted,
-                (a.b*a.a+b.b*b.a+c.b*c.a+d.b*d.a)/weighted,alpha);
+            if (showDialog)
+                Debug.LogWarning("[LEVEL 7 ICON] The supplied PNG was not found. " +
+                    "Save '" + IconName + "' in Downloads and run the icon import menu again.");
+            return;
         }
 
-        Texture2D result=new Texture2D(IconSize,IconSize,TextureFormat.RGBA32,false);
-        result.SetPixels(smaller);
-        result.Apply(false,false);
-        return result;
+        // Verify the user-supplied PNG really contains transparent pixels and
+        // has a valid file header. Do not add or remove a background or rotate.
+        byte[] bytes = File.ReadAllBytes(source);
+        if (bytes.Length < 33 || bytes[0] != 137 || bytes[1] != 80 ||
+            bytes[2] != 78 || bytes[3] != 71)
+        {
+            Debug.LogError("[LEVEL 7 ICON] Supplied file is not a PNG: " + source);
+            return;
+        }
+
+        string fullDestination = Path.GetFullPath(IconAssetPath);
+        Directory.CreateDirectory(Path.GetDirectoryName(fullDestination));
+        bool changed = !File.Exists(fullDestination) ||
+            !File.ReadAllBytes(fullDestination).SequenceEqual(bytes);
+
+        if (changed)
+        {
+            File.WriteAllBytes(fullDestination, bytes);
+            AssetDatabase.ImportAsset(IconAssetPath,
+                ImportAssetOptions.ForceSynchronousImport |
+                ImportAssetOptions.ForceUpdate);
+        }
+
+        TextureImporter importer = AssetImporter.GetAtPath(IconAssetPath) as TextureImporter;
+        if (importer == null)
+        {
+            Debug.LogError("[LEVEL 7 ICON] Unity could not import " + IconAssetPath);
+            return;
+        }
+
+        bool needsImport = importer.textureType != TextureImporterType.Default ||
+            !importer.alphaIsTransparency || importer.mipmapEnabled ||
+            importer.textureCompression != TextureImporterCompression.Uncompressed ||
+            importer.maxTextureSize < 2048 || !importer.sRGBTexture;
+
+        if (needsImport)
+        {
+            importer.textureType = TextureImporterType.Default;
+            importer.alphaIsTransparency = true;
+            importer.mipmapEnabled = false;
+            importer.textureCompression = TextureImporterCompression.Uncompressed;
+            importer.maxTextureSize = 2048;
+            importer.sRGBTexture = true;
+            importer.SaveAndReimport();
+        }
+
+        if (changed || showDialog)
+        {
+            Debug.Log("[LEVEL 7 ICON] Imported original artwork without changes: " +
+                IconAssetPath + ". Shop/Equipment use the existing blue background; " +
+                "hotbar uses its transparency.");
+        }
+
+        if (showDialog)
+            EditorUtility.DisplayDialog("Level 7 Rod Icon",
+                "Original transparent PNG imported. Its bottom-left to top-right " +
+                "orientation is preserved. The shop and Equipment supply their " +
+                "existing blue-wave background; the hotbar does not.", "OK");
     }
 
-    private static float Edge(Vector3 a,Vector3 b,float x,float y)
-        => (x-a.x)*(b.y-a.y)-(y-a.y)*(b.x-a.x);
-
-    private static void Save(Texture2D result,string path)
+    private static string FindProvidedIcon()
     {
-        Directory.CreateDirectory(Folder);
-        File.WriteAllBytes(path,result.EncodeToPNG());
-        AssetDatabase.ImportAsset(path,ImportAssetOptions.ForceSynchronousImport);
-        TextureImporter importer=AssetImporter.GetAtPath(path) as TextureImporter;
-        if (importer==null) throw new InvalidDataException("Could not import generated icon: "+path);
-        importer.textureType=TextureImporterType.Default;
-        importer.alphaIsTransparency=true;
-        importer.sRGBTexture=true;
-        importer.mipmapEnabled=false;
-        importer.textureCompression=TextureImporterCompression.Uncompressed;
-        importer.maxTextureSize=512;
-        importer.SaveAndReimport();
+        string user = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        string[] folders =
+        {
+            Path.Combine(user, "Downloads"),
+            Path.Combine(user, "Desktop"),
+            "Assets/_Game/Fishing/RodReel/Level7/Source"
+        };
+
+        foreach (string folder in folders)
+        {
+            if (!Directory.Exists(folder)) continue;
+            string exact = Path.Combine(folder, IconName);
+            if (File.Exists(exact)) return exact;
+
+            // Browsers may append (1), (2), etc. to the downloaded filename.
+            // Prefer the most recently downloaded matching Level 7 icon.
+            string best = Directory.EnumerateFiles(folder, "*.png",
+                    SearchOption.TopDirectoryOnly)
+                .Where(path => Path.GetFileNameWithoutExtension(path)
+                    .StartsWith("Level 7 Fishing Rod Icon", StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(File.GetLastWriteTimeUtc)
+                .FirstOrDefault();
+            if (!string.IsNullOrEmpty(best)) return best;
+        }
+        return null;
     }
 }
 #endif

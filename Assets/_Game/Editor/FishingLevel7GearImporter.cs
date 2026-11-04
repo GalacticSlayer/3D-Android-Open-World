@@ -219,7 +219,8 @@ public static class FishingLevel7GearImporter
             MakeReelPrefab(reel, reelMaterial);
 
             AssetDatabase.SaveAssets();
-            FishingLevel7RodIconGenerator.Generate(savedRod, texture);
+            // Preserve the supplied icon; never regenerate model-based artwork.
+            FishingLevel7RodIconGenerator.InstallProvidedIcon();
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
             Validate();
             Debug.Log("[LEVEL 7 GEAR] Imported correctly: rigid rod dimensions, authored reel " +

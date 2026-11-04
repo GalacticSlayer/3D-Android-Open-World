@@ -81,6 +81,30 @@ public sealed class ShopPreview : MonoBehaviour
                 if(reelBackground!=null)target.rectTransform.anchoredPosition=reelBackground.anchoredPosition;
                 target.color=Color.white;
             }
+            // Level 7 uses the user's exact transparent Rod6.png, facing
+            // bottom-left to top-right. Keep the existing blue-water background
+            // separately, just like the reel and line previews. Do not load
+            // the old generated Rod6Card (which baked in the wrong artwork).
+            if(resolvedGear=="Rod6")
+            {
+                Texture2D supplied=Resources.Load<Texture2D>("Fishing/ItemIcons/Rod6");
+                if(supplied!=null)
+                {
+                    if(SetWaterBackground(target))
+                    {
+                        RectTransform backing=target.transform.parent.Find(
+                            "FishingItemWaterBackground") as RectTransform;
+                        if(backing!=null)target.rectTransform.anchoredPosition=backing.anchoredPosition;
+                    }
+                    target.rectTransform.localScale=Vector3.one;
+                    target.rectTransform.localRotation=Quaternion.identity;
+                    target.texture=supplied;
+                    target.uvRect=new Rect(0f,0f,1f,1f);
+                    target.color=Color.white;
+                    target.enabled=true;
+                    return;
+                }
+            }
             if(rod || line)
             {
                 // Existing pre-composited artwork is retained as a fallback.
