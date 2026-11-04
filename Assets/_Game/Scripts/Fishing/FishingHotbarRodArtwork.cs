@@ -45,7 +45,9 @@ public sealed class FishingHotbarRodArtwork : MonoBehaviour
         {
             // Keep the existing hotbar representation if artwork is unavailable.
             fallback = gameObject.AddComponent<ShopPreview>();
-            fallback.Attach(image, 0, 0, "RodAssembly");
+            // Render the actual Level 7 rod if no hand-painted icon exists.
+            // Earlier tiers retain their existing transparent artwork.
+            fallback.Attach(image, 0, 0, tier >= 6 ? "Rod" + tier : "RodAssembly");
         }
     }
 }
