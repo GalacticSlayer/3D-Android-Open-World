@@ -29,7 +29,7 @@ public static class FishingLevel7GearImporter
     private const string ReelPrefab = "Assets/Resources/Fishing/FishingRodReelLevel7.prefab";
     private const string BlenderPrefsKey = "OpenWorld.Goatfish.BlenderExecutable";
     private const string RepairSessionKey = "OpenWorld.Level7Gear.CorrectAssembly.20261103.v2";
-    private const string[] ReelParts =
+    private static readonly string[] ReelParts =
         { "ReelFootAndBody", "Rotor", "ReelHousing", "Spool", "Handle" };
     private static bool running;
 
