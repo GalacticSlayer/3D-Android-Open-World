@@ -73,7 +73,7 @@ test('observer receives equipped rod and timed cast, then unequip; old clients d
   const post=await fixture(t);
   const host=await post('/v1/open',hello);
   const guest=await post('/v1/join',{...hello,code:host.code});
-  const fishing={...pose(3),rodEquipped:true,rodTier:5,castSequence:1,castAge:.2,castDuration:.72};
+  const fishing={...pose(3),rodEquipped:true,rodTier:6,castSequence:1,castAge:.2,castDuration:.72};
   await post('/v1/state',{pose:fishing},guest.token);
   const seen=(await post('/v1/state',{pose:pose()},host.token)).players;
   const observed=seen.find(p=>p.id===guest.id);
@@ -84,7 +84,7 @@ test('observer receives equipped rod and timed cast, then unequip; old clients d
   const unequipped=(await post('/v1/state',{pose:pose()},host.token)).players.find(p=>p.id===guest.id);
   assert.equal(unequipped.rodEquipped,false);assert.equal(unequipped.castAge,-1);
   assert.equal(unequipped.castSequence,1);
-  for(const change of [{rodTier:6},{rodTier:9},{castSequence:-1},{castSequence:1.5},{castAge:'0'},{castAge:61},{castDuration:0}])
+  for(const change of [{rodTier:7},{rodTier:9},{castSequence:-1},{castSequence:1.5},{castAge:'0'},{castAge:61},{castDuration:0}])
     assert.equal((await post('/v1/state',{pose:{...fishing,...change}},guest.token)).status,400);
 });
 
@@ -458,11 +458,11 @@ test('right passenger seat is not enabled on yachts or rafts',async t=>{
 test('server advertises the supported rod tier on open, join and polls',async t=>{
   const post=await fixture(t);
   const host=await post('/v1/open',{...hello,pose:{...pose(),rodEquipped:false,rodTier:0,castSequence:0}});
-  assert.equal(host.ok,true);assert.equal(host.maxRodTier,5);
-  const guest=await post('/v1/join',{...hello,code:host.code});assert.equal(guest.maxRodTier,5);
+  assert.equal(host.ok,true);assert.equal(host.maxRodTier,6);
+  const guest=await post('/v1/join',{...hello,code:host.code});assert.equal(guest.maxRodTier,6);
   const update=await post('/v1/state',{pose:{...pose(),rodEquipped:true,rodTier:host.maxRodTier}},host.token);
-  assert.equal(update.ok,true);assert.equal(update.maxRodTier,5);
-  assert.equal(update.players.find(p=>p.id===host.id).rodTier,5);
+  assert.equal(update.ok,true);assert.equal(update.maxRodTier,6);
+  assert.equal(update.players.find(p=>p.id===host.id).rodTier,6);
 });
 
 test('fish pose replicates to observers, clears, and defaults off for older clients',async t=>{

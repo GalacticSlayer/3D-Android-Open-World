@@ -40,7 +40,7 @@ export function createSessionServer({ clock = Date.now, timeout = 30000, ledgerP
     if (!value || !['x','y','z','yaw'].every(k => typeof value[k] === 'number' && Number.isFinite(value[k]))) fail(400, 'Invalid player position.');
     if (['x','y','z'].some(k => Math.abs(value[k]) > 100000) || ![0,1,2].includes(value.world)) fail(400, 'Invalid world position.');
     // Optional fields preserve compatibility with older walking-only clients.
-    for (const [key, max] of [['rodTier',5],['castSequence',2147483647]])
+    for (const [key, max] of [['rodTier',6],['castSequence',2147483647]])
       if (value[key] !== undefined && (!Number.isInteger(value[key]) || value[key] < 0 || value[key] > max)) fail(400, 'Invalid fishing animation state.');
     if (value.castAge !== undefined && (typeof value.castAge !== 'number' || !Number.isFinite(value.castAge) || value.castAge < -1 || value.castAge > 60)) fail(400, 'Invalid cast age.');
     if (value.castDuration !== undefined && (typeof value.castDuration !== 'number' || !Number.isFinite(value.castDuration) || value.castDuration < .1 || value.castDuration > 60)) fail(400, 'Invalid cast duration.');
@@ -127,7 +127,7 @@ export function createSessionServer({ clock = Date.now, timeout = 30000, ledgerP
         if (room.players.size >= 8) fail(409, 'This room is full (8 players).');
       }
       const p = add(room, data);
-      return { ok:true, id:p.id, token:p.token, code:room.code, hostId:room.host, players:snapshot(room),tournament:tournaments.view(room),boss:bosses.view(room),bossReady:true,maxRodTier:5 };
+      return { ok:true, id:p.id, token:p.token, code:room.code, hostId:room.host, players:snapshot(room),tournament:tournaments.view(room),boss:bosses.view(room),bossReady:true,maxRodTier:6 };
     }
     const p = sessions.get(token);
     if (!p) fail(401, 'Session ended. The host may have left. Open or join again.');
@@ -148,7 +148,7 @@ export function createSessionServer({ clock = Date.now, timeout = 30000, ledgerP
     acceptBoatRide(p,previous); pruneBoatRiders(p.room);
     if(path==='/v1/tournament')tournaments.action(p,data.tournament);
     const bossResult=path==='/v1/boss'?bosses.action(p,data.boss):{};
-    return { ok:true, code:p.room.code, hostId:p.room.host, players:snapshot(p.room),tournament:tournaments.view(p.room),boss:bosses.view(p.room),bossReady:true,maxRodTier:5,...bossResult };
+    return { ok:true, code:p.room.code, hostId:p.room.host, players:snapshot(p.room),tournament:tournaments.view(p.room),boss:bosses.view(p.room),bossReady:true,maxRodTier:6,...bossResult };
   }
   const server = http.createServer({ requestTimeout:5000, headersTimeout:5000, maxHeaderSize:8192 }, async (req, res) => {
     const reply = (status, value) => { if (!res.destroyed) { res.writeHead(status, {'Content-Type':'application/json','Cache-Control':'no-store'}); res.end(JSON.stringify(value)); } };

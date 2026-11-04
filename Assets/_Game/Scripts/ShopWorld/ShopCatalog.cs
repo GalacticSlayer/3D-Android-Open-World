@@ -29,8 +29,8 @@ public static class ShopCatalog
     public const int FireShadLureVariant=2;
     public const int BloodyBaitLureVariant=PopperLureVariant; // Legacy tuning alias.
     public const int MetalSpoonLureVariant=3; // Retains Deep Flash's saved ownership and tuning slot.
-    public const int MaxRodTier=5;
-    public const int MaxReelTier=5;
+    public const int MaxRodTier=6;
+    public const int MaxReelTier=6;
 
     public static readonly string[] LureNames =
     {
@@ -106,6 +106,7 @@ public static class ShopCatalog
     {
         switch(tier)
         {
+            case 6:return "Fishing/FishingRodReelLevel7Rod";
             case 5:return "Fishing/FishingRodReelLevel6Rod";
             case 4:return "Fishing/FishingRodReelLevel5Rod";
             case 3:return "Fishing/FishingRodReelLevel4Rod";
@@ -119,6 +120,7 @@ public static class ShopCatalog
     {
         switch(tier)
         {
+            case 6:return "Fishing/FishingRodReelLevel7";
             case 5:return "Fishing/FishingRodReelLevel6";
             case 4:return "Fishing/FishingRodReelLevel5";
             case 3:return "Fishing/FishingRodReelLevel4";
@@ -141,19 +143,19 @@ public static class ShopCatalog
         new HabitatDefinition("garden", "Garden Lagoon", 5000, 25, 105f, 720f, 18f, 4f, 14f, true, true),
         new HabitatDefinition("lake", "Sanctuary Lake", 15000, 50, 360f, 3600f, 32f, 6f, 24f, true, true)
     };
-    public static readonly string[] RodNames = { "Woodland Rod", "Level 2 Fishing Rod", "Level 3 Fishing Rod", "Level 4 Fishing Rod", "Level 5 Fishing Rod", "Level 6 Fishing Rod" };
-    public static readonly string[] ReelNames = { "Starter Reel", "Level 2 Fishing Reel", "Level 3 Fishing Reel", "Level 4 Fishing Reel", "Level 5 Fishing Reel", "Level 6 Fishing Reel" };
+    public static readonly string[] RodNames = { "Woodland Rod", "Level 2 Fishing Rod", "Level 3 Fishing Rod", "Level 4 Fishing Rod", "Level 5 Fishing Rod", "Level 6 Fishing Rod", "Level 7 Fishing Rod" };
+    public static readonly string[] ReelNames = { "Starter Reel", "Level 2 Fishing Reel", "Level 3 Fishing Reel", "Level 4 Fishing Reel", "Level 5 Fishing Reel", "Level 6 Fishing Reel", "Level 7 Fishing Reel" };
     public static readonly string[] LineNames = { "Standard Line", "Reinforced Line", "Braided Line", "Elite Braid" };
     public static readonly string[] BaitNames = { "Worms", "Worms (legacy)", "Shrimp", "Squid", "Heavy Jig" };
     public static readonly int[] BaitPrices = { 0, 35, 90, 180, 0 };
-    public static readonly int[] RodPrices = { 0, 2000, 6000, 19000, 39500, 85000 };
-    public static readonly int[] ReelPrices = { 0, 1500, 4500, 12000, 35000, 77000 };
+    public static readonly int[] RodPrices = { 0, 2000, 6000, 19000, 39500, 85000, 215000 };
+    public static readonly int[] ReelPrices = { 0, 1500, 4500, 12000, 35000, 77000, 195000 };
     public static readonly int[] LinePrices = { 0, 100, 400, 2500 };
     public static readonly float[] LineBonus = { 0, 0, 0, 0 };
     public static HabitatDefinition Habitat(string id) => Array.Find(Habitats, h => h.id == id);
     public static string GearName(GearKind kind, int tier) => (kind == GearKind.Rod ? RodNames : kind == GearKind.Reel ? ReelNames : LineNames)[tier];
     public static int GearPrice(GearKind kind, int tier) => (kind == GearKind.Rod ? RodPrices : kind == GearKind.Reel ? ReelPrices : LinePrices)[tier];
-    public static float RodTensionControlMultiplier(int tier) => tier>=5 ? 1.05f : 1f;
-    public static string RodTensionControlDescription(int tier) => tier>=5 ? " / 5% tension control" : "";
+    public static float RodTensionControlMultiplier(int tier) => tier>=6 ? 1.09f : tier>=5 ? 1.05f : 1f;
+    public static string RodTensionControlDescription(int tier) => tier>=6 ? " / 9% tension control" : tier>=5 ? " / 5% tension control" : "";
     public static float FishLength(int species,float kg) => FishSizeTable.LengthMetres(species,kg);
 }
