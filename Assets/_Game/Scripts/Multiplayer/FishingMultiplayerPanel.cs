@@ -13,7 +13,7 @@ public sealed class FishingMultiplayerPanel : MonoBehaviour
     public static void Build(RectTransform parent,FirstPersonController player)
     {
         var go=new GameObject("MultiplayerPanel",typeof(RectTransform),typeof(LayoutElement));
-        go.transform.SetParent(parent,false);go.GetComponent<LayoutElement>().preferredHeight=570;
+        go.transform.SetParent(parent,false);go.GetComponent<LayoutElement>().preferredHeight=675;
         var panel=go.AddComponent<FishingMultiplayerPanel>();panel.player=player;panel.session=FishingMultiplayer.For(player);panel.Create();
     }
     private void Create()
@@ -29,7 +29,12 @@ public sealed class FishingMultiplayerPanel : MonoBehaviour
         join=Action("JOIN SERVER",310,.51f,1,()=>session.JoinServer(code.text));
         copy=Action("COPY ROOM CODE",400,0,.49f,()=>GUIUtility.systemCopyBuffer=session.Code);
         leave=Action("LEAVE SERVER",400,.51f,1,()=>session.LeaveServer());
-        Label("Close this menu to walk around. Use the same island to meet up.\nLeaving as host closes the room for everyone.",490,75,23);
+        Action("VIEW AQUARIUMS",490,0,1,()=>
+        {
+            var hud=FindFirstObjectByType<ShopWorldHUD>();
+            if(hud!=null)hud.Open("homes");
+        });
+        Label("Browse public Homes even when their owners are offline.\nOpening or joining a multiplayer room is optional.",580,82,23);
     }
     private void Update()
     {
