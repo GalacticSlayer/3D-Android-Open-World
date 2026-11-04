@@ -59,6 +59,9 @@ export function createSessionServer({ clock = Date.now, timeout = 30000, ledgerP
     if (value.heldFishWeight !== undefined && (typeof value.heldFishWeight !== 'number' || !Number.isFinite(value.heldFishWeight) || value.heldFishWeight < 0 || value.heldFishWeight > 1000000)) fail(400, 'Invalid held fish weight.');
     if (value.heldFishSpecies >= 0 && !(value.heldFishWeight > 0)) fail(400, 'Missing held fish weight.');
     if(value.islandMask!==undefined && (!Number.isInteger(value.islandMask)||value.islandMask<0||value.islandMask>31))fail(400,'Invalid island unlocks.');
+    if(value.homeCode!==undefined && value.homeCode!==null && value.homeCode!=='' &&
+       (typeof value.homeCode!=='string'||!/^[A-HJ-NP-Z2-9]{8}$/.test(value.homeCode)))
+       fail(400,'Invalid Home visitor location.');
     const lineKind=value.lineKind??0, lureVariant=value.lureVariant??0;
     if(!Number.isInteger(lineKind)||lineKind<0||lineKind>3||!Number.isInteger(lureVariant)||lureVariant<0||lureVariant>4)
       fail(400,'Invalid fishing line state.');
@@ -94,7 +97,8 @@ export function createSessionServer({ clock = Date.now, timeout = 30000, ledgerP
       castImpactY:value.world===0&&impactSequence?value.castImpactY:0,
       castImpactZ:value.world===0&&impactSequence?value.castImpactZ:0,
       ...boatPose(value), x: value.x, y: value.y, z: value.z, yaw: ((value.yaw % 360) + 360) % 360,
-      world: value.world, swimming: value.swimming === true,
+      world: value.world, homeCode:value.world===2?(value.homeCode||''):'',
+      swimming: value.swimming === true,
       sprinting: value.sprinting === true && value.swimming !== true,
       rodEquipped: value.rodEquipped === true, rodTier: value.rodTier ?? 0,
       reelTier: value.reelTier ?? 0,
