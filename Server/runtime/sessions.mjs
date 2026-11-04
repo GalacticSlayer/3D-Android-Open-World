@@ -18,7 +18,13 @@ export function createSessionServer({ clock = Date.now, timeout = 30000, ledgerP
   // Tests without a storage path receive an isolated temporary directory.
   const homeFolder=homesDirectory || (ledgerPath?path.join(path.dirname(ledgerPath),'homes'):
     fs.mkdtempSync(path.join(os.tmpdir(),'fishing-homes-')));
-  const homes=createHomes({directory:homeFolder,clock});
+  let homes;
+  try{homes=createHomes({directory:homeFolder,clock})}
+  catch(e)
+  {
+    console.error('Home directory unavailable; preserving normal multiplayer service:',e.message);
+    homes={dispatch:()=>fail(503,'Home directory temporarily unavailable.')};
+  }
   const rooms = new Map(), sessions = new Map(), limits = new Map();
   const homeRegistrationLimits=new Map();
   const fail = (status, message) => { throw Object.assign(new Error(message), { status }); };
