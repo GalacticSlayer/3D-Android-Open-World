@@ -87,9 +87,10 @@ public sealed class ShopWorldHUD : MonoBehaviour
         bool independentPage=page=="bait" || page.StartsWith(HabitatAddPrefix,StringComparison.Ordinal);
         if(shopSession==null && !independentPage && Keyboard.current!=null && Keyboard.current.tabKey.wasPressedThisFrame) Open("bag");
         string nearest=travel.Nearest();
-        nearbyButton.SetActive(!MenuOpen && nearest!=null && !travel.Traveling);
+        bool aquariumInteraction=HomeAquariumPlacement.IsPlacing || HomeAquariumPlacement.StorageOpen;
+        nearbyButton.SetActive(!MenuOpen && !aquariumInteraction && nearest!=null && !travel.Traveling);
         if(nearest!=null) nearLabel.text=nearest=="gear" ? "OPEN TACKLE STORE" : nearest=="market" ? "SELL FISH" : "VIEW HABITAT";
-        if(!MenuOpen && nearest!=null && Keyboard.current!=null && Keyboard.current.eKey.wasPressedThisFrame) Open(nearest);
+        if(!MenuOpen && !aquariumInteraction && nearest!=null && Keyboard.current!=null && Keyboard.current.eKey.wasPressedThisFrame) Open(nearest);
 
         if(travel.Traveling) { feedback.text="Traveling..."; return; }
         if(travel.TravelError!=null) feedback.text=travel.TravelError;
