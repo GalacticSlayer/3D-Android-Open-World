@@ -281,7 +281,8 @@ public sealed class ShopWorldHUD : MonoBehaviour
         }
         if(habitatAddId!=null)
         {
-            var habitat=ShopCatalog.Habitat(habitatAddId);
+            var habitatOwned=progress.Data.Habitat(habitatAddId);
+            var habitat=ShopCatalog.Habitat(habitatOwned!=null?habitatOwned.id:habitatAddId);
             heading.text=habitat!=null?"ADD FISH • "+habitat.name.ToUpperInvariant():"ADD FISH";
         }
         bool independent=index || page=="bait" || page=="stats" || habitatAddId!=null;
@@ -644,16 +645,29 @@ public sealed class ShopWorldHUD : MonoBehaviour
     }
     private void HabitatPage(string id)
     {
-        var d=ShopCatalog.Habitat(id); if(d==null) {TravelPage();return;}
-        if(!travel.Near(id)) { Row(d.name,"Approach its sign to view this habitat.","TRAVEL",()=>Open("travel"));return; }
         var owned=progress.Data.Habitat(id);
+        var d=ShopCatalog.Habitat(owned!=null?owned.id:id); if(d==null){TravelPage();return;}
+        if(!travel.Near(id)){Row(d.name,"Approach its sign to view this habitat.","TRAVEL",()=>Open("travel"));return;}
         string capacity=$"{d.width} × {d.depth} × {d.height} m / {d.fishLimit} fish / max {d.maxFishKg} kg each / {d.totalKg} kg total";
         if(travel.InShop)
         {
             int cost=progress.Data.UpgradeCost(id);
-            var current=progress.Data.CurrentHabitat(d.pond);
-            string detail=owned!=null?"This habitat is installed at Home.":cost>=0?"Upgrades your Home in place. Residents stay with their habitat.":"Purchase the preceding size first. You own one aquarium and one pond.";
-            Row(d.name,capacity+"\n"+detail,owned!=null?"OWNED":cost>=0?$"UPGRADE {cost:N0}":"LOCKED",()=>Result(progress.BuyHabitat(id),"Your Home habitat has been upgraded."),cost>=0 && progress.Data.coins>=cost && !progress.ReadOnly);
+            if(!d.pond)
+            {
+                int count=progress.Data.AquariumCount(id);
+                Row(d.name,capacity+"\n"+count+" owned • Each purchase doubles this model's next price. New aquariums appear in the storage box at Home.",
+                    cost>=0?$"BUY {cost:N0}":"MAX PRICE",
+                    ()=>Result(progress.BuyHabitat(id),"Aquarium purchased! Travel Home to place it from your storage box."),
+                    cost>=0 && progress.Data.coins>=cost && !progress.ReadOnly);
+            }
+            else
+            {
+                var current=progress.Data.CurrentHabitat(true);
+                string detail=owned!=null?"This pond is installed at Home.":cost>=0?"Upgrades your Home pond in place. Fish remain.":"Purchase the preceding pond size first.";
+                Row(d.name,capacity+"\n"+detail,owned!=null?"OWNED":cost>=0?$"UPGRADE {cost:N0}":"LOCKED",
+                    ()=>Result(progress.BuyHabitat(id),"Your Home pond has been upgraded."),
+                    owned==null && cost>=0 && progress.Data.coins>=cost && !progress.ReadOnly);
+            }
             return;
         }
         if(owned==null || !travel.InHome)return;
@@ -665,7 +679,8 @@ public sealed class ShopWorldHUD : MonoBehaviour
     }
     private void HabitatFishPicker(string id)
     {
-        var d=ShopCatalog.Habitat(id);
+        var located=progress.Data.Habitat(id);
+        var d=ShopCatalog.Habitat(located!=null?located.id:id);
         if(d==null){Row("Habitat unavailable","This habitat could not be found.","CLOSE",Close);return;}
         if(!travel.InHome || !travel.Near(id))
         {Row(d.name,"Return to this habitat at Home to add fish.","BACK",()=>Open(id));return;}
