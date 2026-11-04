@@ -23,7 +23,15 @@ public sealed class ShopDimensionManager : MonoBehaviour
     private float oldFogDensity;
     private bool oldFog;
     private Color oldFogColor;
-    private void Awake() { Instance=this; controller=GetComponent<FirstPersonController>(); fishing=GetComponent<FishingSystem>(); }
+    private void Awake()
+    {
+        Instance=this;
+        controller=GetComponent<FirstPersonController>();
+        fishing=GetComponent<FishingSystem>();
+        // Runtime attachment works with existing installed scenes; no scene rebuild.
+        if(GetComponent<HomeAquariumPlacement>()==null)
+            gameObject.AddComponent<HomeAquariumPlacement>();
+    }
     private void OnDestroy() { if(Instance==this) Instance=null; }
     public bool Near(string id)
     {
