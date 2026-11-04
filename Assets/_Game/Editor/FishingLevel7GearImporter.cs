@@ -539,6 +539,16 @@ with open(out_path,'w',encoding='utf-8') as f:
                 Transform target = mount.Find(name);
                 if (target == null) throw new InvalidDataException("Missing existing animated part: " + name);
                 Vector3 localPosition = target.localPosition;
+                // The original Level 7 FBX pivots exactly match these existing
+                // reel pivots (to five decimal places after Blender axis/unit
+                // conversion). Reject any future misassembled source instead
+                // of quietly warping each part to look plausible.
+                Vector3 authoredPosition = new Vector3(part.position[0],
+                    part.position[1],part.position[2]);
+                if (Vector3.Distance(authoredPosition,localPosition) > .002f)
+                    throw new InvalidDataException("Level 7 " + name +
+                        " authored pivot does not match the working reel mount: " +
+                        authoredPosition + " / " + localPosition);
                 Quaternion localRotation = target.localRotation;
                 Vector3 localScale = target.localScale;
                 Mesh mesh = MakeReelMesh(part, localPosition);
