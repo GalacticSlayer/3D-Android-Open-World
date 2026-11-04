@@ -3,6 +3,7 @@ using UnityEngine;
 public sealed class ShopHabitat : MonoBehaviour
 {
     public string id;
+    public string instanceKey; // Stable Home instance; empty on shop displays and templates.
     public Transform interaction, entrance, exit, fishRoot;
     public ShopWaterVolume water;
     public BoxCollider purchaseBarrier;
@@ -30,14 +31,24 @@ public sealed class ShopHabitat : MonoBehaviour
     private void OnDestroy() { if(progress!=null) progress.Changed-=Refresh; }
     private void Refresh()
     {
-        var d=ShopCatalog.Habitat(id); var owned=progress.Data.Habitat(id);
+        var d=ShopCatalog.Habitat(id);
         bool home=GetComponentInParent<ShopWorldEnvironment>().isHome;
-        bool purchased=home && owned!=null;
+        var owned=progress.Data.Habitat(!string.IsNullOrEmpty(instanceKey)?instanceKey:id);
+        bool purchased=home && owned!=null &&
+            (d.pond || !string.IsNullOrEmpty(instanceKey) && owned.placed);
         water.available=purchased && d.swimmable;
         if(purchaseBarrier!=null) purchaseBarrier.enabled=!purchased || !d.swimmable;
         float kg=0; int signature=purchased?17:0;
         if(purchased) foreach(var f in owned.fish) { kg+=f.weightKg; unchecked { signature=signature*31+f.GetHashCode(); } }
-        if(label!=null) label.text=d.name.ToUpperInvariant()+"\n"+(purchased ? $"OWNED  |  {owned.fish.Count}/{d.fishLimit} FISH  |  {kg:0.0}/{d.totalKg:0} KG" : $"{d.price:N0} TOTAL VALUE  |  UPGRADE FOR HOME")+$"\nMAX {d.maxFishKg:0.0} KG EACH";
+        if(label!=null)
+        {
+            int next=d.pond?progress.Data.UpgradeCost(id):progress.Data.NextAquariumPrice(id);
+            string offer=d.pond?$"{d.price:N0} TOTAL VALUE  |  UPGRADE FOR HOME":
+                (next<0?"MAXIMUM PURCHASE PRICE REACHED":$"{next:N0} COINS  |  BUY FOR HOME");
+            label.text=d.name.ToUpperInvariant()+"\n"+
+                (purchased?$"OWNED  |  {owned.fish.Count}/{d.fishLimit} FISH  |  {kg:0.0}/{d.totalKg:0} KG":offer)+
+                $"\nMAX {d.maxFishKg:0.0} KG EACH";
+        }
         var sign=label!=null?label.GetComponent<ShopSign>():null; if(sign!=null)sign.Fit();
         if(signature==fishSignature) return;
         fishSignature=signature;
