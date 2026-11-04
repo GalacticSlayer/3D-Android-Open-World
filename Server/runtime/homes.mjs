@@ -71,6 +71,7 @@ export function createHomes({directory,clock=Date.now}={}){
   }
   function register(data){
     const name=nameOf(data?.name);
+    if(homes.size>=10000)bad(503,'The public Home directory is currently at capacity.');
     let code;
     do{code=randomCode()}while(homes.has(code));
     const ownerKey=randomBytes(32).toString('hex');
@@ -98,7 +99,7 @@ export function createHomes({directory,clock=Date.now}={}){
     const q=typeof data?.query==='string'?data.query.trim().toLowerCase().slice(0,40):'';
     const page=Number.isInteger(data?.page)?Math.max(0,Math.min(10000,data.page)):0;
     const sort=data?.sort==='fish'?'fish':data?.sort==='biggest'?'biggest':'recent';
-    const entries=[...homes.values()].filter(h=>h.visibility==='public'&&
+    const entries=[...homes.values()].filter(h=>h.visibility==='public'&&h.tanks.length>0&&
       (!q||h.name.toLowerCase().includes(q)||h.code.toLowerCase().includes(q)))
       .map(publicInfo);
     entries.sort((a,b)=>sort==='fish'?b.fish-a.fish||b.updatedAt-a.updatedAt:
