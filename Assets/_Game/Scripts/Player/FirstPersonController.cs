@@ -8,6 +8,16 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private Transform cameraTransform;
     [SerializeField] private MobileJoystick moveJoystick;
     [SerializeField] private TouchLookArea touchLookArea;
+    // Pose's uncluttered overlay supplies the same swipe and pinch gestures
+    // while the ordinary gameplay canvas is hidden.
+    private TouchLookArea poseLookArea;
+    public void SetPoseLookArea(TouchLookArea area)
+    {
+        if (poseLookArea == area) return;
+        if (poseLookArea != null) poseLookArea.ConsumeLookDelta();
+        if (touchLookArea != null) touchLookArea.ConsumeLookDelta();
+        poseLookArea = area;
+    }
     [SerializeField] private MobileActionButton jumpButton;
     [SerializeField] private OceanWater oceanWater;
 
@@ -735,10 +745,12 @@ public class FirstPersonController : MonoBehaviour
                 mouseSensitivity;
         }
 
-        if (touchLookArea != null)
+        TouchLookArea activeLookArea = poseLookArea != null && poseLookArea.isActiveAndEnabled
+            ? poseLookArea : touchLookArea;
+        if (activeLookArea != null)
         {
             Vector2 touchDelta =
-                touchLookArea
+                activeLookArea
                     .ConsumeLookDelta();
 
             float dpi =

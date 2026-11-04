@@ -36,6 +36,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
     private GameObject poseShortcut;
     private Text poseLabel;
     private Canvas poseOnlyCanvas;
+    private TouchLookArea poseLookArea;
     private GameObject stopPoseShortcut;
     private readonly List<Canvas> poseHiddenCanvases = new List<Canvas>();
     private readonly List<GraphicRaycaster> poseHiddenRaycasters = new List<GraphicRaycaster>();
@@ -77,7 +78,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
         previews=gameObject.AddComponent<ShopPreview>();
         Build(); progress.Changed+=RefreshSoon; message=progress.Notice; MenuOpen=false;
     }
-    private void OnDestroy() { RestorePoseHUD(); if(poseOnlyCanvas!=null)Destroy(poseOnlyCanvas.gameObject); if(progress!=null) progress.Changed-=RefreshSoon; MenuOpen=false;if(islandThumbnail!=null)Destroy(islandThumbnail);if(rockyThumbnail!=null)Destroy(rockyThumbnail);if(deepThumbnail!=null)Destroy(deepThumbnail);if(bluewaterThumbnail!=null)Destroy(bluewaterThumbnail);if(snapperThumbnail!=null)Destroy(snapperThumbnail); }
+    private void OnDestroy() { RestorePoseHUD(); if(player!=null)player.SetPoseLookArea(null); if(poseOnlyCanvas!=null)Destroy(poseOnlyCanvas.gameObject); if(progress!=null) progress.Changed-=RefreshSoon; MenuOpen=false;if(islandThumbnail!=null)Destroy(islandThumbnail);if(rockyThumbnail!=null)Destroy(rockyThumbnail);if(deepThumbnail!=null)Destroy(deepThumbnail);if(bluewaterThumbnail!=null)Destroy(bluewaterThumbnail);if(snapperThumbnail!=null)Destroy(snapperThumbnail); }
     private void RefreshSoon() => dirty=true;
     private void Update()
     {
@@ -811,6 +812,18 @@ public sealed class ShopWorldHUD : MonoBehaviour
             scaler.referencePixelsPerUnit = originalScaler.referencePixelsPerUnit;
             scaler.scaleFactor = originalScaler.scaleFactor;
         }
+        // Reuse normal swipe/pinch handling without making ordinary HUD visible.
+        // The transparent hit surface sits below the stop button.
+        var touchSurface = new GameObject("Pose Camera Touch Surface",
+            typeof(RectTransform), typeof(Image), typeof(TouchLookArea));
+        touchSurface.transform.SetParent(go.transform, false);
+        Full(touchSurface.GetComponent<RectTransform>());
+        var touchImage = touchSurface.GetComponent<Image>();
+        touchImage.color = Color.clear;
+        touchImage.raycastTarget = true;
+        poseLookArea = touchSurface.GetComponent<TouchLookArea>();
+        if (player != null) player.SetPoseLookArea(poseLookArea);
+
         stopPoseShortcut = ButtonAt(go.transform, "STOP POSING", () => fishing.ToggleFishPose()).gameObject;
         Rect(stopPoseShortcut.GetComponent<RectTransform>(), Vector2.one, Vector2.one, Vector2.one,
             new Vector2(-36,-136), new Vector2(380,76));
