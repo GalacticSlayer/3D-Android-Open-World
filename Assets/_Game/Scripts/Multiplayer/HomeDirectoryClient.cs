@@ -106,7 +106,8 @@ public sealed class HomeDirectoryClient : MonoBehaviour
             if(definition==null || definition.pond)continue;
             var fish=new List<FishInfo>();
             if(own.fish!=null)foreach(var f in own.fish)
-                if(f!=null)fish.Add(new FishInfo{speciesId=f.speciesId,biomeId=f.biomeId,weightKg=f.weightKg});
+                if(f!=null)fish.Add(new FishInfo{speciesId=f.speciesId,biomeId=f.biomeId,
+                    weightKg=Mathf.Round(f.weightKg*1000f)/1000f});
             result.Add(new TankInfo{key=own.instanceKey,id=own.id,x=own.localX,
                 y=own.localY,z=own.localZ,yaw=own.yaw,fish=fish.ToArray()});
         }
@@ -120,7 +121,10 @@ public sealed class HomeDirectoryClient : MonoBehaviour
     };
     private void Update()
     {
-        if(progress!=null && dirty && !sending && Time.unscaledTime>=nextSync)
+        // A damaged, read-only local save must NEVER overwrite a valid
+        // previously published Home with the fallback empty ledger.
+        if(progress!=null && !progress.ReadOnly && dirty && !sending &&
+           Time.unscaledTime>=nextSync)
             StartCoroutine(Synchronize());
         if(VisitingHome==null || travel==null)return;
         if(travel.InHome && !travel.Traveling)visitEntered=true;
