@@ -4,6 +4,11 @@ using System.Collections.Generic;
 [Serializable] public sealed class HabitatOwnership
 {
     public string id;
+    // Individual aquariums own their fish, placement and identity independently.
+    // Legacy ponds intentionally retain the original single-upgrade behavior.
+    public string instanceKey;
+    public bool placed;
+    public float localX, localY, localZ, yaw;
     public List<CaughtFishRecord> fish = new List<CaughtFishRecord>();
 }
 
@@ -179,12 +184,73 @@ using System.Collections.Generic;
     public List<HabitatOwnership> habitats = new List<HabitatOwnership>();
     public bool legacyMigrated;
     public bool homeMigrated;
+    public int aquariumPlacementVersion, nextAquariumId;
     public const int BagLimit=50;
     public bool BagFull => bag.Count>=BagLimit;
     public HabitatOwnership CurrentHabitat(bool pond) => habitats.Find(h=>ShopCatalog.Habitat(h.id).pond==pond);
+    public int AquariumCount(string id)
+    {
+        int count=0;
+        if(habitats!=null)foreach(var h in habitats)if(h!=null && h.id==id)count++;
+        return count;
+    }
+    public int NextAquariumPrice(string id)
+    {
+        var d=ShopCatalog.Habitat(id);
+        if(d==null || d.pond)return -1;
+        long cost=d.price;
+        int count=AquariumCount(id);
+        for(int i=0;i<count;i++)
+        {
+            cost*=2;
+            if(cost>=int.MaxValue)return -1; // no overflow / unbuyable sentinel
+        }
+        return (int)cost;
+    }
+    public bool EnsureAquariumInstances()
+    {
+        bool changed=false;
+        // Keep the existing Home aquarium at its authored position; new buys
+        // start in storage and do not occupy a floor space until placed.
+        bool legacy=aquariumPlacementVersion<1;
+        foreach(var h in habitats)
+        {
+            if(h==null || ShopCatalog.Habitat(h.id).pond)continue;
+            if(!string.IsNullOrEmpty(h.instanceKey) && h.instanceKey.StartsWith("aq",StringComparison.Ordinal) &&
+               int.TryParse(h.instanceKey.Substring(2),out int number))
+                nextAquariumId=Math.Max(nextAquariumId,number);
+        }
+        foreach(var h in habitats)
+        {
+            if(h==null || ShopCatalog.Habitat(h.id).pond)continue;
+            if(string.IsNullOrEmpty(h.instanceKey))
+            {
+                h.instanceKey="aq"+(++nextAquariumId);
+                changed=true;
+            }
+            if(legacy)
+            {
+                h.placed=true;h.localX=-23f;h.localY=0;h.localZ=28f;h.yaw=0;
+                changed=true;
+            }
+        }
+        if(legacy){aquariumPlacementVersion=1;changed=true;}
+        return changed;
+    }
+    public bool PlaceAquarium(string key,float x,float y,float z,float rotation)
+    {
+        var h=habitats.Find(a=>a!=null && a.instanceKey==key);
+        if(h==null || ShopCatalog.Habitat(h.id).pond ||
+           float.IsNaN(x) || float.IsNaN(y) || float.IsNaN(z) || float.IsNaN(rotation) ||
+           float.IsInfinity(x) || float.IsInfinity(y) || float.IsInfinity(z) || float.IsInfinity(rotation))
+            return false;
+        h.localX=x;h.localY=y;h.localZ=z;h.yaw=rotation;h.placed=true;
+        return true;
+    }
     public int UpgradeCost(string id)
     {
         var d=ShopCatalog.Habitat(id); if(d==null)return -1;
+        if(!d.pond)return NextAquariumPrice(id);
         var current=CurrentHabitat(d.pond);
         int index=Array.IndexOf(ShopCatalog.Habitats,d);
         int previous=current==null?(d.pond?4:-1):Array.IndexOf(ShopCatalog.Habitats,ShopCatalog.Habitat(current.id));
@@ -210,7 +276,7 @@ using System.Collections.Generic;
     }
     public int Owned(GearKind kind) => kind == GearKind.Rod ? rodOwned : kind == GearKind.Reel ? reelOwned : lineOwned;
     public int Equipped(GearKind kind) => kind == GearKind.Rod ? rodEquipped : kind == GearKind.Reel ? reelEquipped : lineEquipped;
-    public HabitatOwnership Habitat(string id) => habitats.Find(h => h.id == id);
+    public HabitatOwnership Habitat(string id) => habitats.Find(h=>h.instanceKey==id && !string.IsNullOrEmpty(id)) ?? habitats.Find(h=>h.id==id);
     public bool Spend(int price) { if (price < 0 || price==int.MaxValue || coins < price) return false; coins -= price; return true; }
     public bool BuyGear(GearKind kind, int tier)
     {
@@ -247,15 +313,20 @@ using System.Collections.Generic;
     {
         var definition=ShopCatalog.Habitat(id);
         int cost=UpgradeCost(id);
-        if (definition==null || cost<0 || !Spend(cost)) return false;
-        var current=CurrentHabitat(definition.pond);
-        if(current==null) habitats.Add(new HabitatOwnership { id=id });
+        if(definition==null || cost<0 || !Spend(cost))return false;
+        if(!definition.pond)
+        {
+            habitats.Add(new HabitatOwnership { id=id, instanceKey="aq"+(++nextAquariumId), placed=false });
+            return true;
+        }
+        var current=CurrentHabitat(true);
+        if(current==null)habitats.Add(new HabitatOwnership { id=id });
         else current.id=id;
         return true;
     }
     public string Admission(string id, CaughtFishRecord fish)
     {
-        var owned=Habitat(id); var d=ShopCatalog.Habitat(id);
+        var owned=Habitat(id); var d=owned!=null?ShopCatalog.Habitat(owned.id):ShopCatalog.Habitat(id);
         if (owned==null || d==null) return "Purchase this habitat first.";
         if (fish==null || float.IsNaN(fish.weightKg) || float.IsInfinity(fish.weightKg) || fish.weightKg<=0) return "Invalid fish weight.";
         if (owned.fish.Count>=d.fishLimit) return "Fish count limit reached.";
