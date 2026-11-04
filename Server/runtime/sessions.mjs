@@ -3,13 +3,22 @@ import { createBosses } from './bosses.mjs';
 import { createTournaments } from './tournaments.mjs';
 import { boatPose, acceptBoatRide, pruneBoatRiders } from './boats.mjs';
 import { randomBytes, randomInt } from 'node:crypto';
+import path from 'node:path';
+import os from 'node:os';
+import fs from 'node:fs';
+import { createHomes } from './homes.mjs';
 
 export const PROTOCOL = 'fishing-walk-v1';
 const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const playerName = value => value.replace(/[^a-zA-Z0-9 _-]/g, '').trim().slice(0,20) || 'Angler';
-export function createSessionServer({ clock = Date.now, timeout = 30000, ledgerPath = null, tournamentRandom, bossRandom } = {}) {
+export function createSessionServer({ clock = Date.now, timeout = 30000, ledgerPath = null, homesDirectory = null, tournamentRandom, bossRandom } = {}) {
   const tournaments=createTournaments({clock,ledgerPath,random:tournamentRandom});
   const bosses=createBosses({clock,random:bossRandom,ledgerPath:ledgerPath?ledgerPath+'.bosses':null});
+  // Directory persists separately from multiplayer rooms and tournament escrow.
+  // Tests without a storage path receive an isolated temporary directory.
+  const homeFolder=homesDirectory || (ledgerPath?path.join(path.dirname(ledgerPath),'homes'):
+    fs.mkdtempSync(path.join(os.tmpdir(),'fishing-homes-')));
+  const homes=createHomes({directory:homeFolder,clock});
   const rooms = new Map(), sessions = new Map(), limits = new Map();
   const fail = (status, message) => { throw Object.assign(new Error(message), { status }); };
   const snapshot = room => [...room.players.values()].map(p => ({ id: p.id, name: p.name, ...p.pose,
@@ -107,6 +116,7 @@ export function createSessionServer({ clock = Date.now, timeout = 30000, ledgerP
     return p;
   }
   function dispatch(path, data, token) {
+    if(path.startsWith('/v1/homes/'))return homes.dispatch(path,data);
     expire();
     if(path==='/v1/boss-receipt')return bosses.receipt(data);
     if(path==='/v1/tournament-receipt')return {ok:true,...tournaments.receipt(data)};
@@ -161,12 +171,15 @@ export function createSessionServer({ clock = Date.now, timeout = 30000, ledgerP
     }
     if (++limit.count > 100) { reply(429,{ok:false,error:'Too many requests.'});req.resume();return; }
     if (req.method === 'GET' && req.url === '/health') { reply(200,{ok:true,protocol:PROTOCOL});return; }
-    if (req.method !== 'POST' || !['/v1/open','/v1/join','/v1/state','/v1/leave','/v1/tournament','/v1/tournament-receipt','/v1/tournament-catches','/v1/boss','/v1/boss-receipt'].includes(req.url)) {reply(404,{ok:false,error:'Not found.'});req.resume();return;}
+    if (req.method !== 'POST' || !['/v1/open','/v1/join','/v1/state','/v1/leave','/v1/tournament','/v1/tournament-receipt','/v1/tournament-catches','/v1/boss','/v1/boss-receipt',
+      '/v1/homes/register','/v1/homes/update','/v1/homes/list','/v1/homes/get','/v1/homes/check'].includes(req.url)) {reply(404,{ok:false,error:'Not found.'});req.resume();return;}
     if ((req.url === '/v1/open' || req.url === '/v1/join') && ++limit.opens > 4) {reply(429,{ok:false,error:'Wait a moment before trying again.'});req.resume();return;}
     if (!(req.headers['content-type'] || '').startsWith('application/json')) {reply(415,{ok:false,error:'JSON required.'});req.resume();return;}
     try {
       let size=0; const chunks=[];
-      for await (const chunk of req) { size+=chunk.length; if(size>4096){fail(413,'Request too large.');} chunks.push(chunk); }
+      // Only Home layout uploads need a larger limit; 10 Hz movement stays at 4 KB.
+      const maxBytes=req.url==='/v1/homes/update'?262144:4096;
+      for await (const chunk of req) { size+=chunk.length; if(size>maxBytes){fail(413,'Request too large.');} chunks.push(chunk); }
       let data;
       try {data=JSON.parse(Buffer.concat(chunks).toString('utf8'));} catch {fail(400,'Invalid JSON.');}
       if (!data || typeof data !== 'object' || Array.isArray(data)) fail(400,'Invalid request.');
