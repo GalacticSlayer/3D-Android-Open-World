@@ -184,7 +184,19 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         if(template==null){RestoreSource();return;}
         ghost=Instantiate(template.gameObject,world.transform,false);
         foreach(var child in ghost.GetComponentsInChildren<Transform>(true))
+        {
             child.gameObject.isStatic=false;
+            // The Home template is inactive, so AquariumStepGeometryFix does
+            // not process it on scene load. Match the actual thin treads here.
+            if(child.name=="AccessStep" && child.localScale.y>.09f)
+            {
+                const float thickness=.09f;
+                float top=child.localPosition.y+child.localScale.y*.5f;
+                Vector3 scale=child.localScale,position=child.localPosition;
+                scale.y=thickness;position.y=top-thickness*.5f;
+                child.localScale=scale;child.localPosition=position;
+            }
+        }
         ghost.name="Aquarium Placement Preview";
         ghost.SetActive(false);
         var habitat=ghost.GetComponent<ShopHabitat>();
