@@ -65,11 +65,16 @@ public static class FishingLevel7GearImporter
         }
 
         Directory.CreateDirectory(sourceDirectory);
-        File.Copy(rod, Path.Combine(sourceDirectory, "Level7FishingRod.fbx"), false);
-        File.Copy(reel, Path.Combine(sourceDirectory, "Level7FishingReel.fbx"), false);
-        File.Copy(texture, Path.Combine(sourceDirectory, "Level7EquipmentTexture.png"), false);
+        CopyIfMissing(rod, Path.Combine(sourceDirectory, "Level7FishingRod.fbx"));
+        CopyIfMissing(reel, Path.Combine(sourceDirectory, "Level7FishingReel.fbx"));
+        CopyIfMissing(texture, Path.Combine(sourceDirectory, "Level7EquipmentTexture.png"));
         AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
         return AllSourcesExist();
+    }
+
+    private static void CopyIfMissing(string original, string destination)
+    {
+        if (!File.Exists(destination)) File.Copy(original, destination);
     }
 
     public static void ImportIfAvailable()
