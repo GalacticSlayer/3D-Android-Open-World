@@ -77,7 +77,13 @@ public sealed class ShopWorldHUD : MonoBehaviour
     {
         if(root==null) return;
         if(Keyboard.current!=null && Keyboard.current.escapeKey.wasPressedThisFrame)
-        { if(MenuOpen) CloseMenuPage(); else Open("travel"); }
+        {
+            var placement=travel!=null?travel.GetComponent<HomeAquariumPlacement>():null;
+            if(HomeAquariumPlacement.IsPlacing)placement?.CancelPlacement();
+            else if(HomeAquariumPlacement.StorageOpen)placement?.CloseStorage();
+            else if(MenuOpen)CloseMenuPage();
+            else Open("travel");
+        }
         // The animated catch-XP bar temporarily replaces MENU / TRAVEL only.
         // Keep the other shortcuts working and restore the menu button afterward.
         menuShortcut.SetActive(!MenuOpen && !FishingExperienceToast.IsShowingXp);
