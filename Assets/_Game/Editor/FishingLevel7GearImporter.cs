@@ -68,7 +68,6 @@ public static class FishingLevel7GearImporter
             Application.isBatchMode || SessionState.GetBool(RepairSessionKey, false))
             return;
         if (!HaveOriginalBlends()) return;
-        SessionState.SetBool(RepairSessionKey, true);
         Build(false);
     }
 
@@ -208,7 +207,12 @@ public static class FishingLevel7GearImporter
             Material reelMaterial = MatchExistingMaterial(
                 Generated + "Level7FishingReel.mat", ReelTemplate, "Spool", texture);
 
-            Mesh rodMesh = MakeRodMesh(rod, 1.80232f);
+            // Match the EXISTING RodBlank mesh bounds, including its -1 cm
+            // butt offset; the visible tip then coincides with RodTip exactly.
+            GameObject rodReference = AssetDatabase.LoadAssetAtPath<GameObject>(RodTemplate);
+            Mesh oldRodMesh = Find(rodReference.transform, "RodBlank")
+                .GetComponent<MeshFilter>().sharedMesh;
+            Mesh rodMesh = MakeRodMesh(rod, oldRodMesh.bounds.size.y, oldRodMesh.bounds.min.y);
             Mesh savedRod = SaveMesh(Generated + "Level7RodBlank.asset", rodMesh);
             MakeRodPrefab(savedRod, rodMaterial);
 
@@ -330,7 +334,8 @@ for source_name,target_name in name_map.items():
                 loop=mesh.loops[li]
                 v=mesh.vertices[loop.vertex_index]
                 p=linear @ v.co
-                n=(normal_matrix @ loop.normal).normalized()
+                corner=mesh.corner_normals[li].vector if hasattr(mesh, 'corner_normals') else loop.normal
+                n=(normal_matrix @ corner).normalized()
                 t=uv_layer[li].uv if uv_layer else (0.0,0.0)
                 ids.append(len(vertices)//3)
                 vertices.extend((p.x,p.y,p.z))
@@ -369,7 +374,7 @@ with open(out_path,'w',encoding='utf-8') as f:
         }
     }
 
-    private static Mesh MakeRodMesh(RodGeometry g, float targetLength)
+    private static Mesh MakeRodMesh(RodGeometry g, float targetLength, float targetBaseY)
     {
         int count = g.vertices.Length / 3;
         var from = new Vector3[count];
@@ -398,7 +403,7 @@ with open(out_path,'w',encoding='utf-8') as f:
             Vector3 p = from[i];
             vertices[i] = new Vector3(
                 (Axis(p,sideA)-ca)*scale,
-                (Axis(p,longAxis)-baseValue)*sign*scale,
+                targetBaseY + (Axis(p,longAxis)-baseValue)*sign*scale,
                 (Axis(p,sideB)-cb)*scale);
             uv[i] = new Vector2(g.uv[i*2],g.uv[i*2+1]);
         }
