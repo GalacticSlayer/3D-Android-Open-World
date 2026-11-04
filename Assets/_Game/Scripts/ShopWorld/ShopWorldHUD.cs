@@ -35,6 +35,12 @@ public sealed class ShopWorldHUD : MonoBehaviour
     private Button menuClose, perspectiveToggle;
     private GameObject poseShortcut;
     private Text poseLabel;
+    private Canvas poseOnlyCanvas;
+    private GameObject stopPoseShortcut;
+    private readonly List<Canvas> poseHiddenCanvases = new List<Canvas>();
+    private readonly List<GraphicRaycaster> poseHiddenRaycasters = new List<GraphicRaycaster>();
+    private bool poseUiConcealed;
+    private float nextPoseCanvasScan;
     private GameObject profileNameRow;
     private InputField profileNameInput;
     private RectTransform list;
@@ -71,12 +77,14 @@ public sealed class ShopWorldHUD : MonoBehaviour
         previews=gameObject.AddComponent<ShopPreview>();
         Build(); progress.Changed+=RefreshSoon; message=progress.Notice; MenuOpen=false;
     }
-    private void OnDestroy() { if(progress!=null) progress.Changed-=RefreshSoon; MenuOpen=false;if(islandThumbnail!=null)Destroy(islandThumbnail);if(rockyThumbnail!=null)Destroy(rockyThumbnail);if(deepThumbnail!=null)Destroy(deepThumbnail);if(bluewaterThumbnail!=null)Destroy(bluewaterThumbnail);if(snapperThumbnail!=null)Destroy(snapperThumbnail); }
+    private void OnDestroy() { RestorePoseHUD(); if(poseOnlyCanvas!=null)Destroy(poseOnlyCanvas.gameObject); if(progress!=null) progress.Changed-=RefreshSoon; MenuOpen=false;if(islandThumbnail!=null)Destroy(islandThumbnail);if(rockyThumbnail!=null)Destroy(rockyThumbnail);if(deepThumbnail!=null)Destroy(deepThumbnail);if(bluewaterThumbnail!=null)Destroy(bluewaterThumbnail);if(snapperThumbnail!=null)Destroy(snapperThumbnail); }
     private void RefreshSoon() => dirty=true;
     private void Update()
     {
         if(root==null) return;
-        if(Keyboard.current!=null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        bool posing = fishing != null && fishing.IsFishPosing;
+        UpdatePoseHUD(posing);
+        if(!posing && Keyboard.current!=null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
             var placement=travel!=null?travel.GetComponent<HomeAquariumPlacement>():null;
             if(HomeAquariumPlacement.IsPlacing)placement?.CancelPlacement();
@@ -86,17 +94,17 @@ public sealed class ShopWorldHUD : MonoBehaviour
         }
         // The animated catch-XP bar temporarily replaces MENU / TRAVEL only.
         // Keep the other shortcuts working and restore the menu button afterward.
-        menuShortcut.SetActive(!MenuOpen && !FishingExperienceToast.IsShowingXp);
-        poseShortcut.SetActive(!MenuOpen && !travel.Traveling && fishing != null && fishing.CanPoseWithFish);
-        poseLabel.text = fishing != null && fishing.IsFishPosing ? "STOP POSING" : "POSE";
-        indexShortcut.SetActive(!MenuOpen);baitShortcut.SetActive(!MenuOpen);RefreshBaitShortcut();
+        menuShortcut.SetActive(!posing && !MenuOpen && !FishingExperienceToast.IsShowingXp);
+        poseShortcut.SetActive(!posing && !MenuOpen && !travel.Traveling && fishing != null && fishing.CanPoseWithFish);
+        poseLabel.text = posing ? "STOP POSING" : "POSE";
+        indexShortcut.SetActive(!posing && !MenuOpen);baitShortcut.SetActive(!posing && !MenuOpen);RefreshBaitShortcut();
         bool independentPage=page=="bait" || page.StartsWith(HabitatAddPrefix,StringComparison.Ordinal);
-        if(shopSession==null && !independentPage && Keyboard.current!=null && Keyboard.current.tabKey.wasPressedThisFrame) Open("bag");
+        if(!posing && shopSession==null && !independentPage && Keyboard.current!=null && Keyboard.current.tabKey.wasPressedThisFrame) Open("bag");
         string nearest=travel.Nearest();
         bool aquariumInteraction=HomeAquariumPlacement.IsPlacing || HomeAquariumPlacement.StorageOpen;
-        nearbyButton.SetActive(!MenuOpen && !aquariumInteraction && nearest!=null && !travel.Traveling);
+        nearbyButton.SetActive(!posing && !MenuOpen && !aquariumInteraction && nearest!=null && !travel.Traveling);
         if(nearest!=null) nearLabel.text=nearest=="gear" ? "OPEN TACKLE STORE" : nearest=="market" ? "SELL FISH" : "VIEW HABITAT";
-        if(!MenuOpen && !aquariumInteraction && nearest!=null && Keyboard.current!=null && Keyboard.current.eKey.wasPressedThisFrame) Open(nearest);
+        if(!posing && !MenuOpen && !aquariumInteraction && nearest!=null && Keyboard.current!=null && Keyboard.current.eKey.wasPressedThisFrame) Open(nearest);
 
         if(travel.Traveling) { feedback.text="Traveling..."; return; }
         if(travel.TravelError!=null) feedback.text=travel.TravelError;
@@ -104,7 +112,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
     }
     public void Open(string destination)
     {
-        if(root==null || travel.Traveling) return;
+        if(root==null || travel.Traveling || (fishing!=null && fishing.IsFishPosing)) return;
         if(MenuOpen && shopSession!=null && destination!=shopSession && !(shopSession=="market" && destination=="sell-confirm"))return;
         if(MenuOpen && page==destination && !dirty)return;
         if(destination!=page){SaveProfileName();message="";}
@@ -147,6 +155,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
         poseLabel=poseShortcut.GetComponentInChildren<Text>();
         FishingHudTheme.Panel(poseShortcut);
         poseShortcut.SetActive(false);
+        BuildPoseOnlyCanvas();
         indexShortcut=ButtonAt(root.transform,"ISLAND / FISH INDEX",()=>Open("islands")).gameObject;
         Rect(indexShortcut.GetComponent<RectTransform>(),new Vector2(0,1),new Vector2(0,1),new Vector2(0,1),new Vector2(36,-32),new Vector2(460,92));
         baitShortcut=ButtonAt(root.transform,"",()=>Open("bait")).gameObject;
@@ -782,6 +791,77 @@ public sealed class ShopWorldHUD : MonoBehaviour
             previews.Attach(image,fish!=null?fish.speciesId:0,fish!=null?fish.weightKg:1,gear,page=="reef-fish");
         }
     }
+    // STOP POSING lives on an independent root canvas while the rest of the HUD is hidden.
+    private void BuildPoseOnlyCanvas()
+    {
+        var go = new GameObject("Pose Mode Only HUD",
+            typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+        poseOnlyCanvas = go.GetComponent<Canvas>();
+        poseOnlyCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        poseOnlyCanvas.overrideSorting = true;
+        poseOnlyCanvas.sortingOrder = 32000;
+        var originalScaler = GetComponentInParent<CanvasScaler>();
+        if (originalScaler != null)
+        {
+            var scaler = go.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = originalScaler.uiScaleMode;
+            scaler.referenceResolution = originalScaler.referenceResolution;
+            scaler.screenMatchMode = originalScaler.screenMatchMode;
+            scaler.matchWidthOrHeight = originalScaler.matchWidthOrHeight;
+            scaler.referencePixelsPerUnit = originalScaler.referencePixelsPerUnit;
+            scaler.scaleFactor = originalScaler.scaleFactor;
+        }
+        stopPoseShortcut = ButtonAt(go.transform, "STOP POSING", () => fishing.ToggleFishPose()).gameObject;
+        Rect(stopPoseShortcut.GetComponent<RectTransform>(), Vector2.one, Vector2.one, Vector2.one,
+            new Vector2(-36,-136), new Vector2(380,76));
+        FishingHudTheme.Panel(stopPoseShortcut);
+        go.SetActive(false);
+    }
+
+    private void UpdatePoseHUD(bool posing)
+    {
+        if (poseOnlyCanvas == null) return;
+        if (!posing)
+        {
+            RestorePoseHUD();
+            return;
+        }
+        if (!poseOnlyCanvas.gameObject.activeSelf) poseOnlyCanvas.gameObject.SetActive(true);
+        // Catch HUD canvases created after pose begins, without searching every frame.
+        if (poseUiConcealed && Time.unscaledTime < nextPoseCanvasScan) return;
+        poseUiConcealed = true;
+        nextPoseCanvasScan = Time.unscaledTime + .35f;
+        foreach (var canvas in FindObjectsByType<Canvas>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+        {
+            if (canvas == null || canvas == poseOnlyCanvas || canvas.renderMode == RenderMode.WorldSpace)
+                continue;
+            if (canvas.enabled)
+            {
+                poseHiddenCanvases.Add(canvas);
+                canvas.enabled = false;
+            }
+            var raycaster = canvas.GetComponent<GraphicRaycaster>();
+            if (raycaster != null && raycaster.enabled)
+            {
+                poseHiddenRaycasters.Add(raycaster);
+                raycaster.enabled = false;
+            }
+        }
+    }
+
+    private void RestorePoseHUD()
+    {
+        if (!poseUiConcealed) return;
+        foreach (var canvas in poseHiddenCanvases)
+            if (canvas != null) canvas.enabled = true;
+        foreach (var raycaster in poseHiddenRaycasters)
+            if (raycaster != null) raycaster.enabled = true;
+        poseHiddenCanvases.Clear();
+        poseHiddenRaycasters.Clear();
+        poseUiConcealed = false;
+        if (poseOnlyCanvas != null) poseOnlyCanvas.gameObject.SetActive(false);
+    }
+
     private GameObject Panel(string name,Transform parent,Color color)
     {
         var go=new GameObject(name,typeof(RectTransform),typeof(Image)); go.transform.SetParent(parent,false); go.GetComponent<Image>().color=color; return go;

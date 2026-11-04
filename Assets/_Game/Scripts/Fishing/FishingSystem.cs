@@ -255,17 +255,37 @@ public class FishingSystem : MonoBehaviour
         ? heldRecord.speciesId : -1;
     public float NetworkHeldWeight => NetworkHeldSpecies >= 0 ? heldRecord.weightKg : 0f;
     public bool IsFishPosing { get; private set; }
+    private bool returnToFirstPersonAfterPose;
     public bool CanPoseWithFish => NetworkHeldSpecies >= 0 && !MustStowForSwimming();
     public void ToggleFishPose()
     {
-        if (!CanPoseWithFish) return;
-        IsFishPosing = !IsFishPosing;
         if (IsFishPosing)
         {
-            var owner = GetComponent<FirstPersonController>();
-            var view = FishingThirdPersonView.For(owner);
-            if (view != null && !view.IsThirdPerson) view.Toggle();
+            StopFishPose();
+            return;
         }
+        if (!CanPoseWithFish) return;
+        var owner = GetComponent<FirstPersonController>();
+        var view = FishingThirdPersonView.For(owner);
+        if (view == null) return;
+        returnToFirstPersonAfterPose = !view.IsThirdPerson;
+        if (returnToFirstPersonAfterPose) view.Toggle();
+        if (!view.IsThirdPerson)
+        {
+            returnToFirstPersonAfterPose = false;
+            return;
+        }
+        view.FacePlayerForPose();
+        IsFishPosing = true;
+    }
+    private void StopFishPose()
+    {
+        if (!IsFishPosing) return;
+        IsFishPosing = false;
+        var view = GetComponent<FishingThirdPersonView>();
+        if (returnToFirstPersonAfterPose && view != null && view.IsThirdPerson)
+            view.Toggle();
+        returnToFirstPersonAfterPose = false;
     }
     public bool IsHolding(CaughtFishRecord record) => heldRecord==record && heldFishVisual!=null;
     public void PrepareForMenu()
@@ -357,6 +377,7 @@ public class FishingSystem : MonoBehaviour
 
     private void OnDisable()
     {
+        StopFishPose();
         CancelFishing();
     }
 
@@ -386,7 +407,7 @@ public class FishingSystem : MonoBehaviour
             if (!CanPoseWithFish || ShopWorldHUD.MenuOpen ||
                 (owner != null && owner.BoatInput.sqrMagnitude > .0025f) ||
                 (passenger != null && passenger.Seated) || view == null || !view.IsThirdPerson)
-                IsFishPosing = false;
+                StopFishPose();
         }
         UpdateHeldFishAnimation();
         if(rodEquipped && MustStowForSwimming())
@@ -3978,7 +3999,7 @@ public class FishingSystem : MonoBehaviour
 
     private void ClearHeldFish()
     {
-        IsFishPosing = false;
+        StopFishPose();
         heldRecord=null;
         if (heldFishVisual != null)
         {

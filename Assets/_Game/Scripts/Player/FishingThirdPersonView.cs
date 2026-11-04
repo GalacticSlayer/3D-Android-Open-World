@@ -67,6 +67,15 @@ public sealed class FishingThirdPersonView : MonoBehaviour
         SyncLocalAvatar();
     }
 
+    // Enter pose with the camera in front of the angler, preserving the existing zoom.
+    public void FacePlayerForPose()
+    {
+        if (!IsThirdPerson) return;
+        RestoreRenderPose();
+        orbitYaw = Mathf.Repeat(transform.eulerAngles.y + 180f, 360f);
+        movementHeldTime = returnYawVelocity = 0f;
+    }
+
     private bool IsSeatedMotorboat()
     {
         BoatPassenger passenger = player != null ? player.GetComponent<BoatPassenger>() : null;
