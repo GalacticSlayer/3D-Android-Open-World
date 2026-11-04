@@ -282,7 +282,7 @@ public sealed class HomeDirectoryClient : MonoBehaviour
             request.uploadHandler=new UploadHandlerRaw(Encoding.UTF8.GetBytes(JsonUtility.ToJson(body)));
             request.downloadHandler=new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type","application/json");
-            request.timeout=8;
+            request.timeout=path=="/v1/homes/update"?15:8;
             yield return request.SendWebRequest();
             Reply answer=null;
             if(request.downloadHandler!=null&&!string.IsNullOrEmpty(request.downloadHandler.text))
