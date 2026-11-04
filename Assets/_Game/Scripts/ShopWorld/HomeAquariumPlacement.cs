@@ -55,7 +55,8 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         if(storageSignMaterial!=null)Destroy(storageSignMaterial);
     }
     private bool AtHome => travel!=null && travel.InHome && !travel.Traveling &&
-        travel.World!=null && progress!=null && !progress.ReadOnly;
+        travel.World!=null && progress!=null && !progress.ReadOnly &&
+        (HomeDirectoryClient.Instance==null || !HomeDirectoryClient.Instance.IsVisiting);
 
     private void Update()
     {
