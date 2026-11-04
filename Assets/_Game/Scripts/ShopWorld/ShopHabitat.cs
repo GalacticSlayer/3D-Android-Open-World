@@ -45,7 +45,8 @@ public sealed class ShopHabitat : MonoBehaviour
             int next=d.pond?progress.Data.UpgradeCost(id):progress.Data.NextAquariumPrice(id);
             string offer=d.pond?$"{d.price:N0} TOTAL VALUE  |  UPGRADE FOR HOME":
                 (next<0?"MAXIMUM PURCHASE PRICE REACHED":$"{next:N0} COINS  |  BUY FOR HOME");
-            label.text=d.name.ToUpperInvariant()+"\n"+
+            label.text=d.name.ToUpperInvariant()+
+                (purchased && !d.pond?"  ["+instanceKey.ToUpperInvariant()+"]":"")+"\n"+
                 (purchased?$"OWNED  |  {owned.fish.Count}/{d.fishLimit} FISH  |  {kg:0.0}/{d.totalKg:0} KG":offer)+
                 $"\nMAX {d.maxFishKg:0.0} KG EACH";
         }
