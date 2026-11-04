@@ -20,6 +20,7 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
     private ShopDimensionManager travel;
     private ShopProgress progress;
     private FirstPersonController controller;
+    private FishingMenuSafetyRuntime menuSafety;
     private ShopWorldEnvironment world;
     private GameObject storageBox,ghost,canvasRoot,storagePanel;
     private MeshRenderer storageSignRenderer;
@@ -40,6 +41,7 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         travel=GetComponent<ShopDimensionManager>();
         progress=GetComponent<ShopProgress>();
         controller=GetComponent<FirstPersonController>();
+        menuSafety=FindFirstObjectByType<FishingMenuSafetyRuntime>();
         font=Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         BuildUI();
     }
@@ -105,7 +107,11 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
             return;
         }
         nearest=NearestAquarium(out float aquariumDistance);
-        bool canInteract=!ShopWorldHUD.MenuOpen && !FishingTournament.ModalOpen;
+        // The passive Fish Index intentionally leaves ShopWorldHUD.MenuOpen false.
+        // Hide BOTH aquarium buttons while that overlay is displayed.
+        if(menuSafety==null)menuSafety=FindFirstObjectByType<FishingMenuSafetyRuntime>();
+        bool canInteract=!ShopWorldHUD.MenuOpen && !FishingTournament.ModalOpen &&
+            (menuSafety==null || !menuSafety.IsIndexOpen);
         bool boxNearest=boxDistance<=InteractionRange && boxDistance<=aquariumDistance;
         bool show=canInteract && (boxNearest || nearest!=null);
         contextButton.gameObject.SetActive(show);
