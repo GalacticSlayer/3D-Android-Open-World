@@ -11,6 +11,7 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
 {
     public static bool IsPlacing { get; private set; }
     public static bool StorageOpen { get; private set; }
+    public static string PreviewKey { get; private set; }
 
     private const float InteractionRange=5.5f;
     private const float PreviewDistance=20f;
@@ -215,7 +216,7 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
             r.receiveShadows=false;
         }
         ghost.SetActive(true);
-        pendingKey=key;IsPlacing=true;valid=false;
+        pendingKey=key;PreviewKey=key;IsPlacing=true;valid=false;
         placeButton.gameObject.SetActive(true);
         cancelButton.gameObject.SetActive(true);
         placementHint.gameObject.SetActive(true);
@@ -337,9 +338,9 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         if(hiddenSource!=null)hiddenSource.gameObject.SetActive(true);
         hiddenSource=null;
     }
-    private void CancelPlacement()
+    public void CancelPlacement()
     {
-        IsPlacing=false;valid=false;pendingKey=null;
+        IsPlacing=false;valid=false;pendingKey=null;PreviewKey=null;
         if(ghost!=null)Destroy(ghost);
         ghost=null;
         RestoreSource();
@@ -356,7 +357,7 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         controller.SetMenuOpen(true);
         RefreshStorageRows();
     }
-    private void CloseStorage()
+    public void CloseStorage()
     {
         if(!StorageOpen)return;
         StorageOpen=false;
