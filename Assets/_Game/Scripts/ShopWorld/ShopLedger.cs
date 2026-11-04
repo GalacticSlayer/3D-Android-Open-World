@@ -237,6 +237,19 @@ using System.Collections.Generic;
         if(legacy){aquariumPlacementVersion=1;changed=true;}
         return changed;
     }
+    // Storage is only available for an empty, already-placed aquarium.
+    // Keeping its own record means buying/placing it again is unnecessary.
+    public bool StoreAquarium(string key)
+    {
+        if(string.IsNullOrEmpty(key) || habitats==null)return false;
+        var aquarium=habitats.Find(h=>h!=null && h.instanceKey==key);
+        if(aquarium==null || !aquarium.placed || aquarium.fish==null ||
+           aquarium.fish.Count!=0)return false;
+        var definition=ShopCatalog.Habitat(aquarium.id);
+        if(definition==null || definition.pond)return false;
+        aquarium.placed=false;
+        return true;
+    }
     public bool PlaceAquarium(string key,float x,float y,float z,float rotation)
     {
         var h=habitats.Find(a=>a!=null && a.instanceKey==key);
