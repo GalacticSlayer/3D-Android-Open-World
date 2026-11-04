@@ -180,7 +180,9 @@ public sealed class ShopProgress : MonoBehaviour
     public bool StoreAquarium(string key) =>
         CanManage && Commit(Data.StoreAquarium(key));
     public bool Sell(CaughtFishRecord fish) => CanTrade && ShopDimensionManager.Instance.Near("market") && Commit(Data.Sell(fish,FishCatalog.GetSellValue(fish.speciesId,fish.weightKg,fish.biomeId)));
-    public bool CanManage => !ReadOnly && ShopDimensionManager.Instance!=null && ShopDimensionManager.Instance.InHome;
+    public bool CanManage => !ReadOnly && ShopDimensionManager.Instance!=null &&
+        ShopDimensionManager.Instance.InHome &&
+        (HomeDirectoryClient.Instance==null || !HomeDirectoryClient.Instance.IsVisiting);
     public bool Deposit(string id,CaughtFishRecord fish) => CanManage && ShopDimensionManager.Instance.Near(id) && Commit(Data.Deposit(id,fish));
     public bool Withdraw(string id,CaughtFishRecord fish) => CanManage && ShopDimensionManager.Instance.Near(id) && Commit(Data.Withdraw(id,fish));
     public int TakeBait()
