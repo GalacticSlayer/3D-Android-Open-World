@@ -14,6 +14,7 @@ public sealed class FishingMultiplayer : MonoBehaviour
     [Serializable] public class Pose {
         public BoatPose boat;
         public int lineKind,lureVariant,islandMask=1;
+        public string homeCode;
         // Compact replicated FX event; never used to decide damage or fish HP.
         public int lightningSerial,lightningZap;
         // Persisted last successful water landing, independent of transient line state.
@@ -146,6 +147,9 @@ public sealed class FishingMultiplayer : MonoBehaviour
         }
         if(equipment!=null && equipment.Data!=null)
             pose.islandMask=1|4|(equipment.Data.brinebreakDiscovered?2:0)|(equipment.Data.bluewaterDiscovered?8:0)|(equipment.Data.snapperDiscovered?16:0);
+        var directory=HomeDirectoryClient.Instance;
+        if(pose.world==2 && directory!=null)
+            pose.homeCode=directory.IsVisiting?directory.VisitingHome.code:directory.OwnerCode;
         if(boats!=null)boats.Capture(pose);
         return pose;
     }
@@ -234,8 +238,19 @@ public sealed class FishingMultiplayer : MonoBehaviour
     private void Update()
     {
         var travel=ShopDimensionManager.Instance;
-        bool visible=Connected && Time.realtimeSinceStartup-lastSnapshot<3 && (travel==null || (!travel.Traveling && travel.Destination==0));
-        foreach(var remote in remotes.Values)if(remote!=null)remote.gameObject.SetActive(visible && remote.World==0);
+        bool current=Connected && Time.realtimeSinceStartup-lastSnapshot<3 &&
+            (travel==null || !travel.Traveling);
+        var directory=HomeDirectoryClient.Instance;
+        string localHome=directory==null?"":directory.IsVisiting?
+            directory.VisitingHome.code:directory.OwnerCode;
+        foreach(var remote in remotes.Values)
+        {
+            if(remote==null)continue;
+            bool sharedIsland=(travel==null || travel.Destination==0) && remote.World==0;
+            bool sharedHome=travel!=null && travel.InHome && remote.World==2 &&
+                !string.IsNullOrEmpty(localHome) && remote.HomeCode==localHome;
+            remote.gameObject.SetActive(current && (sharedIsland || sharedHome));
+        }
     }
     public void LeaveServer()
     {
