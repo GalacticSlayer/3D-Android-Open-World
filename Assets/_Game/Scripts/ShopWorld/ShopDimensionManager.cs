@@ -31,6 +31,8 @@ public sealed class ShopDimensionManager : MonoBehaviour
         // Runtime attachment works with existing installed scenes; no scene rebuild.
         if(GetComponent<HomeAquariumPlacement>()==null)
             gameObject.AddComponent<HomeAquariumPlacement>();
+        if(GetComponent<HomeDirectoryClient>()==null)
+            gameObject.AddComponent<HomeDirectoryClient>();
     }
     private void OnDestroy() { if(Instance==this) Instance=null; }
     public bool Near(string id)
@@ -170,8 +172,16 @@ public sealed class ShopDimensionManager : MonoBehaviour
     {
         if(!InHome || !Near(id)) return;
         var h=World.Habitat(id); var progress=GetComponent<ShopProgress>();
-        if(h==null || progress.Data.Habitat(id)==null || !ShopCatalog.Habitat(h.id).swimmable) return;
+        var directory=GetComponent<HomeDirectoryClient>();
+        bool visitorTank=directory!=null && directory.IsVisiting && World.VisitorTank(id)!=null;
+        if(h==null || !visitorTank && progress.Data.Habitat(id)==null ||
+           !ShopCatalog.Habitat(h.id).swimmable)return;
         Teleport(h.entrance.position,h.entrance.rotation);
+    }
+    public void ReturnToHomeSpawn()
+    {
+        if(InHome && !Traveling && World!=null && World.spawn!=null)
+            Teleport(World.spawn.position,World.spawn.rotation);
     }
     public void ExitWater()
     {
