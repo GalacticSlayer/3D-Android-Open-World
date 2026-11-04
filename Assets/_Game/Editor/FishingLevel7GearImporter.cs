@@ -30,7 +30,47 @@ public static class FishingLevel7GearImporter
     }
 
     [MenuItem("Tools/Open World/Import Level 7 Fishing Rod and Reel (One Click)")]
-    public static void ImportFromMenu() => Build(true);
+    public static void ImportFromMenu()
+    {
+        // The source files can remain in the Windows Downloads folder. They
+        // are copied (not moved) into Unity's Assets on the user's machine.
+        // No ZIP extraction or renaming is needed.
+        if (!AllSourcesExist() && !CopyOriginalFilesFromDownloads()) return;
+        Build(true);
+    }
+
+    private static bool CopyOriginalFilesFromDownloads()
+    {
+        string downloads = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+        string sourceDirectory = Path.Combine(Application.dataPath, "_Game", "Fishing",
+            "RodReel", "Level7", "Source");
+
+        string rod = Path.Combine(downloads, "Level 7 Fishing Rod.fbx");
+        string reel = Path.Combine(downloads, "Level 7 Fishing Reel.fbx");
+        string rodTexture = Path.Combine(downloads, "Level 7 Fishing Rod Texture.png");
+        string reelTexture = Path.Combine(downloads, "Level 7 Fishing Reel Texture.png");
+        string texture = File.Exists(rodTexture) ? rodTexture : reelTexture;
+
+        if (!File.Exists(rod) || !File.Exists(reel) || !File.Exists(texture))
+        {
+            Debug.LogError("Level 7 gear: expected Level 7 Fishing Rod.fbx, " +
+                "Level 7 Fishing Reel.fbx, and either Level 7 Fishing Rod Texture.png " +
+                "or Level 7 Fishing Reel Texture.png in " + downloads);
+            EditorUtility.DisplayDialog("Level 7 source files not found",
+                "Keep the original .fbx and .png files in your Downloads folder " +
+                "(the .blend files are optional).\n\nSearched: " + downloads +
+                "\n\nIf Downloads is redirected, copy those files to " + Source, "OK");
+            return false;
+        }
+
+        Directory.CreateDirectory(sourceDirectory);
+        File.Copy(rod, Path.Combine(sourceDirectory, "Level7FishingRod.fbx"), false);
+        File.Copy(reel, Path.Combine(sourceDirectory, "Level7FishingReel.fbx"), false);
+        File.Copy(texture, Path.Combine(sourceDirectory, "Level7EquipmentTexture.png"), false);
+        AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+        return AllSourcesExist();
+    }
 
     public static void ImportIfAvailable()
     {
@@ -237,8 +277,9 @@ public static class FishingLevel7GearImporter
         bool ready = Find(rod.transform, "RodBlank")?.GetComponent<MeshFilter>()?.sharedMesh != null;
         foreach (string part in new[] { "ReelFootAndBody", "Rotor", "ReelHousing", "Spool", "Handle" })
             ready &= Find(reel.transform, part)?.GetComponent<MeshFilter>()?.sharedMesh != null;
-        ready &= AssetDatabase.LoadAssetAtPath<Texture2D>(
-            "Assets/Resources/Fishing/ItemIcons/Rod6.png") != null;
+        // The Level 7 hotbar automatically renders the imported Rod6 model
+        // when no separately authored 2D Rod6.png artwork is installed.
+        ready &= AssetDatabase.LoadAssetAtPath<Texture2D>(TextureSource) != null;
         ready &= ShopCatalog.MaxRodTier == 6 && ShopCatalog.MaxReelTier == 6;
         ready &= FishingBurstDamageRuntime.NormalMinimumForTier(6) == 55 &&
                  FishingBurstDamageRuntime.NormalMaximumForTier(6) == 75 &&
