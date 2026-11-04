@@ -21,8 +21,8 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
     private ShopWorldEnvironment world;
     private GameObject storageBox,ghost,canvasRoot,storagePanel;
     private ShopHabitat hiddenSource,nearest;
-    private Material previewMaterial,boxMaterial;
-    private Button contextButton,placeButton,cancelButton;
+    private Material previewMaterial,boxMaterial,storageSignMaterial;
+    private Button contextButton,moveToStorageButton,placeButton,cancelButton;
     private Text contextText,placementHint;
     private RectTransform storageRows;
     private Font font;
@@ -47,6 +47,7 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         if(canvasRoot!=null)Destroy(canvasRoot);
         if(previewMaterial!=null)Destroy(previewMaterial);
         if(boxMaterial!=null)Destroy(boxMaterial);
+        if(storageSignMaterial!=null)Destroy(storageSignMaterial);
     }
     private bool AtHome => travel!=null && travel.InHome && !travel.Traveling &&
         travel.World!=null && progress!=null && !progress.ReadOnly;
@@ -60,6 +61,7 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
             if(storageBox!=null)Destroy(storageBox);
             storageBox=null;world=null;
             contextButton.gameObject.SetActive(false);
+            moveToStorageButton.gameObject.SetActive(false);
             return;
         }
         if(world!=travel.World)
@@ -75,6 +77,7 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         if(!string.IsNullOrEmpty(pendingKey))
         {
             contextButton.gameObject.SetActive(false);
+            moveToStorageButton.gameObject.SetActive(false);
             if(ShopWorldHUD.MenuOpen || FishingTournament.ModalOpen)
             {CancelPlacement();return;}
             UpdatePreview();
@@ -88,6 +91,7 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         if(StorageOpen)
         {
             contextButton.gameObject.SetActive(false);
+            moveToStorageButton.gameObject.SetActive(false);
             if(boxDistance>InteractionRange || ShopWorldHUD.MenuOpen)CloseStorage();
             return;
         }
@@ -96,6 +100,14 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         bool boxNearest=boxDistance<=InteractionRange && boxDistance<=aquariumDistance;
         bool show=canInteract && (boxNearest || nearest!=null);
         contextButton.gameObject.SetActive(show);
+        var selected=!boxNearest && nearest!=null
+            ?progress.Data.Habitat(nearest.instanceKey):null;
+        bool canStore=show && selected!=null && selected.placed &&
+            selected.fish!=null && selected.fish.Count==0;
+        moveToStorageButton.gameObject.SetActive(canStore);
+        // Only reposition the existing button while its optional companion is visible.
+        contextButton.GetComponent<RectTransform>().anchoredPosition=
+            new Vector2(canStore?-225f:0f,230f);
         if(!show)return;
         contextText.text=boxNearest?"AQUARIUM STORAGE":"MOVE AQUARIUM";
         // E remains assigned to the existing fish management interaction.
@@ -128,6 +140,31 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         else if(nearest!=null)Begin(nearest.instanceKey);
     }
 
+    private void MoveToStorage()
+    {
+        if(!AtHome || StorageOpen || IsPlacing || ShopWorldHUD.MenuOpen ||
+            FishingTournament.ModalOpen)return;
+        // Recheck proximity and ownership at the moment of the click. The ledger
+        // independently refuses storage if any fish has been added in the meantime.
+        var aquarium=NearestAquarium(out float distance);
+        if(aquarium==null || aquarium!=nearest || distance>InteractionRange)return;
+        var owned=progress.Data.Habitat(aquarium.instanceKey);
+        if(owned==null || !owned.placed || owned.fish==null || owned.fish.Count!=0)return;
+        var definition=ShopCatalog.Habitat(owned.id);
+        if(definition==null || definition.pond)return;
+
+        // Do not remove a swimmable aquarium while the player is inside it.
+        Vector3 local=aquarium.transform.InverseTransformPoint(transform.position);
+        if(Mathf.Abs(local.x)<definition.width*.5f &&
+           Mathf.Abs(local.z)<definition.depth*.5f &&
+           transform.position.y>aquarium.transform.position.y+.4f)return;
+
+        if(!progress.StoreAquarium(aquarium.instanceKey))return;
+        nearest=null;
+        moveToStorageButton.gameObject.SetActive(false);
+        contextButton.gameObject.SetActive(false);
+    }
+
     private void CreateStorageBox()
     {
         if(world==null)return;
@@ -143,15 +180,34 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         if(boxMaterial.HasProperty("_Color"))boxMaterial.color=new Color(.12f,.42f,.48f);
         BoxPart("Storage Crate",new Vector3(0,.55f,0),new Vector3(2.6f,1.1f,1.5f));
         BoxPart("Storage Lid",new Vector3(0,1.16f,0),new Vector3(2.85f,.16f,1.72f));
+
+        // A wooden brown plaque on the front of the crate, not floating text.
+        // Keep the original label, orientation, and crate interaction unchanged.
+        if(storageSignMaterial==null)
+            storageSignMaterial=new Material(Shader.Find("Universal Render Pipeline/Lit") ??
+                Shader.Find("Standard") ?? Shader.Find("Sprites/Default"));
+        Color brown=new Color(.34f,.18f,.09f,1f);
+        if(storageSignMaterial.HasProperty("_BaseColor"))
+            storageSignMaterial.SetColor("_BaseColor",brown);
+        if(storageSignMaterial.HasProperty("_Color"))
+            storageSignMaterial.color=brown;
+        var board=GameObject.CreatePrimitive(PrimitiveType.Cube);
+        board.name="Brown Aquarium Storage Sign";
+        board.transform.SetParent(storageBox.transform,false);
+        board.transform.localPosition=new Vector3(0,.68f,-.80f);
+        board.transform.localScale=new Vector3(2.42f,.78f,.12f);
+        board.GetComponent<Renderer>().sharedMaterial=storageSignMaterial;
+        Destroy(board.GetComponent<Collider>());
+
         var sign=new GameObject("Aquarium Storage Label",typeof(TextMesh));
         sign.transform.SetParent(storageBox.transform,false);
-        sign.transform.localPosition=new Vector3(-1.16f,.64f,-.79f);
+        sign.transform.localPosition=new Vector3(0,.68f,-.90f);
         sign.transform.localRotation=Quaternion.Euler(0,180,0);
         var text=sign.GetComponent<TextMesh>();
-        text.text="AQUARIUM\nSTORAGE";text.font=font;text.fontSize=68;text.characterSize=.018f;
+        text.text="AQUARIUM\nSTORAGE";text.font=font;text.fontSize=68;text.characterSize=.015f;
+        text.color=new Color(.98f,.94f,.84f,1f);
         sign.GetComponent<MeshRenderer>().sharedMaterial=font.material;
         text.alignment=TextAlignment.Center;text.anchor=TextAnchor.MiddleCenter;
-        // TextMesh anchor is centered; face the player at the Home arrival.
     }
     private void BoxPart(string name,Vector3 position,Vector3 size)
     {
@@ -426,6 +482,8 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         contextButton=ButtonAt(canvasRoot.transform,"AQUARIUM STORAGE",ContextAction);
         AnchorBottom(contextButton.GetComponent<RectTransform>(),new Vector2(0,230),new Vector2(420,74));
         contextText=contextButton.GetComponentInChildren<Text>();
+        moveToStorageButton=ButtonAt(canvasRoot.transform,"MOVE TO STORAGE",MoveToStorage);
+        AnchorBottom(moveToStorageButton.GetComponent<RectTransform>(),new Vector2(225,230),new Vector2(420,74));
         placeButton=ButtonAt(canvasRoot.transform,"PLACE AQUARIUM",Place);
         AnchorBottom(placeButton.GetComponent<RectTransform>(),new Vector2(-235,220),new Vector2(420,80));
         cancelButton=ButtonAt(canvasRoot.transform,"CANCEL",CancelPlacement);
@@ -434,6 +492,7 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         placementHint.alignment=TextAnchor.MiddleCenter;
         AnchorBottom(placementHint.rectTransform,new Vector2(0,315),new Vector2(860,62));
         contextButton.gameObject.SetActive(false);
+        moveToStorageButton.gameObject.SetActive(false);
         placeButton.gameObject.SetActive(false);
         cancelButton.gameObject.SetActive(false);
         placementHint.gameObject.SetActive(false);
