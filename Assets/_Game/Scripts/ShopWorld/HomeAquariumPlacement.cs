@@ -25,6 +25,7 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
     private Text contextText,placementHint;
     private RectTransform storageRows;
     private Font font;
+    private readonly List<Renderer> decorativeObstacles=new List<Renderer>();
     private string pendingKey;
     private bool valid;
     private Vector3 localTarget;
@@ -64,6 +65,10 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         {
             CancelPlacement();CloseStorage();
             world=travel.World;
+            decorativeObstacles.Clear();
+            foreach(var renderer in world.GetComponentsInChildren<Renderer>(true))
+                if(renderer.name=="TreeCrown" || renderer.name=="Lantern")
+                    decorativeObstacles.Add(renderer);
             CreateStorageBox();
         }
         if(!string.IsNullOrEmpty(pendingKey))
@@ -92,12 +97,7 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         contextButton.gameObject.SetActive(show);
         if(!show)return;
         contextText.text=boxNearest?"AQUARIUM STORAGE":"MOVE AQUARIUM";
-        if(UnityEngine.InputSystem.Keyboard.current!=null &&
-           UnityEngine.InputSystem.Keyboard.current.eKey.wasPressedThisFrame &&
-           // E already opens the nearby aquarium's fish menu. Use the UI
-           // button for the move/storage action instead of competing with it.
-           false)
-            ContextAction();
+        // E remains assigned to the existing fish management interaction.
         currentContextIsBox=boxNearest;
     }
 
@@ -146,7 +146,8 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         sign.transform.localPosition=new Vector3(-1.16f,.64f,-.79f);
         sign.transform.localRotation=Quaternion.Euler(0,180,0);
         var text=sign.GetComponent<TextMesh>();
-        text.text="AQUARIUM\nSTORAGE";text.fontSize=68;text.characterSize=.018f;
+        text.text="AQUARIUM\nSTORAGE";text.font=font;text.fontSize=68;text.characterSize=.018f;
+        sign.GetComponent<MeshRenderer>().sharedMaterial=font.material;
         text.alignment=TextAlignment.Center;text.anchor=TextAnchor.MiddleCenter;
         // TextMesh anchor is centered; face the player at the Home arrival.
     }
@@ -181,6 +182,8 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         var template=world.Template(ownership.id);
         if(template==null){RestoreSource();return;}
         ghost=Instantiate(template.gameObject,world.transform,false);
+        foreach(var child in ghost.GetComponentsInChildren<Transform>(true))
+            child.gameObject.isStatic=false;
         ghost.name="Aquarium Placement Preview";
         ghost.SetActive(false);
         var habitat=ghost.GetComponent<ShopHabitat>();
@@ -272,10 +275,10 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
 
         // All corners, edges and the center need a real horizontal Home floor.
         // This excludes holes, slopes, objects and partly-off-plot placements.
-        for(int x=-2;x<=2;x++)for(int z=-2;z<=2;z++)
+        for(int x=-1;x<=1;x++)for(int z=-1;z<=1;z++)
         {
             Vector3 point=ghost.transform.TransformPoint(center+
-                new Vector3(x*half.x*.5f,0,z*half.z*.5f));
+                new Vector3(x*half.x,0,z*half.z));
             if(!OnFlatHomeFloor(point))return false;
         }
 
@@ -289,6 +292,16 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
                hit.transform.IsChildOf(transform))continue;
             return false;
         }
+        // Tree crowns and lanterns are decorative renderers without colliders
+        // in the authored Home. Their geometry must also obstruct placement.
+        Vector3 xAxis=ghost.transform.right*half.x;
+        Vector3 zAxis=ghost.transform.forward*half.z;
+        var visualExtents=new Vector3(Mathf.Abs(xAxis.x)+Mathf.Abs(zAxis.x),
+            halfBox.y,Mathf.Abs(xAxis.z)+Mathf.Abs(zAxis.z));
+        var area=new Bounds(boxCenter,visualExtents*2);
+        foreach(var renderer in decorativeObstacles)
+            if(renderer!=null && renderer.gameObject.activeInHierarchy &&
+               renderer.bounds.Intersects(area))return false;
         return true;
     }
     private bool OnFlatHomeFloor(Vector3 point)
