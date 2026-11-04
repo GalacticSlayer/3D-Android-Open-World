@@ -283,6 +283,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
         if(page=="equipment")heading.text="EQUIPMENT";
         if(page=="bait")heading.text="BAIT / LURES";
         if(page=="multiplayer")heading.text="MULTIPLAYER";
+        if(page=="homes")heading.text="PLAYER AQUARIUMS";
         if(page=="stats")heading.text="PERSONAL STATS";
         // Only the gold Personal Stats heading has a crisp, thin black border.
         // Keep the shared heading unchanged on every other shop/menu page.
@@ -329,6 +330,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
         else if(page=="gear") EquipmentPage(true); else if(page=="market") MarketPage(); else if(page=="sell-confirm") SellConfirmation();
         else if(page=="bait") BaitPage(false);
         else if(page=="multiplayer") FishingMultiplayerPanel.Build(list,player);
+        else if(page=="homes") HomeDirectoryPanel.Build(list,player);
         else if(page=="islands") IslandIndex(); else if(page=="reef-fish") ReefFishIndex();
         else if(habitatAddId!=null) HabitatFishPicker(habitatAddId);
         else HabitatPage(page);
@@ -338,13 +340,13 @@ public sealed class ShopWorldHUD : MonoBehaviour
     private void SetStorePresentation(bool tackle)
     {
         bool market=page=="market" || page=="sell-confirm" || page=="bait" || page=="bag" || page=="equipment";
-        bool themed=tackle || market || page=="multiplayer";
+        bool themed=tackle || market || page=="multiplayer" || page=="homes";
         storeHeader.SetActive(themed);storeBody.SetActive(themed);
         var headerSymbol=storeHeader.GetComponentInChildren<FishingHudSymbol>();
         if(headerSymbol!=null)
         {
             headerSymbol.kind=page=="bag"?FishingHudSymbol.Kind.Fish:page=="equipment"?FishingHudSymbol.Kind.Rod:
-                page=="multiplayer"?FishingHudSymbol.Kind.People:FishingHudSymbol.Kind.Cart;
+                (page=="multiplayer" || page=="homes")?FishingHudSymbol.Kind.People:FishingHudSymbol.Kind.Cart;
             headerSymbol.SetVerticesDirty();
         }
         // The item surface reaches the frame bottom, with equal 20-unit list insets.
@@ -662,6 +664,35 @@ public sealed class ShopWorldHUD : MonoBehaviour
     }
     private void HabitatPage(string id)
     {
+        var directory=HomeDirectoryClient.Instance;
+        if(travel.InHome && directory!=null && directory.IsVisiting &&
+           directory.VisitingHome!=null && directory.VisitingHome.tanks!=null)
+        {
+            foreach(var remote in directory.VisitingHome.tanks)
+            {
+                if(remote==null || remote.key!=id)continue;
+                var desc=ShopCatalog.Habitat(remote.id);
+                if(desc==null)return;
+                if(!travel.Near(id))
+                {
+                    Row(desc.name,"Approach this aquarium to view its fish.","HOME",()=>{},false);
+                    return;
+                }
+                Row(desc.name,directory.VisitingHome.name+"'s aquarium • Read-only display",
+                    "VISITING",()=>{},false);
+                int count=remote.fish!=null?remote.fish.Length:0;
+                Row("RESIDENTS",count+" fish currently displayed","VIEW ONLY",()=>{},false);
+                if(remote.fish!=null)foreach(var resident in remote.fish)
+                {
+                    if(resident==null)continue;
+                    string species="Fish";
+                    try{species=FishCatalog.Get(resident.speciesId).Name;}catch{}
+                    Row(species,resident.weightKg.ToString("0.00")+" kg • Aquarium resident",
+                        "VIEW ONLY",()=>{},false);
+                }
+                return;
+            }
+        }
         var owned=progress.Data.Habitat(id);
         var d=ShopCatalog.Habitat(owned!=null?owned.id:id); if(d==null){TravelPage();return;}
         if(!travel.Near(id)){Row(d.name,"Approach its sign to view this habitat.","TRAVEL",()=>Open("travel"));return;}
