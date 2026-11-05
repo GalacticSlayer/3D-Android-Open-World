@@ -246,6 +246,7 @@ version check.
 
 Server API on existing TCP 3001:
 - POST /v1/homes/register  (new owner code + private credential)
+- POST /v1/homes/resolve-owner  (recover original code using verified ownership)
 - POST /v1/homes/update    (owner-only atomic snapshot write, max 256 KiB)
 - POST /v1/homes/list      (public summaries, 20/page)
 - POST /v1/homes/get       (full snapshot on demand, public/unlisted)
@@ -272,7 +273,7 @@ low-frequency save debounce. If the phone is offline, changes stay in
 ShopProgress/PlayerPrefs and automatically retry when connectivity returns.
 A successful heartbeat is independent of the regular fishing room, and both
 players can see each other even when neither opens a multiplayer server.
-Check `GET /health` for `homePresenceProtocol: 3` before testing a new APK.
+Check `GET /health` for `homePresenceProtocol: 4` before testing a new APK.
 The server only keeps temporary Home-presence records in RAM; a nine-second
 timeout removes disconnected players. A live owner drag sends a tiny temporary
 aquarium position to visitors. A successful placement also sends a short-lived
