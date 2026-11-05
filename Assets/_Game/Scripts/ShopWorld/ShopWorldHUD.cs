@@ -25,6 +25,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
     }
 
     private ShopProgress progress;
+    private HomeDirectoryClient homeDirectory;
     private ShopDimensionManager travel;
     private FishingSystem fishing;
     private FirstPersonController player;
@@ -77,10 +78,23 @@ public sealed class ShopWorldHUD : MonoBehaviour
         fishing=progress.GetComponent<FishingSystem>(); player=progress.GetComponent<FirstPersonController>();
         fishingHUD=GetComponent<FishingHUD>(); font=Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         previews=gameObject.AddComponent<ShopPreview>();
-        Build(); progress.Changed+=RefreshSoon; message=progress.Notice; MenuOpen=false;
+        Build(); progress.Changed+=RefreshSoon;
+        homeDirectory=HomeDirectoryClient.Instance;
+        if(homeDirectory!=null)homeDirectory.Changed+=RefreshVisitedHabitatSoon;
+        message=progress.Notice; MenuOpen=false;
     }
-    private void OnDestroy() { RestorePoseHUD(); if(player!=null)player.SetPoseLookArea(null); if(poseOnlyCanvas!=null)Destroy(poseOnlyCanvas.gameObject); if(progress!=null) progress.Changed-=RefreshSoon; MenuOpen=false;if(islandThumbnail!=null)Destroy(islandThumbnail);if(rockyThumbnail!=null)Destroy(rockyThumbnail);if(deepThumbnail!=null)Destroy(deepThumbnail);if(bluewaterThumbnail!=null)Destroy(bluewaterThumbnail);if(snapperThumbnail!=null)Destroy(snapperThumbnail); }
+    private void OnDestroy() { RestorePoseHUD(); if(player!=null)player.SetPoseLookArea(null); if(poseOnlyCanvas!=null)Destroy(poseOnlyCanvas.gameObject); if(progress!=null) progress.Changed-=RefreshSoon; if(homeDirectory!=null)homeDirectory.Changed-=RefreshVisitedHabitatSoon; MenuOpen=false;if(islandThumbnail!=null)Destroy(islandThumbnail);if(rockyThumbnail!=null)Destroy(rockyThumbnail);if(deepThumbnail!=null)Destroy(deepThumbnail);if(bluewaterThumbnail!=null)Destroy(bluewaterThumbnail);if(snapperThumbnail!=null)Destroy(snapperThumbnail); }
     private void RefreshSoon() => dirty=true;
+    private void RefreshVisitedHabitatSoon()
+    {
+        // Refresh the open, read-only habitat details as soon as the owner's
+        // latest snapshot arrives. Do not rebuild unrelated menus or trigger
+        // any fish transfer through this notification.
+        if(MenuOpen && travel!=null && travel.InHome &&
+           homeDirectory!=null && homeDirectory.IsVisiting &&
+           homeHabitatPage)
+            dirty=true;
+    }
     private void Update()
     {
         if(root==null) return;
