@@ -16,6 +16,16 @@ public sealed class HomePresenceClient : MonoBehaviour
         public string key;
         public float x,y,z,yaw;
     }
+    // Explicit flat wire DTO. JsonUtility must not deserialize through
+    // FishingMultiplayer.Peer inheritance to decide whether someone exists.
+    [Serializable] private sealed class HomePeer
+    {
+        public string id,name,homeCode;
+        public float x,y,z,yaw,heldFishWeight,reelTime;
+        public int world,heldFishSpecies=-1,rodTier,reelTier,castSequence;
+        public bool swimming,sprinting,rodEquipped,reeling,hasFish;
+        public bool lureInWater,fishPosing;
+    }
     [Serializable] private sealed class PresenceRequest
     {
         public string code,session,name,ownerKey;
@@ -27,10 +37,8 @@ public sealed class HomePresenceClient : MonoBehaviour
     {
         public bool ok,owner;
         public string code,error;
-        public int version;
-        // Use the exact same peer model as FishingMultiplayer.Reply; Home
-        // presence must not rely on a special subclass or moving tank data.
-        public FishingMultiplayer.Peer[] players;
+        public int version,otherCount;
+        public HomePeer[] players;
         public AquariumMove moving,placed;
     }
 
@@ -48,6 +56,9 @@ public sealed class HomePresenceClient : MonoBehaviour
     private float nextPoll,lastSuccess;
     private bool pending,authorized,quitting;
     private int otherPlayers;
+    private string lastError="";
+    private float lastErrorLog;
+    public string LiveConnectionError => lastError;
     private const float ActivePollInterval=.25f;
     private const float EmptyPollInterval=1.5f;
     private const float PresenceTimeout=10f;
@@ -177,12 +188,22 @@ public sealed class HomePresenceClient : MonoBehaviour
         {
             // Reauthenticate after a VM restart or expired presence session.
             authorized=false;
+            var reason=answer!=null && !string.IsNullOrEmpty(answer.error)
+                ?answer.error:"Home presence request failed.";
+            if(reason!=lastError || Time.unscaledTime-lastErrorLog>=20f)
+            {
+                Debug.LogWarning("[HOME LIVE] "+reason+
+                    " Avatars and instant aquarium changes require the current Oracle Home API.");
+                lastErrorLog=Time.unscaledTime;
+            }
+            lastError=reason;
             nextPoll=Time.unscaledTime+2f;
             if(remotes.Count>0 &&
                Time.unscaledTime-lastSuccess>PresenceTimeout)ClearPeers();
             yield break;
         }
         authorized=directory!=null && directory.IsVisiting || answer.owner;
+        lastError="";
         // The owner key is sent on first handshake (or after an expiration),
         // never continuously with normal movement updates.
         lastSuccess=Time.unscaledTime;
@@ -195,7 +216,7 @@ public sealed class HomePresenceClient : MonoBehaviour
     private void Apply(PresenceReply response)
     {
         if(response.code!=currentHome)return;
-        var peers=response.players??new FishingMultiplayer.Peer[0];
+        var peers=response.players??new HomePeer[0];
         var present=new HashSet<string>();
         // Aquarium drag updates travel separately from avatar presence.
         AquariumMove moving=response.moving;
@@ -206,7 +227,8 @@ public sealed class HomePresenceClient : MonoBehaviour
             // nested JSON inheritance can omit that optional field and
             // previously caused stationary players to be filtered out.
             if(peer==null || string.IsNullOrEmpty(peer.id) ||
-               peer.id==sessionId)continue;
+               peer.id==sessionId || float.IsNaN(peer.x) ||
+               float.IsNaN(peer.y) || float.IsNaN(peer.z))continue;
             present.Add(peer.id);
             if(!remotes.TryGetValue(peer.id,out var avatar) || avatar==null)
             {
@@ -215,17 +237,38 @@ public sealed class HomePresenceClient : MonoBehaviour
                 avatar.Initialize(peer.name,peer.id);
                 remotes[peer.id]=avatar;
             }
-            avatar.Receive(peer);
+            // Construct the regular animation pose after reading the simple
+            // wire format. This includes idle states: tank dragging is never
+            // a prerequisite for the avatar to be instantiated or shown.
+            var pose=new FishingMultiplayer.Peer {
+                id=peer.id,name=peer.name,
+                homeCode=currentHome,world=2,
+                x=peer.x,y=peer.y,z=peer.z,yaw=peer.yaw,
+                swimming=peer.swimming,sprinting=peer.sprinting,
+                rodEquipped=peer.rodEquipped,reeling=peer.reeling,
+                hasFish=peer.hasFish,lureInWater=peer.lureInWater,
+                fishPosing=peer.fishPosing,
+                heldFishSpecies=peer.heldFishSpecies,
+                heldFishWeight=peer.heldFishWeight,
+                rodTier=peer.rodTier,reelTier=peer.reelTier,
+                reelTime=peer.reelTime,castSequence=peer.castSequence
+            };
+            avatar.Receive(pose);
             if(!avatar.gameObject.activeSelf)
                 avatar.gameObject.SetActive(true);
         }
-        otherPlayers=present.Count;
+        // The server's authoritative count drives sync; avatar decoding must
+        // never be able to disable live fish/aquarium updates.
+        otherPlayers=Mathf.Max(present.Count,response.otherCount);
         // When the owner publishes a changed tank/fish snapshot, guests
         // download it immediately. A guest alone keeps the old 10s polling.
         directory?.NotifyLiveHomeRevision(response.version,otherPlayers>0);
         var removed=new List<string>();
-        foreach(var entry in remotes)
-            if(!present.Contains(entry.Key))removed.Add(entry.Key);
+        // Guard against a malformed/partially decoded peer array: don't hide
+        // otherwise valid avatars while the backend reports peers are here.
+        if(present.Count>0 || response.otherCount==0)
+            foreach(var entry in remotes)
+                if(!present.Contains(entry.Key))removed.Add(entry.Key);
         foreach(var id in removed)
         {
             if(remotes[id]!=null)Destroy(remotes[id].gameObject);
@@ -302,7 +345,13 @@ public sealed class HomePresenceClient : MonoBehaviour
                 catch(ArgumentException){}
             }
             if(reply==null || request.result!=UnityWebRequest.Result.Success)
-                reply=new PresenceReply{ok=false};
+            {
+                string message=reply!=null && !string.IsNullOrEmpty(reply.error)
+                    ?reply.error:"No valid Home presence response";
+                if(request.result!=UnityWebRequest.Result.Success)
+                    message+=" (HTTP "+request.responseCode+": "+request.error+")";
+                reply=new PresenceReply{ok=false,error=message};
+            }
             done(reply);
         }
     }
