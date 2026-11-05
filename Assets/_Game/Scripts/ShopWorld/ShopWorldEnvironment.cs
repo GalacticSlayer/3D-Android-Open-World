@@ -31,6 +31,7 @@ public sealed class ShopWorldEnvironment : MonoBehaviour
     {
         if(progress==null || progress.Data==null)return;
         if(directory==null)directory=HomeDirectoryClient.Instance;
+        EnsurePondGround();
         bool visiting=directory!=null && directory.IsVisiting;
         foreach(var h in habitats)
         {
@@ -98,21 +99,53 @@ public sealed class ShopWorldEnvironment : MonoBehaviour
         // A Home with no pond must have walkable garden ground, including when
         // visiting a player who never bought one. Previously this was always
         // disabled for visitors, leaving the foundation hole exposed.
+        // Cover the plot unless a real pond was successfully instantiated.
+        // A published pond record alone is not proof that its model loaded.
         bool hasPond=visiting
-            ? directory.VisitingHome!=null && directory.VisitingHome.pond!=null
+            ? visitorPond!=null && visitorPond.gameObject.activeInHierarchy
             : progress.Data.CurrentHabitat(true)!=null;
         if(emptyPondCover!=null)emptyPondCover.SetActive(!hasPond);
     }
+    private void EnsurePondGround()
+    {
+        if(emptyPondCover==null)
+        {
+            var found=transform.Find("ReservedPondPlot");
+            if(found!=null)emptyPondCover=found.gameObject;
+        }
+        if(emptyPondCover==null)
+        {
+            // Legacy installed Home scenes may lack the serialized cover
+            // reference. Recreate a solid, visible walkable garden plot
+            // rather than leaving an eight-metre drop to the foundation.
+            emptyPondCover=GameObject.CreatePrimitive(PrimitiveType.Cube);
+            emptyPondCover.name="ReservedPondPlot";
+            emptyPondCover.transform.SetParent(transform,false);
+            emptyPondCover.transform.localPosition=new Vector3(24f,-.15f,30f);
+            emptyPondCover.transform.localScale=new Vector3(32f,.3f,24f);
+            var garden=transform.Find("GardenFront");
+            var source=garden!=null?garden.GetComponent<Renderer>():null;
+            var target=emptyPondCover.GetComponent<Renderer>();
+            if(source!=null && target!=null)
+                target.sharedMaterial=source.sharedMaterial;
+        }
+        if(emptyPondCover.GetComponent<Collider>()==null)
+            emptyPondCover.AddComponent<BoxCollider>();
+    }
+
     private string visitingSnapshot;
     private void RenderVisitorHome(HomeDirectoryClient.Reply snapshot)
     {
-        if(snapshot==null || snapshot.tanks==null){ClearVisitorHome();return;}
+        if(snapshot==null){ClearVisitorHome();return;}
+        // Unity may deserialize an empty tank list as null. The pond still
+        // needs rendering, even if its owner has not placed any aquariums.
         // Rebuild only when the owner changes their published snapshot.
         string key=snapshot.code+":"+snapshot.version;
         if(visitingSnapshot==key)return;
         ClearVisitorHome();
         visitingSnapshot=key;
         RenderVisitorPond(snapshot.pond);
+        if(snapshot.tanks==null)return;
         foreach(var tank in snapshot.tanks)
         {
             if(tank==null || visitorAquariums.ContainsKey(tank.key))continue;
