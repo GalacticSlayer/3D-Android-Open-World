@@ -200,50 +200,93 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
         if(overlayParent==null)return;
         ClosePopup();
         popupMode=kind;
-        popupRoot=new GameObject("Aquarium "+kind+" Popup",typeof(RectTransform),
-            typeof(Image));
-        popupRoot.transform.SetParent(overlayParent,false);
+
+        // A full-screen click catcher dismisses the popup when the user taps
+        // outside it, without triggering any buttons on the underlying menu.
+        popupBackdrop=new GameObject("Aquarium Popup Dismiss Backdrop",
+            typeof(RectTransform),typeof(Image),typeof(Button));
+        popupBackdrop.transform.SetParent(overlayParent,false);
+        var backdropRect=popupBackdrop.GetComponent<RectTransform>();
+        backdropRect.anchorMin=Vector2.zero;
+        backdropRect.anchorMax=Vector2.one;
+        backdropRect.offsetMin=backdropRect.offsetMax=Vector2.zero;
+        var dim=popupBackdrop.GetComponent<Image>();
+        dim.color=new Color(0f,.012f,.025f,.48f);
+        var dismiss=popupBackdrop.GetComponent<Button>();
+        dismiss.targetGraphic=dim;
+        dismiss.onClick.AddListener(ClosePopup);
+
+        popupRoot=new GameObject("Aquarium "+kind+" Popup",
+            typeof(RectTransform),typeof(Image),typeof(Button));
+        popupRoot.transform.SetParent(popupBackdrop.transform,false);
         var rect=popupRoot.GetComponent<RectTransform>();
         rect.anchorMin=new Vector2(.17f,.14f);
         rect.anchorMax=new Vector2(.83f,.87f);
         rect.offsetMin=rect.offsetMax=Vector2.zero;
-        FishingHudTheme.Panel(popupRoot);
 
-        // Settings contain several controls. Keep the lower buttons reachable
-        // on shorter Android displays rather than clipping their layout.
+        // The solid backing makes this window FULLY OPAQUE. The transparent
+        // Tideglass gradient graphic is only an overlay on the solid backing.
+        var background=popupRoot.GetComponent<Image>();
+        background.sprite=null;
+        background.color=new Color(.012f,.08f,.125f,1f);
+        var absorb=popupRoot.GetComponent<Button>();
+        absorb.targetGraphic=background;
+        absorb.onClick.AddListener(()=>{}); // Tapping inside must not dismiss it.
+        var glass=new GameObject("Opaque Panel Gradient",typeof(RectTransform),
+            typeof(Image));
+        glass.transform.SetParent(popupRoot.transform,false);
+        var glassRect=glass.GetComponent<RectTransform>();
+        glassRect.anchorMin=Vector2.zero;
+        glassRect.anchorMax=Vector2.one;
+        glassRect.offsetMin=glassRect.offsetMax=Vector2.zero;
+        FishingHudTheme.Panel(glass);
+        glass.GetComponent<Image>().raycastTarget=false;
+
+        // Keep Home settings and search/sort choices scrollable on Android.
+        // Reserve a top-right close slot for Settings/Search, or a bottom
+        // action bar for the Sort picker.
         var viewport=new GameObject("Popup Scroll View",typeof(RectTransform),
             typeof(Image),typeof(RectMask2D),typeof(ScrollRect));
         viewport.transform.SetParent(popupRoot.transform,false);
         var vr=viewport.GetComponent<RectTransform>();
-        vr.anchorMin=Vector2.zero;vr.anchorMax=Vector2.one;
-        vr.offsetMin=new Vector2(18,15);vr.offsetMax=new Vector2(-18,-15);
-        var background=viewport.GetComponent<Image>();
-        background.color=Color.clear;background.raycastTarget=true;
+        vr.anchorMin=Vector2.zero;
+        vr.anchorMax=Vector2.one;
+        vr.offsetMin=new Vector2(18,kind==PopupMode.Sort?105:15);
+        vr.offsetMax=new Vector2(-18,kind==PopupMode.Sort?-15:-88);
+        var viewportImage=viewport.GetComponent<Image>();
+        viewportImage.color=Color.clear;
+        viewportImage.raycastTarget=true;
         var content=new GameObject("Popup Rows",typeof(RectTransform),
             typeof(VerticalLayoutGroup),typeof(ContentSizeFitter));
         content.transform.SetParent(viewport.transform,false);
         popupContent=content.transform;
         var cr=content.GetComponent<RectTransform>();
-        cr.anchorMin=new Vector2(0,1);cr.anchorMax=Vector2.one;
+        cr.anchorMin=new Vector2(0,1);
+        cr.anchorMax=Vector2.one;
         cr.pivot=new Vector2(.5f,1);
         cr.sizeDelta=Vector2.zero;
         var group=content.GetComponent<VerticalLayoutGroup>();
         group.padding=new RectOffset(6,6,6,6);
         group.spacing=7;
-        group.childControlHeight=true;group.childControlWidth=true;
-        group.childForceExpandHeight=false;group.childForceExpandWidth=true;
+        group.childControlHeight=true;
+        group.childControlWidth=true;
+        group.childForceExpandHeight=false;
+        group.childForceExpandWidth=true;
         content.GetComponent<ContentSizeFitter>().verticalFit=ContentSizeFitter.FitMode.PreferredSize;
         var popupScroll=viewport.GetComponent<ScrollRect>();
-        popupScroll.viewport=vr;popupScroll.content=cr;
-        popupScroll.horizontal=false;popupScroll.scrollSensitivity=38;
+        popupScroll.viewport=vr;
+        popupScroll.content=cr;
+        popupScroll.horizontal=false;
+        popupScroll.scrollSensitivity=38;
         popupScroll.movementType=ScrollRect.MovementType.Clamped;
+
         switch(kind)
         {
             case PopupMode.Settings: BuildSettingsPopup();break;
             case PopupMode.Search: BuildSearchPopup();break;
             case PopupMode.Sort: BuildSortPopup();break;
         }
-        popupRoot.transform.SetAsLastSibling();
+        popupBackdrop.transform.SetAsLastSibling();
     }
 
     private void ClosePopup()
@@ -254,12 +297,36 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
         settingsCode=null;
         settingsVisibility=null;
         for(int i=0;i<sortChoiceLabels.Length;i++)sortChoiceLabels[i]=null;
-        if(popupRoot!=null)
+        var backdrop=popupBackdrop;
+        popupBackdrop=null;
+        popupRoot=null;
+        if(backdrop!=null)
         {
-            popupRoot.SetActive(false);
-            Destroy(popupRoot);
-            popupRoot=null;
+            backdrop.SetActive(false);
+            Destroy(backdrop);
         }
+    }
+
+    private void TopRightClose()
+    {
+        var button=ButtonAt(popupRoot.transform,"CLOSE",ClosePopup,8);
+        var rect=button.GetComponent<RectTransform>();
+        rect.anchorMin=rect.anchorMax=new Vector2(1f,1f);
+        rect.pivot=new Vector2(1f,1f);
+        rect.anchoredPosition=new Vector2(-17f,-15f);
+        rect.sizeDelta=new Vector2(185f,64f);
+    }
+
+    private Button BottomAction(string caption,bool left,
+        UnityEngine.Events.UnityAction action,int style)
+    {
+        var button=ButtonAt(popupRoot.transform,caption,action,style);
+        var rect=button.GetComponent<RectTransform>();
+        rect.anchorMin=rect.anchorMax=new Vector2(left?0f:1f,0f);
+        rect.pivot=new Vector2(left?0f:1f,0f);
+        rect.anchoredPosition=new Vector2(left?24f:-24f,20f);
+        rect.sizeDelta=new Vector2(230f,68f);
+        return button;
     }
 
     private void BuildSettingsPopup()
