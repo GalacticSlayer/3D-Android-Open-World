@@ -37,7 +37,7 @@ public sealed class HomeDirectoryClient : MonoBehaviour
     }
     [Serializable] private sealed class Request
     {
-        public string code,ownerKey,name,visibility,query,sort;
+        public string code,ownerKey,name,visibility,query,sort,excludeCode;
         public int page;
         public TankInfo[] tanks;
     }
@@ -197,7 +197,7 @@ public sealed class HomeDirectoryClient : MonoBehaviour
     {
         Busy=true;Changed?.Invoke();
         Reply answer=null;
-        yield return Post("/v1/homes/list",new Request{query=query,page=page,sort=sort},r=>answer=r);
+        yield return Post("/v1/homes/list",new Request{query=query,page=page,sort=sort,excludeCode=OwnerCode},r=>answer=r);
         Busy=false;
         if(answer!=null&&answer.ok)
         {
@@ -212,16 +212,33 @@ public sealed class HomeDirectoryClient : MonoBehaviour
     {
         if(Busy || travel==null || travel.Traveling ||
            travel.TournamentTravelRestricted)return;
-        StartCoroutine(DownloadVisit(code));
+        string normalized=(code??"").Replace("-","").Replace(" ","").Trim().ToUpperInvariant();
+        // A player's own Home is always accessed through ordinary Home travel,
+        // never through the read-only Player Aquariums visitor flow.
+        if(!string.IsNullOrEmpty(OwnerCode) &&
+           string.Equals(normalized,OwnerCode,StringComparison.OrdinalIgnoreCase))
+        {
+            Status="This is your Home. Use Travel to Home instead.";
+            Changed?.Invoke();
+            return;
+        }
+        StartCoroutine(DownloadVisit(normalized));
     }
     private IEnumerator DownloadVisit(string code)
     {
         Busy=true;Changed?.Invoke();
         string normalized=(code??"").Replace("-","").Replace(" ","").Trim().ToUpperInvariant();
         Reply answer=null;
-        yield return Post("/v1/homes/get",new Request{code=normalized,
-            ownerKey=normalized==OwnerCode?ownerKey:null},r=>answer=r);
+        yield return Post("/v1/homes/get",new Request{code=normalized},r=>answer=r);
         Busy=false;
+        // Registration may finish while the request is in flight.
+        if(!string.IsNullOrEmpty(OwnerCode) &&
+           string.Equals(normalized,OwnerCode,StringComparison.OrdinalIgnoreCase))
+        {
+            Status="This is your Home. Use Travel to Home instead.";
+            Changed?.Invoke();
+            yield break;
+        }
         if(answer==null||!answer.ok)
         {
             Status=answer!=null?answer.error:"Home is not reachable.";
