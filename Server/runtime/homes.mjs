@@ -8,6 +8,7 @@ const alphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const codePattern=/^[A-HJ-NP-Z2-9]{8}$/;
 const choices=new Set(['public','unlisted','private']);
 const aquariumTypes=new Set(['nano','reef','lagoon','grand','ocean']);
+const pondTypes=new Set(['pond','garden','lake']);
 const nameOf=s=>typeof s==='string'?(s.replace(/[^a-zA-Z0-9 _-]/g,'').trim().slice(0,20)||'Angler'):'Angler';
 const bad=(status,error)=>{throw Object.assign(new Error(error),{status})};
 const hash=s=>createHash('sha256').update(s).digest();
@@ -63,15 +64,23 @@ export function createHomes({directory,clock=Date.now}={}){
       return {key:t.key,id:t.id,x:t.x,y:t.y,z:t.z,yaw:t.yaw,fish:t.fish.map(getRecord)};
     });
   }
+  function validatePond(value){
+    if(value==null)return null; // Old snapshots and Homes without a pond.
+    if(typeof value!=='object'||!pondTypes.has(value.id)||
+       !Array.isArray(value.fish)||value.fish.length>50)
+       bad(400,'Invalid Home pond.');
+    return {id:value.id,fish:value.fish.map(getRecord)};
+  }
   // Store only compact summaries in memory. Full fish lists remain on disk and
   // are loaded ONLY for individual Home requests and owner updates.
   function publicInfo(h){
     if(!Array.isArray(h.tanks))
       return {code:h.code,name:h.name,visibility:h.visibility,updatedAt:h.updatedAt,
         version:h.version,aquariums:h.aquariums,fish:h.fish,biggest:h.biggest};
-    const fish=h.tanks.reduce((n,t)=>n+t.fish.length,0);
+    const pondFish=h.pond?.fish??[];
+    const fish=h.tanks.reduce((n,t)=>n+t.fish.length,pondFish.length);
     let biggest=null;
-    for(const t of h.tanks)for(const f of t.fish)
+    for(const f of [...h.tanks.flatMap(t=>t.fish),...pondFish])
       if(biggest===null||f.weightKg>biggest.weightKg)
         biggest={speciesId:f.speciesId,weightKg:f.weightKg};
     return {code:h.code,name:h.name,visibility:h.visibility,updatedAt:h.updatedAt,
@@ -87,7 +96,7 @@ export function createHomes({directory,clock=Date.now}={}){
     do{code=randomCode()}while(homes.has(code));
     const ownerKey=randomBytes(32).toString('hex');
     const h={code,ownerHash:hash(ownerKey).toString('hex'),name,visibility:'public',
-      updatedAt:clock(),version:0,tanks:[]};
+      updatedAt:clock(),version:0,tanks:[],pond:null};
     save(h);homes.set(code,summary(h));
     return {ok:true,code,ownerKey,visibility:'public',version:0};
   }
@@ -96,13 +105,15 @@ export function createHomes({directory,clock=Date.now}={}){
     if(!h||!owner(h,data.ownerKey))bad(403,'Home ownership could not be verified.');
     if(!choices.has(data.visibility))bad(400,'Invalid Home privacy.');
     const tanks=validateTanks(data.tanks);
+    const pond=validatePond(data.pond);
     const name=nameOf(data.name);
     // Idempotent when a client retries a timed-out upload.
-    const next=JSON.stringify({tanks,name,visibility:data.visibility});
+    const next=JSON.stringify({tanks,pond,name,visibility:data.visibility});
     const currentRecord=read(h.code);
-    const current=JSON.stringify({tanks:currentRecord.tanks,name:h.name,visibility:h.visibility});
+    const current=JSON.stringify({tanks:currentRecord.tanks,pond:currentRecord.pond??null,
+      name:h.name,visibility:h.visibility});
     if(next===current)return {ok:true,version:h.version,updatedAt:h.updatedAt};
-    const changed={...currentRecord,tanks,name,visibility:data.visibility,
+    const changed={...currentRecord,tanks,pond,name,visibility:data.visibility,
       version:h.version+1,updatedAt:clock()};
     save(changed);homes.set(h.code,summary(changed));
     return {ok:true,version:changed.version,updatedAt:changed.updatedAt};
@@ -131,7 +142,9 @@ export function createHomes({directory,clock=Date.now}={}){
     if(!h||h.visibility==='private'&&!owner(h,data.ownerKey))
       bad(404,'Home not found or private.');
     const info=publicInfo(h);
-    return versionOnly?{ok:true,...info}:{ok:true,...info,tanks:copy(read(h.code).tanks)};
+    if(versionOnly)return {ok:true,...info};
+    const snapshot=read(h.code);
+    return {ok:true,...info,tanks:copy(snapshot.tanks),pond:copy(snapshot.pond??null)};
   }
   return {dispatch(route,data){
     if(route==='/v1/homes/register')return register(data);
