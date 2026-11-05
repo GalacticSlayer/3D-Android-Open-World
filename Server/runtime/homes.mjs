@@ -249,11 +249,22 @@ export function createHomes({directory,clock=Date.now}={}){
       if(id!==session)players.push({id,name:peer.name,...peer.pose});
     }
     if(room.size===0)visitors.delete(code);
-    // This count is independent of how a particular Unity client renders or
-    // deserializes avatars. Owners use it to immediately publish aquarium and
-    // fish updates whenever at least one visitor is connected.
+    // Merge read-only Home layout/fish updates into the same reliable heartbeat
+    // that discovers other players. Never resend a large snapshot if its
+    // revision has not changed; fish movement/physics are still client-sided.
+    let snapshot=null;
+    if(data.wantSnapshot===true)
+    {
+      const known=Number.isInteger(data.knownVersion)?data.knownVersion:-1;
+      if(known!==home.version)
+      {
+        const record=read(code);
+        snapshot={ok:true,...publicInfo(home),tanks:copy(record.tanks),
+          pond:copy(record.pond??null)};
+      }
+    }
     return {ok:true,code,version:home.version,owner:authorized,
-      otherCount:players.length,players,moving,placed};
+      otherCount:players.length,players,moving,placed,snapshot};
   }
 
   return {dispatch(route,data){
