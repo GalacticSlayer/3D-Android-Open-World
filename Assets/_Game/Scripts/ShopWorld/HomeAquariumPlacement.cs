@@ -114,11 +114,14 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         bool canInteract=!ShopWorldHUD.MenuOpen && !FishingTournament.ModalOpen &&
             (menuSafety==null || !menuSafety.IsIndexOpen);
         bool boxNearest=boxDistance<=InteractionRange && boxDistance<=aquariumDistance;
-        bool show=canInteract && (boxNearest || nearest!=null);
+        bool insideTank=InsideAquarium();
+        // Aquarium manipulation buttons are never offered while the player's
+        // feet/body are inside ANY tank, not just the nearest one.
+        bool show=canInteract && (boxNearest || !insideTank && nearest!=null);
         contextButton.gameObject.SetActive(show);
         var selected=!boxNearest && nearest!=null
             ?progress.Data.Habitat(nearest.instanceKey):null;
-        bool canStore=show && selected!=null && selected.placed &&
+        bool canStore=show && !insideTank && selected!=null && selected.placed &&
             selected.fish!=null && selected.fish.Count==0;
         moveToStorageButton.gameObject.SetActive(canStore);
         // Only reposition the existing button while its optional companion is visible.
@@ -128,6 +131,23 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         contextText.text=boxNearest?"AQUARIUM STORAGE":"MOVE AQUARIUM";
         // E remains assigned to the existing fish management interaction.
         currentContextIsBox=boxNearest;
+    }
+
+    private bool InsideAquarium()
+    {
+        if(world==null)return false;
+        foreach(var h in world.ActiveHabitats())
+        {
+            if(h==null)continue;
+            var definition=ShopCatalog.Habitat(h.id);
+            if(definition==null || definition.pond || h.water==null)continue;
+            var local=h.water.transform.InverseTransformPoint(transform.position);
+            if(Mathf.Abs(local.x)<=h.water.size.x*.5f &&
+               Mathf.Abs(local.z)<=h.water.size.z*.5f &&
+               local.y>=-.5f && local.y<=h.water.size.y+1f)
+                return true;
+        }
+        return false;
     }
 
     private bool currentContextIsBox;
@@ -153,7 +173,7 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
     private void ContextAction()
     {
         if(currentContextIsBox)OpenStorage();
-        else if(nearest!=null)
+        else if(nearest!=null && !InsideAquarium())
         {
             Begin(nearest.instanceKey);
             // Picking up plays only for the explicit MOVE AQUARIUM action,
@@ -165,7 +185,7 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
     private void MoveToStorage()
     {
         if(!AtHome || StorageOpen || IsPlacing || ShopWorldHUD.MenuOpen ||
-            FishingTournament.ModalOpen)return;
+            FishingTournament.ModalOpen || InsideAquarium())return;
         // Recheck proximity and ownership at the moment of the click. The ledger
         // independently refuses storage if any fish has been added in the meantime.
         var aquarium=NearestAquarium(out float distance);
@@ -256,7 +276,7 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
     private void Begin(string key)
     {
         if(!AtHome || StorageOpen || !string.IsNullOrEmpty(pendingKey) ||
-           ShopWorldHUD.MenuOpen)return;
+           ShopWorldHUD.MenuOpen || InsideAquarium())return;
         var ownership=progress.Data.Habitat(key);
         if(ownership==null || ownership.instanceKey!=key)return;
         var d=ShopCatalog.Habitat(ownership.id);
