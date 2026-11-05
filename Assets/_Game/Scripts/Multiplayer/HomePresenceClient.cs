@@ -70,6 +70,7 @@ public sealed class HomePresenceClient : MonoBehaviour
     private float nextPoll,lastSuccess;
     private bool pending,authorized,quitting;
     private int otherPlayers;
+    private int loggedPeers=-1;
     private string lastError="";
     private float lastErrorLog;
     public string LiveConnectionError => lastError;
@@ -161,6 +162,7 @@ public sealed class HomePresenceClient : MonoBehaviour
         string previousSession=sessionId;
         currentHome=code;
         otherPlayers=0;
+        loggedPeers=-1;
         lastError="";
         lastMoving=null;
         recentlyPlaced=null;
@@ -331,6 +333,14 @@ public sealed class HomePresenceClient : MonoBehaviour
         // The server's authoritative count drives sync; avatar decoding must
         // never be able to disable live fish/aquarium updates.
         otherPlayers=Mathf.Max(present.Count,response.otherCount);
+        if(loggedPeers!=otherPlayers)
+        {
+            loggedPeers=otherPlayers;
+            Debug.Log("[HOME LIVE] Connected to "+currentHome+
+                ", other players: "+otherPlayers+
+                ", decoded avatars: "+present.Count+
+                ", published version: "+response.version);
+        }
         // When the owner publishes a changed tank/fish snapshot, guests
         // download it immediately. A guest alone keeps the old 10s polling.
         directory?.NotifyLiveHomeRevision(response.version,otherPlayers>0);
@@ -383,6 +393,7 @@ public sealed class HomePresenceClient : MonoBehaviour
     private void ClearPeers()
     {
         otherPlayers=0;
+        loggedPeers=-1;
         lastMoving=null;
         foreach(var peer in remotes.Values)
             if(peer!=null)Destroy(peer.gameObject);
