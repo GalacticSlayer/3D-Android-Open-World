@@ -227,8 +227,11 @@ export function createHomes({directory,clock=Date.now}={}){
         heldFishSpecies:p.heldFishSpecies??-1,
         heldFishWeight:p.heldFishWeight??0,
         fishPosing:p.fishPosing===true,
-        rodTier:Number.isInteger(p.rodTier)?Math.max(0,Math.min(6,p.rodTier)):0,
-        reelTier:Number.isInteger(p.reelTier)?Math.max(0,Math.min(6,p.reelTier)):0
+        rodTier:Number.isInteger(p.rodTier)?Math.max(0,Math.min(7,p.rodTier)):0,
+        reelTier:Number.isInteger(p.reelTier)?Math.max(0,Math.min(7,p.reelTier)):0,
+        reelTime:finite(p.reelTime,0,10000000)?p.reelTime:0,
+        castSequence:Number.isInteger(p.castSequence)&&p.castSequence>=0
+          ?p.castSequence:0
       }});
     }
     // Return exactly the same peer structure as /v1/state. Keeping the
@@ -246,8 +249,11 @@ export function createHomes({directory,clock=Date.now}={}){
       if(id!==session)players.push({id,name:peer.name,...peer.pose});
     }
     if(room.size===0)visitors.delete(code);
+    // This count is independent of how a particular Unity client renders or
+    // deserializes avatars. Owners use it to immediately publish aquarium and
+    // fish updates whenever at least one visitor is connected.
     return {ok:true,code,version:home.version,owner:authorized,
-      players,moving,placed};
+      otherCount:players.length,players,moving,placed};
   }
 
   return {dispatch(route,data){
