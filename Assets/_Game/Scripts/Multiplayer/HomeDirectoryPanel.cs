@@ -14,7 +14,7 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
     private ScrollRect scroll;
     private Transform overlayParent;
     private RectTransform results;
-    private Text status, settingsCode, settingsVisibility;
+    private Text status, settingsCode, settingsVisibility, settingsSync;
     private Button settingsButton,sortButton;
     private InputField searchField;
     private GameObject popupRoot, popupBackdrop, emptyNotice;
@@ -299,6 +299,7 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
         searchField=null;
         settingsCode=null;
         settingsVisibility=null;
+        settingsSync=null;
         for(int i=0;i<sortChoiceLabels.Length;i++)sortChoiceLabels[i]=null;
         var backdrop=popupBackdrop;
         popupBackdrop=null;
@@ -343,6 +344,10 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
             if(directory!=null && !string.IsNullOrEmpty(directory.OwnerCode))
                 GUIUtility.systemCopyBuffer=directory.DisplayHomeCode;
         });
+        // Keep Home identity and last confirmed upload revision visible here.
+        // This makes an owner/visitor code split or rejected cloud save
+        // diagnosable on Android without an editor console or another build.
+        settingsSync=HeadingAt(target,"",20);
         settingsVisibility=HeadingAt(target,"",21);
         ButtonAt(target,"PUBLIC • LISTED IN DIRECTORY",()=>directory?.SetVisibility("public"));
         ButtonAt(target,"PRIVATE ~ CODE ONLY",()=>directory?.SetVisibility("unlisted"));
@@ -378,6 +383,8 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
     {
         if(settingsCode!=null)
             settingsCode.text=directory!=null?directory.DisplayHomeCode:"Registering...";
+        if(settingsSync!=null && directory!=null)
+            settingsSync.text="CLOUD HOME: "+directory.OwnerSyncStatus;
         if(settingsVisibility!=null && directory!=null)
             settingsVisibility.text="VISIBILITY: "+VisibilityLabel()+
                 " • Public is the default. Code-only Homes can be visited with their code.";
