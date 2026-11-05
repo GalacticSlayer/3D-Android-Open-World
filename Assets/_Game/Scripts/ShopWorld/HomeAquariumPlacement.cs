@@ -482,6 +482,10 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         if(!valid || !CanPlace())return; // Always recheck at the moment of purchase.
         if(!progress.PlaceAquarium(pendingKey,localTarget.x,localTarget.y,localTarget.z,localYaw))
             return;
+        // Notify visitors only AFTER the placement has actually succeeded.
+        // A canceled move never sends a permanent placement announcement.
+        HomePresenceClient.Instance?.AnnounceAquariumPlacement(
+            pendingKey,localTarget,localYaw);
         HomeDirectoryClient.Instance?.NotifyAquariumPositionCommitted();
         ShopActionAudio.Play(this,ShopActionAudio.Cue.AquariumPlaced);
         CancelPlacement();
