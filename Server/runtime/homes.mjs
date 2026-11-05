@@ -20,6 +20,9 @@ export function createHomes({directory,clock=Date.now}={}){
   if(!directory)throw new Error('Home data directory is required');
   fs.mkdirSync(directory,{recursive:true,mode:0o700});
   const homes=new Map();
+  // Server-owned index of hashed credentials, never exposed in public Homes.
+  // A client with a surviving owner secret can recover its correct Home code.
+  const ownerHomeByHash=new Map();
   // Transient presence is memory-only: no avatar or fish simulation goes to
   // disk, and leaving one Home does not affect other Homes or fishing rooms.
   const visitors=new Map();
@@ -30,7 +33,11 @@ export function createHomes({directory,clock=Date.now}={}){
     try{
       const h=JSON.parse(fs.readFileSync(path.join(directory,file),'utf8'));
       if(h.code===file.slice(0,-5)&&typeof h.ownerHash==='string'&&
-         choices.has(h.visibility)&&Array.isArray(h.tanks))homes.set(h.code,summary(h));
+         choices.has(h.visibility)&&Array.isArray(h.tanks))
+      {
+        homes.set(h.code,summary(h));
+        ownerHomeByHash.set(h.ownerHash,h.code);
+      }
     }catch(e){console.error('Ignoring unreadable Home snapshot',file,e.message)}
   }
   function read(code){return JSON.parse(fs.readFileSync(path.join(directory,code+'.json'),'utf8'))}
@@ -103,7 +110,16 @@ export function createHomes({directory,clock=Date.now}={}){
     const h={code,ownerHash:hash(ownerKey).toString('hex'),name,visibility:'public',
       updatedAt:clock(),version:0,tanks:[],pond:null};
     save(h);homes.set(code,summary(h));
+    ownerHomeByHash.set(h.ownerHash,code);
     return {ok:true,code,ownerKey,visibility:'public',version:0};
+  }
+  function resolveOwner(data){
+    const credential=data?.ownerKey;
+    if(typeof credential!=='string'||!/^[a-f0-9]{64}$/.test(credential))
+      bad(403,'Home owner credential is missing or invalid.');
+    const code=ownerHomeByHash.get(hash(credential).toString('hex'));
+    if(!code||!homes.has(code))bad(404,'No published Home matches this owner credential.');
+    return {ok:true,code,version:homes.get(code).version};
   }
   function update(data){
     const h=homes.get(data?.code);
@@ -270,6 +286,7 @@ export function createHomes({directory,clock=Date.now}={}){
   return {dispatch(route,data){
     if(route==='/v1/homes/presence')return presence(data);
     if(route==='/v1/homes/register')return register(data);
+    if(route==='/v1/homes/resolve-owner')return resolveOwner(data);
     if(route==='/v1/homes/update')return update(data);
     if(route==='/v1/homes/list')return list(data);
     if(route==='/v1/homes/get')return get(data,false);
