@@ -255,7 +255,7 @@ public sealed class HomeDirectoryClient : MonoBehaviour
         Status="Home published • "+DisplayHomeCode;
         Changed?.Invoke();
         if(dirty)nextSync=Time.unscaledTime+
-            (LiveGuestsAtMyHome?.05f:2.5f);
+            (LiveGuestsAtMyHome ? 0.05f : 2.5f);
     }
     private void Retry()
     {
