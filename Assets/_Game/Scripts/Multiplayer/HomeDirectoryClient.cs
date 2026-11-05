@@ -261,6 +261,10 @@ public sealed class HomeDirectoryClient : MonoBehaviour
         if(answer==null || !answer.ok)
         {
             Status=answer!=null?answer.error:"Home synchronization unavailable.";
+            // A failed Home upload leaves visitors on the previous aquarium
+            // layout. Show the real reason in Unity rather than silently
+            // pretending a placement/fish change was synchronized.
+            Debug.LogWarning("[HOME SAVE] Could not publish aquarium/fish changes: "+Status);
             Retry();yield break;
         }
         lastUploaded=fingerprint;
@@ -438,7 +442,8 @@ public sealed class HomeDirectoryClient : MonoBehaviour
         {
             Reply updated=null;
             yield return Post("/v1/homes/get",new Request{code=old.code},r=>updated=r);
-            if(VisitingHome==old && updated!=null && updated.ok)
+            if(VisitingHome==old && updated!=null && updated.ok &&
+               updated.version>old.version)
             {
                 VisitingHome=updated;
                 if(travel!=null && travel.InHome && travel.World!=null)
