@@ -27,7 +27,7 @@ work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 for name in prepare.sh update.sh; do
   curl --fail --show-error --silent --location --retry 3 --connect-timeout 15 --max-time 120 \
-    "https://raw.githubusercontent.com/EthanL1245/3D-Android-Open-World/$revision/Server/ops/$name" -o "$work/$name"
+    "https://raw.githubusercontent.com/GalacticSlayer/3D-Android-Open-World/$revision/Server/ops/$name" -o "$work/$name"
   bash -n "$work/$name"
   install -m 755 "$work/$name" "/usr/local/lib/fishing-server/$name"
 done
