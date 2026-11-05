@@ -103,9 +103,15 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
             HeadingAt(results,"No public Homes found. Try another name or Home code.",23);
             return;
         }
+        bool foundOtherHome=false;
         foreach(var home in directory.Listings)
         {
-            if(home==null)continue;
+            // Also filter the rendered cards locally in case a directory request
+            // finished before this device completed Home registration.
+            if(home==null || !string.IsNullOrEmpty(directory.OwnerCode) &&
+               string.Equals(home.code,directory.OwnerCode,StringComparison.OrdinalIgnoreCase))
+                continue;
+            foundOtherHome=true;
             var card=new GameObject("Home "+home.code,typeof(RectTransform),
                 typeof(Image),typeof(VerticalLayoutGroup),typeof(ContentSizeFitter));
             card.transform.SetParent(results,false);
@@ -131,6 +137,8 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
             string code=home.code;
             ButtonAt(card.transform,"VISIT HOME",()=>directory.Visit(code));
         }
+        if(!foundOtherHome)
+            HeadingAt(results,"No other players' public Homes found.",23);
     }
     private Text Heading(string value,int size)=>HeadingAt(transform,value,size);
     private Text HeadingAt(Transform parent,string value,int size)
