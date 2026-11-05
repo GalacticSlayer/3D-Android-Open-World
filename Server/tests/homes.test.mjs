@@ -98,6 +98,38 @@ test('offline profiles survive server restart without a multiplayer room',()=>{
   }finally{rmSync(dir,{recursive:true,force:true})}
 });
 
+test('visiting Homes include the true pond and all pond fish; no-pond snapshots stay solid',()=>{
+  const dir=temp();
+  try{
+    let api=createHomes({directory:dir});
+    const owner=api.dispatch('/v1/homes/register',{name:'Pond Collector'});
+    const base={code:owner.code,ownerKey:owner.ownerKey,
+      name:'Pond Collector',visibility:'public',tanks:[tank()]};
+    api.dispatch('/v1/homes/update',{...base,pond:null});
+    assert.equal(api.dispatch('/v1/homes/get',{code:owner.code}).pond,null);
+    const pond={id:'garden',fish:[fish(18),fish(30),fish(42)]};
+    const saved=api.dispatch('/v1/homes/update',{...base,pond});
+    const live=api.dispatch('/v1/homes/get',{code:owner.code});
+    assert.deepEqual(live.pond,pond);
+    assert.equal(live.aquariums,1); // Pond isn't counted as an aquarium.
+    assert.equal(live.fish,4); // Pond residents are included.
+    assert.equal(live.biggest.weightKg,42);
+    assert.equal(saved.version,2);
+    assert.equal(api.dispatch('/v1/homes/update',{...base,pond}).version,2);
+    api=createHomes({directory:dir});
+    assert.deepEqual(api.dispatch('/v1/homes/get',{code:owner.code}).pond,pond);
+    // Pre-update clients omit pond entirely; preserve what is already hosted.
+    api.dispatch('/v1/homes/update',{...base,name:'Pond Collector Two'});
+    assert.deepEqual(api.dispatch('/v1/homes/get',{code:owner.code}).pond,pond);
+    assert.throws(()=>api.dispatch('/v1/homes/update',
+      {...base,pond:{id:'invalid',fish:[]}}),e=>e.status===400);
+    assert.throws(()=>api.dispatch('/v1/homes/update',
+      {...base,pond:{id:'lake',fish:Array(51).fill(fish())}}),e=>e.status===400);
+    api.dispatch('/v1/homes/update',{...base,pond:null});
+    assert.equal(api.dispatch('/v1/homes/get',{code:owner.code}).pond,null);
+  }finally{rmSync(dir,{recursive:true,force:true})}
+});
+
 test('HTTP Home endpoints work without opening a room and support >4 KB uploads',async t=>{
   const dir=temp();
   const server=createSessionServer({homesDirectory:dir});
