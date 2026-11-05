@@ -51,6 +51,10 @@ public sealed class HomeDirectoryClient : MonoBehaviour
     public string OwnerCode { get; private set; }
     public string Visibility { get; private set; } = "public";
     public string Status { get; private set; } = "";
+    // Shown separately from directory search status. A failed owner upload
+    // must remain visible when someone browses public Homes.
+    public string OwnerSyncStatus { get; private set; } = "Checking saved Home...";
+    public int OwnerSyncedVersion { get; private set; } = -1;
     public bool Busy { get; private set; }
     public HomeInfo[] Listings { get; private set; } = new HomeInfo[0];
     public int TotalListings { get; private set; }
@@ -88,9 +92,53 @@ public sealed class HomeDirectoryClient : MonoBehaviour
     {
         progress=GetComponent<ShopProgress>();
         travel=GetComponent<ShopDimensionManager>();
+        RestoreVerifiedHomeIdentity();
         if(progress!=null)progress.Changed+=MarkDirty;
         nextSync=Time.unscaledTime+2.5f;
         lastReachability=Application.internetReachability;
+    }
+    private static bool ValidHomeIdentity(string code,string credential)
+    {
+        if(string.IsNullOrEmpty(code)||code.Length!=8 ||
+           string.IsNullOrEmpty(credential)||credential.Length!=64)return false;
+        foreach(char c in code)
+            if(!((c>='A' && c<='H') || (c>='J' && c<='N') ||
+                 (c>='P' && c<='Z') || (c>='2' && c<='9')))return false;
+        foreach(char c in credential)
+            if(!((c>='a' && c<='f') || (c>='0' && c<='9')))return false;
+        return true;
+    }
+    private void RestoreVerifiedHomeIdentity()
+    {
+        if(progress==null || progress.ReadOnly || progress.Data==null)return;
+        var save=progress.Data;
+        // ShopLedger backup is written ONLY after the server has actually
+        // accepted an owner-authenticated update. If independent PlayerPrefs
+        // keys were wiped or split during a build, the verified pair wins.
+        if(!ValidHomeIdentity(save.verifiedHomeCode,save.verifiedHomeOwnerKey))return;
+        if(OwnerCode==save.verifiedHomeCode && ownerKey==save.verifiedHomeOwnerKey)return;
+        OwnerCode=save.verifiedHomeCode;
+        ownerKey=save.verifiedHomeOwnerKey;
+        PlayerPrefs.SetString(OwnerKeyPref,ownerKey);
+        PlayerPrefs.SetString(CodePref,OwnerCode);
+        PlayerPrefs.Save();
+        OwnerSyncStatus="Restored verified Home "+DisplayHomeCode+" from local save.";
+        Debug.LogWarning("[HOME OWNER] Restored previously verified Home code "+
+            DisplayHomeCode+". No new public Home was created.");
+        Changed?.Invoke();
+    }
+    private void BackUpVerifiedHomeIdentity()
+    {
+        if(progress==null || progress.ReadOnly || progress.Data==null ||
+           !ValidHomeIdentity(OwnerCode,ownerKey))return;
+        var save=progress.Data;
+        if(save.verifiedHomeCode==OwnerCode && save.verifiedHomeOwnerKey==ownerKey)
+            return;
+        save.verifiedHomeCode=OwnerCode;
+        save.verifiedHomeOwnerKey=ownerKey;
+        // Save() serializes the entire ledger; fish and aquarium positions are
+        // left untouched. Never publish the owner credential in a Home snapshot.
+        progress.Save();
     }
     private void OnApplicationPause(bool paused)
     {
@@ -282,14 +330,30 @@ public sealed class HomeDirectoryClient : MonoBehaviour
     {
         sending=true;
         // Register once per installation. No active multiplayer room required.
-        if(string.IsNullOrEmpty(OwnerCode) || string.IsNullOrEmpty(ownerKey))
+        // Never silently replace an existing Home with a freshly registered
+        // eight-character code if only its key/code was lost. Doing so strands
+        // visitors in the old listing and makes both players and tanks stale.
+        bool hasCode=!string.IsNullOrEmpty(OwnerCode);
+        bool hasKey=!string.IsNullOrEmpty(ownerKey);
+        if(hasCode!=hasKey || hasCode && !ValidHomeIdentity(OwnerCode,ownerKey))
+        {
+            OwnerSyncStatus="HOME IDENTITY INCOMPLETE for "+DisplayHomeCode+
+                ". Existing Home preserved; cloud upload blocked.";
+            Status=OwnerSyncStatus;
+            Debug.LogError("[HOME OWNER] "+OwnerSyncStatus+
+                " Never uninstall/reset game data while recovering.");
+            Retry();yield break;
+        }
+        if(!hasCode)
         {
             Reply registered=null;
             yield return Post("/v1/homes/register",new Request{
                 name=progress.Data.playerName},r=>registered=r);
-            if(registered==null || !registered.ok || string.IsNullOrEmpty(registered.ownerKey))
+            if(registered==null || !registered.ok ||
+               !ValidHomeIdentity(registered.code,registered.ownerKey))
             {
                 Status=registered!=null?registered.error:"Home registration is unavailable.";
+                OwnerSyncStatus="HOME REGISTRATION FAILED: "+Status;
                 Retry();yield break;
             }
             ownerKey=registered.ownerKey;
@@ -297,6 +361,9 @@ public sealed class HomeDirectoryClient : MonoBehaviour
             PlayerPrefs.SetString(OwnerKeyPref,ownerKey);
             PlayerPrefs.SetString(CodePref,OwnerCode);
             PlayerPrefs.Save();
+            OwnerSyncStatus="Registered "+DisplayHomeCode+"; publishing local Home...";
+            Debug.Log("[HOME OWNER] Registered new Home "+DisplayHomeCode+
+                ". Visitors must use this exact code.");
             Changed?.Invoke();
         }
         var upload=CurrentUpload();
@@ -310,16 +377,21 @@ public sealed class HomeDirectoryClient : MonoBehaviour
         if(answer==null || !answer.ok)
         {
             Status=answer!=null?answer.error:"Home synchronization unavailable.";
-            // A failed Home upload leaves visitors on the previous aquarium
-            // layout. Show the real reason in Unity rather than silently
-            // pretending a placement/fish change was synchronized.
-            Debug.LogWarning("[HOME SAVE] Could not publish aquarium/fish changes: "+Status);
+            OwnerSyncStatus="UPLOAD FAILED for "+DisplayHomeCode+": "+Status;
+            // A stale Home can still be visited even though owner-only
+            // writes fail. Log code and error, never the private owner key.
+            Debug.LogError("[HOME OWNER] "+OwnerSyncStatus+
+                ". Local fish and placement changes are still saved.");
             Retry();yield break;
         }
         lastUploaded=fingerprint;
+        OwnerSyncedVersion=answer.version;
+        OwnerSyncStatus="SYNCED "+DisplayHomeCode+" • version "+
+            answer.version+" • "+upload.tanks.Length+" aquariums";
         Debug.Log("[HOME SAVE] Published "+OwnerCode+
             " revision "+answer.version+" ("+
             upload.tanks.Length+" aquariums).");
+        BackUpVerifiedHomeIdentity();
         // A save during an in-flight upload remains pending.
         dirty=JsonUtility.ToJson(CurrentUpload())!=fingerprint;
         retrySeconds=10f;sending=false;
