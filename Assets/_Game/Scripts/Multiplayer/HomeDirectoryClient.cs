@@ -70,6 +70,10 @@ public sealed class HomeDirectoryClient : MonoBehaviour
     private bool dirty=true,sending,visitEntered,wasAtOwnHome;
     private NetworkReachability lastReachability;
     private float nextSync, nextVisitPoll, retrySeconds=10f;
+    // Aquarium/fish refresh must work independently of the optional live
+    // avatar heartbeat. 2s /check requests are tiny; /get is only fetched
+    // when the owner's published version actually changes.
+    private const float VisitorCheckInterval=2f;
     private int activeDownloads;
     private void Awake()
     {
@@ -101,8 +105,10 @@ public sealed class HomeDirectoryClient : MonoBehaviour
     private void MarkDirty()
     {
         dirty=true;
+        // A Home edit should be uploaded promptly even if live presence
+        // fails to discover a visitor. Keep the old debounce elsewhere.
         nextSync=Time.unscaledTime+
-            (LiveGuestsAtMyHome?0.05f:2.5f);
+            (travel!=null && travel.InHome && !IsVisiting?0.1f:2.5f);
     }
 
     public void ApplyHeartbeatSnapshot(Reply snapshot)
@@ -117,7 +123,7 @@ public sealed class HomeDirectoryClient : MonoBehaviour
             " to version "+snapshot.version+
             " with "+(snapshot.tanks!=null?snapshot.tanks.Length:0)+
             " aquariums and "+snapshot.fish+" fish.");
-        nextVisitPoll=Time.unscaledTime+30f;
+        nextVisitPoll=Time.unscaledTime+VisitorCheckInterval;
         if(travel!=null && travel.InHome && travel.World!=null)
             travel.World.RefreshHomeView();
         Changed?.Invoke();
@@ -133,7 +139,7 @@ public sealed class HomeDirectoryClient : MonoBehaviour
     // scheduled the regular 2.5-second debounced Home update.
     public void NotifyHabitatFishChanged()
     {
-        if(progress==null || progress.ReadOnly || !LiveGuestsAtMyHome)return;
+        if(progress==null || progress.ReadOnly || IsVisiting)return;
         dirty=true;
         nextSync=Time.unscaledTime+.05f;
     }
@@ -153,7 +159,7 @@ public sealed class HomeDirectoryClient : MonoBehaviour
     {
         if(progress==null || progress.ReadOnly)return;
         dirty=true;
-        nextSync=Time.unscaledTime+(LiveGuestsAtMyHome?0.05f:0.35f);
+        nextSync=Time.unscaledTime+.05f;
     }
 
     // Live presence carries only a version number; a full fish/tank snapshot
@@ -237,6 +243,10 @@ public sealed class HomeDirectoryClient : MonoBehaviour
         if(atOwnHome && !wasAtOwnHome)
         {
             dirty=true;
+            // Do not trust a fingerprint cached before travel or a server
+            // restart. Re-publish the authoritative local Home on each entry;
+            // the server handles identical uploads without bumping version.
+            lastUploaded=null;
             nextSync=Time.unscaledTime;
             retrySeconds=3f;
         }
@@ -267,13 +277,10 @@ public sealed class HomeDirectoryClient : MonoBehaviour
         }
         if(visitEntered && Time.unscaledTime>=nextVisitPoll && activeDownloads==0)
         {
-            var presence=HomePresenceClient.Instance;
-            bool liveUnavailable=presence!=null &&
-                !presence.ConnectionHealthy;
-            // The normal heartbeat already sends changed fish and aquarium
-            // snapshots. Keep only an occasional 30s verification check while
-            // connected, and use 2s fallback checks if the heartbeat fails.
-            nextVisitPoll=Time.unscaledTime+(liveUnavailable?2f:30f);
+            // Always verify published aquarium and fish revisions, even when
+            // avatar presence reports success or fails to initialize. The
+            // independent saved-Home API is the source of truth.
+            nextVisitPoll=Time.unscaledTime+VisitorCheckInterval;
             StartCoroutine(CheckVisitingHome());
         }
     }
@@ -456,7 +463,7 @@ public sealed class HomeDirectoryClient : MonoBehaviour
         }
         VisitingHome=answer;
         visitEntered=false;
-        nextVisitPoll=Time.unscaledTime+10f;
+        nextVisitPoll=Time.unscaledTime+VisitorCheckInterval;
         Status="Visiting "+answer.name+"'s Home";
         Changed?.Invoke();
         if(travel.InHome && travel.World!=null)
@@ -492,18 +499,12 @@ public sealed class HomeDirectoryClient : MonoBehaviour
             ReturnToMyHome();
             Status="The owner has made this Home private.";
         }
-        if(VisitingHome==old && check!=null && check.ok && check.version!=old.version)
+        if(VisitingHome==old && check!=null && check.ok && check.version>old.version)
         {
             Reply updated=null;
             yield return Post("/v1/homes/get",new Request{code=old.code},r=>updated=r);
-            if(VisitingHome==old && updated!=null && updated.ok &&
-               updated.version>old.version)
-            {
-                VisitingHome=updated;
-                if(travel!=null && travel.InHome && travel.World!=null)
-                    travel.World.RefreshHomeView();
-                Changed?.Invoke();
-            }
+            if(VisitingHome==old && updated!=null && updated.ok)
+                ApplyHeartbeatSnapshot(updated);
         }
         activeDownloads--;
     }
