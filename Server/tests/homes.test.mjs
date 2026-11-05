@@ -130,6 +130,51 @@ test('visiting Homes include the true pond and all pond fish; no-pond snapshots 
   }finally{rmSync(dir,{recursive:true,force:true})}
 });
 
+test('live Home presence is private to one Home, expires and streams owner tank moves',()=>{
+  const dir=temp();let now=1000;
+  try{
+    const api=createHomes({directory:dir,clock:()=>now});
+    const owner=api.dispatch('/v1/homes/register',{name:'Owner'});
+    const second=api.dispatch('/v1/homes/register',{name:'Elsewhere'});
+    for(const h of [owner,second])
+      api.dispatch('/v1/homes/update',{code:h.code,ownerKey:h.ownerKey,
+        name:'Player',visibility:'public',tanks:[tank()]});
+    const pose={world:2,x:4000,y:200,z:4010,yaw:90,swimming:false};
+    const a='a'.repeat(32),b='b'.repeat(32),c='c'.repeat(32);
+    let response=api.dispatch('/v1/homes/presence',{code:owner.code,
+      session:a,ownerKey:owner.ownerKey,name:'Owner',pose});
+    assert.equal(response.players.length,0);
+    response=api.dispatch('/v1/homes/presence',{code:owner.code,
+      session:b,name:'Visitor',pose:{...pose,x:4002}});
+    assert.equal(response.players.length,1);
+    assert.equal(response.players[0].name,'Owner');
+    assert.equal(response.version,1);
+    const move={key:'aq1',x:5,y:0,z:12,yaw:80};
+    api.dispatch('/v1/homes/presence',{code:owner.code,session:a,
+      name:'Owner',pose,move}); // Owner credential cached, not resent.
+    response=api.dispatch('/v1/homes/presence',{code:owner.code,
+      session:b,name:'Visitor',pose,move:{...move,x:50}});
+    assert.deepEqual(response.players[0].move,move);
+    response=api.dispatch('/v1/homes/presence',{code:owner.code,
+      session:a,name:'Owner',pose});
+    assert.equal(response.players[0].move,null); // Visitor can't move aquariums.
+    assert.equal(api.dispatch('/v1/homes/get',{code:owner.code}).tanks[0].x,12);
+    response=api.dispatch('/v1/homes/presence',{code:second.code,
+      session:c,name:'Other Home',pose});
+    assert.equal(response.players.length,0); // Same world, different Home.
+    now+=5000;
+    response=api.dispatch('/v1/homes/presence',{code:owner.code,
+      session:b,name:'Visitor',pose});
+    assert.equal(response.players.length,0); // Disconnected owner expired.
+    api.dispatch('/v1/homes/update',{code:owner.code,
+      ownerKey:owner.ownerKey,name:'Owner',visibility:'private',tanks:[tank()]});
+    assert.throws(()=>api.dispatch('/v1/homes/presence',
+      {code:owner.code,session:b,name:'Visitor',pose}),e=>e.status===404);
+    assert.equal(api.dispatch('/v1/homes/presence',{code:owner.code,
+      session:a,ownerKey:owner.ownerKey,name:'Owner',pose}).ok,true);
+  }finally{rmSync(dir,{recursive:true,force:true})}
+});
+
 test('HTTP Home endpoints work without opening a room and support >4 KB uploads',async t=>{
   const dir=temp();
   const server=createSessionServer({homesDirectory:dir});
