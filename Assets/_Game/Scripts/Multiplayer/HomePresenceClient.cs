@@ -177,8 +177,12 @@ public sealed class HomePresenceClient : MonoBehaviour
         AquariumMove moving=response.moving;
         foreach(var peer in peers)
         {
+            // The server already scopes this response to currentHome.
+            // Do not require a second HomeCode field on the avatar: Unity's
+            // nested JSON inheritance can omit that optional field and
+            // previously caused stationary players to be filtered out.
             if(peer==null || string.IsNullOrEmpty(peer.id) ||
-               peer.id==sessionId || peer.homeCode!=currentHome)continue;
+               peer.id==sessionId)continue;
             present.Add(peer.id);
             if(!remotes.TryGetValue(peer.id,out var avatar) || avatar==null)
             {
