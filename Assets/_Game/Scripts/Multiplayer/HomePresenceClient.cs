@@ -72,7 +72,7 @@ public sealed class HomePresenceClient : MonoBehaviour
     private int otherPlayers;
     private int loggedPeers=-1;
     private string lastError="";
-    private float lastErrorLog;
+    private float lastErrorLog, lastOwnerAuthLog=-100f;
     public string LiveConnectionError => lastError;
     // An actual successful independent Home heartbeat, not a fishing room.
     public bool ConnectionHealthy =>
@@ -142,6 +142,11 @@ public sealed class HomePresenceClient : MonoBehaviour
     private void Update()
     {
         if(quitting)return;
+        // Unlike visitors, owners may enter Home before asynchronous Home
+        // registration has finished. Reacquire the directory if initialization
+        // order differs across installed Android builds.
+        if(directory==null)directory=HomeDirectoryClient.Instance;
+        if(travel==null)travel=GetComponent<ShopDimensionManager>();
         string code=HomeCode;
         if(string.IsNullOrEmpty(code) || code.Length!=8)
         {
@@ -271,6 +276,18 @@ public sealed class HomePresenceClient : MonoBehaviour
         }
         authorized=directory!=null && directory.IsVisiting || answer.owner;
         lastError="";
+        if(directory!=null && !directory.IsVisiting && !answer.owner &&
+           Time.unscaledTime-lastOwnerAuthLog>20f)
+        {
+            lastOwnerAuthLog=Time.unscaledTime;
+            // This is the exact split that can leave guests in an old Home
+            // while the owner can no longer publish or move aquariums.
+            Debug.LogError("[HOME OWNER] Connected to "+code+
+                " as a visitor, NOT the authenticated owner. Check that "+
+                "MY HOME CODE matches the Home code on the visitor listing. "+
+                "The owner credential may be invalid or belong to a different Home.");
+            directory.ReportOwnerPresenceUnauthorized();
+        }
         // The owner key is sent on first handshake (or after an expiration),
         // never continuously with normal movement updates.
         lastSuccess=Time.unscaledTime;
