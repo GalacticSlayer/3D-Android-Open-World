@@ -305,8 +305,13 @@ public sealed class ShopWorldHUD : MonoBehaviour
         string habitatId=habitatAddId??page;
         var activeHabitat=travel.InHome && travel.World!=null
             ?travel.World.Habitat(habitatId):null;
-        homeHabitatPage=travel.InHome && (activeHabitat!=null ||
-            habitatAddId!=null && progress.Data.Habitat(habitatAddId)!=null);
+        // Home habitat screens (including their Fish Bag-style picker) always
+        // take the exact same themed presentation path as the Fish Bag.
+        // Do not depend on the aquarium instance having finished rendering
+        // before deciding its UI style.
+        homeHabitatPage=travel.InHome &&
+            (activeHabitat!=null || habitatAddId!=null ||
+             progress.Data.Habitat(habitatId)!=null);
         var habitatOwned=homeHabitatPage?progress.Data.Habitat(habitatId):null;
         var habitatDefinition=homeHabitatPage
             ?ShopCatalog.Habitat(activeHabitat!=null?activeHabitat.id:
@@ -378,8 +383,9 @@ public sealed class ShopWorldHUD : MonoBehaviour
     // Layout only. Keep the plain heading text used by existing shop companions.
     private void SetStorePresentation(bool tackle)
     {
-        bool market=page=="market" || page=="sell-confirm" || page=="bait" || page=="bag" || page=="equipment";
-        bool themed=tackle || market || page=="multiplayer" || page=="homes" || homeHabitatPage;
+        bool market=page=="market" || page=="sell-confirm" || page=="bait" ||
+            page=="bag" || page=="equipment" || homeHabitatPage;
+        bool themed=tackle || market || page=="multiplayer" || page=="homes";
         storeHeader.SetActive(themed);storeBody.SetActive(themed);
         var headerSymbol=storeHeader.GetComponentInChildren<FishingHudSymbol>();
         if(headerSymbol!=null)
@@ -799,10 +805,18 @@ public sealed class ShopWorldHUD : MonoBehaviour
         panel.GetComponent<Image>().raycastTarget=false;
         panel.AddComponent<LayoutElement>().preferredHeight=158f;
 
+        // Highlight ONLY the amount currently used, never the maximum:
+        // yellow from 80%, red at or above full. Both measures are visual
+        // warnings; habitat admission/capacity mechanics stay untouched.
+        string fishCurrent=CapacityNumber(fishCount.ToString(),
+            fishCount,definition.fishLimit);
+        string weightCurrent=CapacityNumber(totalKg.ToString("0.00"),
+            totalKg,definition.totalKg);
         var population=Label(panel.transform,
-            fishCount+"/"+definition.fishLimit+" FISH    •    "+
-            totalKg.ToString("0.00")+"/"+definition.totalKg.ToString("0.##")+" KG",
+            fishCurrent+"/"+definition.fishLimit+" FISH    •    "+
+            weightCurrent+"/"+definition.totalKg.ToString("0.##")+" KG",
             30,new Color(.94f,.98f,1f,1f));
+        population.supportRichText=true;
         population.fontStyle=FontStyle.Bold;
         Anchor(population.rectTransform,0,.49f,1,1,28,4,-28,-8);
 
@@ -812,6 +826,16 @@ public sealed class ShopWorldHUD : MonoBehaviour
             definition.maxFishKg.ToString("0.##")+" KG PER FISH",
             23,new Color(.66f,.92f,.98f,1f));
         Anchor(space.rectTransform,0,0,1,.49f,28,8,-28,0);
+    }
+
+    private static string CapacityNumber(string display,float current,float limit)
+    {
+        if(limit<=0f)return display;
+        if(current>=limit-0.0001f)
+            return "<color=#FF4747>"+display+"</color>";
+        if(current>=limit*.8f)
+            return "<color=#FFE04A>"+display+"</color>";
+        return display;
     }
 
     private void HabitatFishPicker(string id)
@@ -888,6 +912,14 @@ public sealed class ShopWorldHUD : MonoBehaviour
         bool market=page=="market" || page=="sell-confirm" || page=="bait" ||
             page=="bag" || page=="equipment" || homeHabitatPage;
         GameObject row=Panel("Item",list,new Color(0.07f,0.12f,0.14f,1));
+        // Fish Bag-style rounded, blue-gradient card with cyan glass outline.
+        // This deliberately uses the SAME cached sprite as the shared menu
+        // background, rather than introducing an unrelated custom theme.
+        if(homeHabitatPage)
+        {
+            FishingHudTheme.Panel(row);
+            row.GetComponent<Image>().raycastTarget=false;
+        }
         row.AddComponent<LayoutElement>().preferredHeight=page=="reef-fish"?340:market?200:184;
         var accent=Panel("Accent",row.transform,gold); Anchor(accent.GetComponent<RectTransform>(),0,0,0,1,0,0,4,0);
         var titleText=Label(row.transform,title,26,Color.white); Anchor(titleText.rectTransform,0,page=="reef-fish"?.72f:.5f,1,1,(fish!=null || gear!=null?170:22),0,-232,-10);
@@ -1024,7 +1056,11 @@ public sealed class ShopWorldHUD : MonoBehaviour
 
     private Button ButtonAt(Transform parent,string text,Action action)
     {
-        var go=Panel(text,parent,teal);var b=go.AddComponent<Button>();b.targetGraphic=go.GetComponent<Image>();b.transition=Selectable.Transition.ColorTint;b.onClick.AddListener(()=>action());
+        var go=Panel(text,parent,teal);
+        // Make every action on Home habitat and Select Fish screens use the
+        // same rounded turquoise gradient buttons as the Fish Bag.
+        if(homeHabitatPage)FishingHudTheme.Panel(go,1);
+        var b=go.AddComponent<Button>();b.targetGraphic=go.GetComponent<Image>();b.transition=Selectable.Transition.ColorTint;b.onClick.AddListener(()=>action());
         ColorBlock colors=b.colors;colors.disabledColor=new Color(0.4f,0.4f,0.4f,0.45f);b.colors=colors;
         var label=Label(go.transform,text,23,Color.white);label.alignment=TextAnchor.MiddleCenter;Full(label.rectTransform);return b;
     }
