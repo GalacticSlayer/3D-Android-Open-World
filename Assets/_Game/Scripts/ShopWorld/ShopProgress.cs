@@ -15,6 +15,8 @@ public sealed class ShopProgress : MonoBehaviour
     public event Action<int, int, int> FishingLevelAwarded;
     public string Notice { get; private set; }
     public bool ReadOnly { get; private set; }
+    private bool savedCoinBalanceReady;
+    private int lastSavedCoins;
     private void Awake()
     {
         try
@@ -52,6 +54,9 @@ public sealed class ShopProgress : MonoBehaviour
         ReefCatalog.BrinebreakDiscovered=Data!=null && Data.brinebreakDiscovered;
         ReefCatalog.BluewaterDiscovered=Data!=null && Data.bluewaterDiscovered;
         ReefCatalog.SnapperDiscovered=Data!=null && Data.snapperDiscovered;
+        // Ignore migrations/refunds during Awake; track real purchases only.
+        lastSavedCoins=Data!=null?Data.coins:0;
+        savedCoinBalanceReady=true;
     }
     private void Start()
     {
@@ -140,10 +145,24 @@ public sealed class ShopProgress : MonoBehaviour
     public void Save()
     {
         if(ReadOnly) return;
+        // The durable coin debit is the common success path for tackle shop,
+        // aquarium/pond shop, and Marina purchases. Future items that call
+        // Save after spending coins automatically inherit this sound, while
+        // equipping already-owned gear or failed purchases remain silent.
+        var dimension=ShopDimensionManager.Instance;
+        var marina=GetComponent<BoatSystem>();
+        bool boughtItem=savedCoinBalanceReady && Data.coins<lastSavedCoins &&
+            ((dimension!=null && dimension.InShop) ||
+             (marina!=null && marina.MarinaShopOpen));
         ShopCatalog.SetActiveLureVariant(Data.lureEquipped);
         string json=JsonUtility.ToJson(Data);
         if(PlayerPrefs.HasKey(SaveKey)) PlayerPrefs.SetString(SaveKey+".backup",PlayerPrefs.GetString(SaveKey));
-        PlayerPrefs.SetString(SaveKey,json); PlayerPrefs.Save(); Changed?.Invoke();
+        PlayerPrefs.SetString(SaveKey,json);
+        PlayerPrefs.Save();
+        lastSavedCoins=Data.coins;
+        savedCoinBalanceReady=true;
+        if(boughtItem)ShopActionAudio.Play(this,ShopActionAudio.Cue.StorePurchase);
+        Changed?.Invoke();
     }
     public static string NormalizePlayerName(string value)
     {
