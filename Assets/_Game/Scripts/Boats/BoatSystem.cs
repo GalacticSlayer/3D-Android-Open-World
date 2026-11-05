@@ -35,6 +35,9 @@ public sealed class BoatSystem : MonoBehaviour
     private BoatData Selected => Catalog!=null?Array.Find(Catalog,b=>b!=null && b.ID==progress.Data.boatEquipped):null;
     private bool OnIsland => ShopDimensionManager.Instance==null || (!ShopDimensionManager.Instance.InDimension && !ShopDimensionManager.Instance.Traveling);
     private bool NearMarina => OnIsland && MarinaCounter!=null && Vector3.Distance(transform.position,MarinaCounter.position)<6;
+    // ShopProgress can recognize any future purchase made through this UI,
+    // without adding an audio callback to each catalog entry.
+    public bool MarinaShopOpen => shop!=null && shop.activeInHierarchy && NearMarina;
 
     private void Awake()
     {
