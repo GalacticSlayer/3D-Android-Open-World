@@ -5,7 +5,7 @@ using UnityEngine.UI;
 public static class FishingHudTheme
 {
     public static readonly Color Cyan = new Color(.05f, .95f, 1f, 1f);
-    private static readonly Sprite[] sprites = new Sprite[7];
+    private static readonly Sprite[] sprites = new Sprite[9];
 
     public static void Panel(GameObject target, int style = 0)
     {
@@ -16,7 +16,8 @@ public static class FishingHudTheme
         image.color = Color.white;
     }
 
-    // 0: navy glass; 1: teal action; 2: translucent bait; 3: meter track; 5: cancel.
+    // 0: navy glass; 1: teal action; 2: translucent bait; 3: meter track;
+    // 5: legacy cancel; 7: blue action gradient; 8: red cancel gradient.
     private static Sprite Surface(int style)
     {
         if (sprites[style] != null) return sprites[style];
@@ -51,6 +52,19 @@ public static class FishingHudTheme
             {
                 Color selectedEdge = new Color(1f,.86f,.04f,1f);
                 c = Color.Lerp(new Color(.025f,.12f,.14f,.98f), selectedEdge, Mathf.Max(rim,glow*1.8f));
+            }
+            if (style == 7 || style == 8)
+            {
+                // Popup-only gradient variants: retain the same rounded
+                // nine-slice silhouette as standard teal shop buttons.
+                Color bottom=style==7
+                    ?new Color(.025f,.19f,.43f,1f):new Color(.43f,.035f,.055f,1f);
+                Color top=style==7
+                    ?new Color(.075f,.48f,.87f,1f):new Color(.93f,.17f,.19f,1f);
+                Color border=style==7
+                    ?new Color(.40f,.80f,1f,1f):new Color(1f,.56f,.47f,1f);
+                c=Color.Lerp(bottom,top,vertical);
+                c=Color.Lerp(c,border,Mathf.Clamp01(Mathf.Max(rim,glow)*.85f));
             }
             c.a *= Mathf.Clamp01(.5f - d);
             pixels[y * size + x] = c;
