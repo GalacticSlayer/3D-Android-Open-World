@@ -24,6 +24,7 @@ export function createHomes({directory,clock=Date.now}={}){
   // disk, and leaving one Home does not affect other Homes or fishing rooms.
   const visitors=new Map();
   const presenceTtlMs=4500;
+  let lastPresenceSweep=0;
   for(const file of fs.readdirSync(directory)){
     if(!/^[A-HJ-NP-Z2-9]{8}\.json$/.test(file))continue;
     try{
@@ -162,9 +163,21 @@ export function createHomes({directory,clock=Date.now}={}){
     const session=data?.session;
     if(typeof session!=='string' || !/^[a-f0-9]{32}$/.test(session))
       bad(400,'Invalid Home presence session.');
+    const now=clock();
+    // Remove abandoned rooms globally without a permanent timer. One sweep
+    // every ten seconds keeps RAM bounded even for heavily browsed Homes.
+    if(now-lastPresenceSweep>=10000)
+    {
+      lastPresenceSweep=now;
+      for(const [roomCode,active] of visitors)
+      {
+        for(const [key,peer] of active)
+          if(now-peer.seen>presenceTtlMs)active.delete(key);
+        if(active.size===0)visitors.delete(roomCode);
+      }
+    }
     let room=visitors.get(code);
     if(!room){room=new Map();visitors.set(code,room);}
-    const now=clock();
     for(const [key,peer] of room)
       if(now-peer.seen>presenceTtlMs)room.delete(key);
     // Authenticate the owner's first request, then cache that identity
@@ -218,7 +231,7 @@ export function createHomes({directory,clock=Date.now}={}){
     for(const [id,peer] of room)if(id!==session)
       players.push({id,name:peer.name,...peer.pose,move:peer.move});
     if(room.size===0)visitors.delete(code);
-    return {ok:true,code,version:home.version,players};
+    return {ok:true,code,version:home.version,owner:authorized,players};
   }
 
   return {dispatch(route,data){
