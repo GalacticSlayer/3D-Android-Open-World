@@ -194,6 +194,13 @@ test('HTTP Home endpoints work without opening a room and support >4 KB uploads'
   assert.equal((await send('/v1/homes/update',upload)).ok,true);
   assert.equal((await send('/v1/homes/list',{})).total,1);
   assert.equal((await send('/v1/homes/get',{code:created.code})).tanks.length,3);
+  const homePresence=await send('/v1/homes/presence',{
+    code:created.code,session:'1'.repeat(32),ownerKey:created.ownerKey,
+    name:'Offline Fish',pose:{world:2,x:4000,y:200,z:4010,yaw:0}
+  });
+  assert.equal(homePresence.ok,true);
+  assert.equal(homePresence.owner,true);
+  assert.equal(homePresence.players.length,0);
   const invalid=await send('/v1/homes/update',{...upload,ownerKey:'a'.repeat(64)});
   assert.equal(invalid.status,403);
   assert.equal((await send('/v1/state',{})).status,401);
