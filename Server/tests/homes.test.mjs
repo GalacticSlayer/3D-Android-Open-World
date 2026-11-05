@@ -478,7 +478,9 @@ test('HTTP Home endpoints work without opening a room and support >4 KB uploads'
     return {status:r.status,...await r.json()};
   };
   const health=await fetch('http://127.0.0.1:'+server.address().port+'/health');
-  assert.equal((await health.json()).homePresenceProtocol,4);
+  const healthResponse=await health.json();
+  assert.equal(healthResponse.homePresenceProtocol,4);
+  assert.equal(healthResponse.homeUploadDiagnostics,true);
   const created=await send('/v1/homes/register',{name:'Offline Fish'});
   assert.equal(created.ok,true);
   const resolved=await send('/v1/homes/resolve-owner',
