@@ -16,6 +16,15 @@ public sealed class HomePresenceClient : MonoBehaviour
         public string key;
         public float x,y,z,yaw;
     }
+    // A compact independent Home pose. Avoid serializing the full fishing-room
+    // state (boats, line effects and other optional network fields) into a Home
+    // heartbeat; entry and avatar visibility must work without opening a room.
+    [Serializable] private sealed class HomePose
+    {
+        public int world=2,heldFishSpecies=-1,rodTier,reelTier,castSequence;
+        public float x,y,z,yaw,heldFishWeight,reelTime;
+        public bool swimming,sprinting,rodEquipped,reeling,hasFish,lureInWater,fishPosing;
+    }
     // Explicit flat wire DTO. JsonUtility must not deserialize through
     // FishingMultiplayer.Peer inheritance to decide whether someone exists.
     [Serializable] private sealed class HomePeer
@@ -30,7 +39,9 @@ public sealed class HomePresenceClient : MonoBehaviour
     {
         public string code,session,name,ownerKey;
         public bool leave;
-        public FishingMultiplayer.Pose pose;
+        public HomePose pose;
+        public bool wantSnapshot;
+        public int knownVersion=-1;
         public AquariumMove move,placed;
     }
     [Serializable] private sealed class PresenceReply
@@ -39,6 +50,7 @@ public sealed class HomePresenceClient : MonoBehaviour
         public string code,error;
         public int version,otherCount;
         public HomePeer[] players;
+        public HomeDirectoryClient.Reply snapshot;
         public AquariumMove moving,placed;
     }
 
@@ -49,6 +61,8 @@ public sealed class HomePresenceClient : MonoBehaviour
     private ShopDimensionManager travel;
     private HomeAquariumPlacement placement;
     private FishingMultiplayer multiplayer;
+    private FishingSystem fishing;
+    private ShopProgress equipment;
     private FirstPersonController player;
     private string currentHome,sessionId;
     private AquariumMove lastMoving,recentlyPlaced;
@@ -59,6 +73,10 @@ public sealed class HomePresenceClient : MonoBehaviour
     private string lastError="";
     private float lastErrorLog;
     public string LiveConnectionError => lastError;
+    // An actual successful independent Home heartbeat, not a fishing room.
+    public bool ConnectionHealthy =>
+        !string.IsNullOrEmpty(currentHome) && string.IsNullOrEmpty(lastError) &&
+        lastSuccess>0f && Time.unscaledTime-lastSuccess<PresenceTimeout;
     private const float ActivePollInterval=.25f;
     private const float EmptyPollInterval=1.5f;
     private const float PresenceTimeout=10f;
@@ -102,6 +120,8 @@ public sealed class HomePresenceClient : MonoBehaviour
         travel=GetComponent<ShopDimensionManager>();
         placement=GetComponent<HomeAquariumPlacement>();
         player=GetComponent<FirstPersonController>();
+        fishing=GetComponent<FishingSystem>();
+        equipment=GetComponent<ShopProgress>();
         multiplayer=FishingMultiplayer.For(player);
     }
     private string HomeCode
@@ -156,15 +176,53 @@ public sealed class HomePresenceClient : MonoBehaviour
         if(!string.IsNullOrEmpty(previous))
             StartCoroutine(SendLeave(previous,previousSession));
     }
+    private HomePose LocalHomePose()
+    {
+        // Only data required to show a player's real-time movements, rods,
+        // held fish and pose. No fishing-room connection or token is used.
+        var position=transform.position;
+        bool equipped=fishing!=null && fishing.IsRodEquipped;
+        float weight=fishing!=null?fishing.NetworkHeldWeight:0f;
+        if(float.IsNaN(weight)||float.IsInfinity(weight))weight=0f;
+        float reel=fishing!=null?fishing.NetworkReelTime:0f;
+        if(float.IsNaN(reel)||float.IsInfinity(reel))reel=0f;
+        return new HomePose{
+            world=2,
+            x=position.x,y=position.y,z=position.z,yaw=transform.eulerAngles.y,
+            swimming=player!=null && player.IsSwimming,
+            sprinting=player!=null && player.IsSprinting && !player.IsSwimming,
+            rodEquipped=equipped,
+            heldFishSpecies=fishing!=null?fishing.NetworkHeldSpecies:-1,
+            heldFishWeight=weight,
+            fishPosing=fishing!=null && fishing.IsFishPosing,
+            reeling=fishing!=null && fishing.NetworkIsReeling,
+            hasFish=fishing!=null && fishing.NetworkHasFish,
+            lureInWater=fishing!=null && fishing.NetworkLureInWater,
+            reelTime=reel,
+            rodTier=FishingNetworkCompatibility.RodTier(
+                equipment!=null&&equipment.Data!=null
+                    ?equipment.Data.Equipped(GearKind.Rod):0,
+                equipped,ShopCatalog.MaxRodTier),
+            reelTier=equipment!=null&&equipment.Data!=null
+                ?Mathf.Clamp(equipment.Data.Equipped(GearKind.Reel),
+                    0,ShopCatalog.MaxReelTier):0,
+            castSequence=fishing!=null?fishing.CastSequence:0
+        };
+    }
+
     private IEnumerator Poll(string code,string id)
     {
         pending=true;
+        var visiting=directory!=null && directory.IsVisiting
+            ?directory.VisitingHome:null;
         var request=new PresenceRequest{
             code=code,session=id,
             name=multiplayer!=null?multiplayer.PlayerName:"Angler",
-            // Home presence is visual-only, so use the locally equipped
-            // rod tier instead of the fishing-room compatibility downgrade.
-            pose=multiplayer!=null?multiplayer.LocalPose(forLocalPresentation:true):null
+            pose=LocalHomePose(),
+            // Guests automatically receive aquarium positions and fish through
+            // this SAME heartbeat whenever the published revision changes.
+            wantSnapshot=visiting!=null,
+            knownVersion=visiting!=null?visiting.version:-1
         };
         if(!authorized && directory!=null && !directory.IsVisiting)
             request.ownerKey=directory.OwnerCredential;
@@ -220,6 +278,15 @@ public sealed class HomePresenceClient : MonoBehaviour
     private void Apply(PresenceReply response)
     {
         if(response.code!=currentHome)return;
+        if(directory!=null && directory.IsVisiting)
+        {
+            if(response.snapshot!=null && response.snapshot.ok)
+                directory.ApplyHeartbeatSnapshot(response.snapshot);
+            else if(directory.VisitingHome!=null &&
+                    response.version>directory.VisitingHome.version)
+                // Backward-compatible fallback for old Oracle deployments.
+                directory.NotifyLiveHomeRevision(response.version,true);
+        }
         var peers=response.players??new HomePeer[0];
         var present=new HashSet<string>();
         // Aquarium drag updates travel separately from avatar presence.
