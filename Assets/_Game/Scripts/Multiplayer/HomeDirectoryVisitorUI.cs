@@ -27,10 +27,12 @@ public sealed class HomeDirectoryVisitorUI : MonoBehaviour
             typeof(Image),typeof(Button));
         button.transform.SetParent(go.transform,false);
         var rect=button.GetComponent<RectTransform>();
-        rect.anchorMin=rect.anchorMax=new Vector2(.5f,0);
-        rect.pivot=new Vector2(.5f,0);
-        rect.anchoredPosition=new Vector2(0,190);
-        rect.sizeDelta=new Vector2(410,70);
+        // Match the Menu / Travel button's right-side column, directly
+        // beneath it instead of covering the hotbar at screen bottom.
+        rect.anchorMin=rect.anchorMax=new Vector2(1f,1f);
+        rect.pivot=new Vector2(1f,1f);
+        rect.anchoredPosition=new Vector2(-36f,-136f);
+        rect.sizeDelta=new Vector2(380f,76f);
         FishingHudTheme.Panel(button,1);
         returnButton=button.GetComponent<Button>();
         returnButton.targetGraphic=button.GetComponent<Image>();
