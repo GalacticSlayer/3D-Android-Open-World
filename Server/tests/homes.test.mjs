@@ -130,6 +130,58 @@ test('visiting Homes include the true pond and all pond fish; no-pond snapshots 
   }finally{rmSync(dir,{recursive:true,force:true})}
 });
 
+test('saved Home directory alone synchronizes aquarium and fish revisions without presence',()=>{
+  const dir=temp();
+  try{
+    const api=createHomes({directory:dir});
+    const created=api.dispatch('/v1/homes/register',{name:'Offline Owner'});
+    const access={code:created.code,ownerKey:created.ownerKey,
+      name:'Offline Owner',visibility:'public'};
+    // All requests use /register, /update, /check, /get exclusively.
+    // A Home visitor must refresh even if /presence never succeeds.
+    const first=api.dispatch('/v1/homes/update',{
+      ...access,tanks:[{...tank(),fish:[fish(7)]}],pond:null});
+    let visitor=api.dispatch('/v1/homes/get',{code:created.code});
+    assert.equal(visitor.version,first.version);
+    assert.equal(visitor.tanks[0].fish.length,1);
+
+    const change=api.dispatch('/v1/homes/update',{
+      ...access,tanks:[{...tank(),x:28,y:0,z:38,yaw:145,
+        fish:[fish(7),fish(19)]}],pond:{id:'garden',fish:[fish(12)]}});
+    const check=api.dispatch('/v1/homes/check',{code:created.code});
+    assert.equal(check.version,change.version);
+    assert.equal(check.tanks,undefined);
+    // The visitor's version-check triggers a full download only on change.
+    if(check.version>visitor.version)
+      visitor=api.dispatch('/v1/homes/get',{code:created.code});
+    assert.equal(visitor.version,change.version);
+    assert.equal(visitor.tanks[0].x,28);
+    assert.equal(visitor.tanks[0].z,38);
+    assert.equal(visitor.tanks[0].yaw,145);
+    assert.equal(visitor.tanks[0].fish.length,2);
+    assert.equal(visitor.pond.fish.length,1);
+
+    const removed=api.dispatch('/v1/homes/update',{
+      ...access,tanks:[{...tank(),x:28,y:0,z:38,yaw:145,
+        fish:[fish(19)]}],pond:{id:'garden',fish:[]}});
+    assert.equal(api.dispatch('/v1/homes/check',{code:created.code}).version,removed.version);
+    visitor=api.dispatch('/v1/homes/get',{code:created.code});
+    assert.equal(visitor.tanks[0].fish.length,1);
+    assert.equal(visitor.pond.fish.length,0);
+
+    // Re-entry and reconnection may re-send unchanged local data. The owner
+    // must not create bogus versions, and a future edit must still publish.
+    const again=api.dispatch('/v1/homes/update',{
+      ...access,tanks:[{...tank(),x:28,y:0,z:38,yaw:145,
+        fish:[fish(19)]}],pond:{id:'garden',fish:[]}});
+    assert.equal(again.version,removed.version);
+    const stored=api.dispatch('/v1/homes/update',{
+      ...access,tanks:[],pond:{id:'garden',fish:[]}});
+    assert.equal(api.dispatch('/v1/homes/get',{code:created.code}).tanks.length,0);
+    assert.equal(api.dispatch('/v1/homes/check',{code:created.code}).version,stored.version);
+  }finally{rmSync(dir,{recursive:true,force:true})}
+});
+
 test('same-Home idle avatars remain visible; fish revision and owner tank moves stay separate',()=>{
   const dir=temp();let now=1000;
   try{
