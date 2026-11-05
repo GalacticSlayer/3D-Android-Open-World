@@ -176,6 +176,7 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
            transform.position.y>aquarium.transform.position.y+.4f)return;
 
         if(!progress.StoreAquarium(aquarium.instanceKey))return;
+        ShopActionAudio.Play(this,ShopActionAudio.Cue.AquariumStored);
         nearest=null;
         moveToStorageButton.gameObject.SetActive(false);
         contextButton.gameObject.SetActive(false);
@@ -319,6 +320,7 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         placeButton.gameObject.SetActive(true);
         cancelButton.gameObject.SetActive(true);
         placementHint.gameObject.SetActive(true);
+        ShopActionAudio.Play(this,ShopActionAudio.Cue.AquariumPickup);
     }
 
     private void UpdatePreview()
@@ -443,6 +445,16 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         if(!valid || !CanPlace())return; // Always recheck at the moment of purchase.
         if(!progress.PlaceAquarium(pendingKey,localTarget.x,localTarget.y,localTarget.z,localYaw))
             return;
+        ShopActionAudio.Play(this,ShopActionAudio.Cue.AquariumPlaced);
+        CancelPlacement();
+    }
+
+    private void CancelByButton()
+    {
+        // Silent CancelPlacement is also called automatically by travel,
+        // disabling, and UI cleanup. Only a deliberate Cancel button plays.
+        if(!string.IsNullOrEmpty(pendingKey))
+            ShopActionAudio.Play(this,ShopActionAudio.Cue.AquariumPlaced);
         CancelPlacement();
     }
     private void RestoreSource()
@@ -528,7 +540,7 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         AnchorBottom(moveToStorageButton.GetComponent<RectTransform>(),new Vector2(225,230),new Vector2(420,74));
         placeButton=ButtonAt(canvasRoot.transform,"PLACE AQUARIUM",Place);
         AnchorBottom(placeButton.GetComponent<RectTransform>(),new Vector2(-235,220),new Vector2(420,80));
-        cancelButton=ButtonAt(canvasRoot.transform,"CANCEL",CancelPlacement);
+        cancelButton=ButtonAt(canvasRoot.transform,"CANCEL",CancelByButton);
         AnchorBottom(cancelButton.GetComponent<RectTransform>(),new Vector2(235,220),new Vector2(260,80));
         placementHint=TextAt(canvasRoot.transform,"",28);
         placementHint.alignment=TextAnchor.MiddleCenter;
