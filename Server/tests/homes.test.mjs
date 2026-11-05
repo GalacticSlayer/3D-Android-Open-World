@@ -35,6 +35,12 @@ test('public by default, directory search, sorting, pagination, and snapshot ver
     const ranked=api.dispatch('/v1/homes/list',{sort:'biggest'});
     assert.equal(ranked.homes[0].code,b.code);
     assert.equal(ranked.homes[0].biggest.weightKg,80);
+    // The requesting player's published Home must not occupy a directory slot,
+    // affect its total, or appear in searches.
+    const others=api.dispatch('/v1/homes/list',{excludeCode:a.code});
+    assert.equal(others.total,1);
+    assert.deepEqual(others.homes.map(h=>h.code),[b.code]);
+    assert.equal(api.dispatch('/v1/homes/list',{query:'reef',excludeCode:a.code}).total,0);
     assert.equal(api.dispatch('/v1/homes/list',{page:1}).homes.length,0);
   }finally{rmSync(dir,{recursive:true,force:true})}
 });
