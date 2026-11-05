@@ -724,7 +724,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
         }
         var owned=progress.Data.Habitat(id);
         var d=ShopCatalog.Habitat(owned!=null?owned.id:id); if(d==null){TravelPage();return;}
-        if(!travel.Near(id)){Row(d.name,"Approach its sign to view this habitat.","TRAVEL",()=>Open("travel"));return;}
+        if(!travel.Near(id)){Row(d.name,"Approach this habitat to view its fish.","TRAVEL",()=>Open("travel"));return;}
         string capacity=$"{d.width} × {d.depth} × {d.height} m / {d.fishLimit} fish / max {d.maxFishKg} kg each / {d.totalKg} kg total";
         if(travel.InShop)
         {
@@ -749,7 +749,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
         }
         if(owned==null || !travel.InHome)return;
         float kg=0;foreach(var f in owned.fish)kg+=f.weightKg;
-        Row(d.name,$"{owned.fish.Count}/{d.fishLimit} fish • {kg:0.00}/{d.totalKg} kg\n"+capacity,"HOME",()=>{},false);
+        HabitatStats(d,owned.fish.Count,kg);
         Row("ADD FISH TO "+d.name.ToUpperInvariant(),$"{progress.Data.bag.Count} fish in your bag. Open the dedicated fish picker to sort, filter and check which catches fit this habitat.",progress.Data.bag.Count>0?"SELECT FISH":"BAG EMPTY",()=>Open(HabitatAddPrefix+id),progress.Data.bag.Count>0 && !progress.ReadOnly);
         foreach(var fish in new List<CaughtFishRecord>(owned.fish))
         {var f=fish;Row(FishCatalog.Get(f.speciesId).Name,$"RESIDENT • {FishCatalog.FormatWeight(f.weightKg)}",progress.Data.BagFull?"BAG FULL":"TO BAG",()=>Result(progress.Withdraw(id,f),"Fish returned to bag."),!progress.ReadOnly && !progress.Data.BagFull,fish:f);}
@@ -766,10 +766,11 @@ public sealed class ShopWorldHUD : MonoBehaviour
                 "VIEW ONLY",()=>{},false);
             return;
         }
-        Row(definition.name,home.name+"'s "+location+" • Read-only display",
-            "VISITING",()=>{},false);
         int count=remote.fish!=null?remote.fish.Length:0;
-        Row("RESIDENTS",count+" fish currently displayed","VIEW ONLY",()=>{},false);
+        float totalKg=0f;
+        if(remote.fish!=null)foreach(var resident in remote.fish)
+            if(resident!=null)totalKg+=resident.weightKg;
+        HabitatStats(definition,count,totalKg);
         if(remote.fish==null)return;
         foreach(var resident in remote.fish)
         {
@@ -779,6 +780,30 @@ public sealed class ShopWorldHUD : MonoBehaviour
             Row(species,resident.weightKg.ToString("0.00")+" kg • "+location+" resident",
                 "VIEW ONLY",()=>{},false);
         }
+    }
+
+    // The old disabled "HOME" row was a duplicate header. A compact stat
+    // panel now follows the yellow habitat title, without action buttons.
+    private void HabitatStats(HabitatDefinition definition,int fishCount,float totalKg)
+    {
+        var panel=Panel("Habitat Stats",list,Color.white);
+        FishingHudTheme.Panel(panel);
+        panel.GetComponent<Image>().raycastTarget=false;
+        panel.AddComponent<LayoutElement>().preferredHeight=158f;
+
+        var population=Label(panel.transform,
+            fishCount+"/"+definition.fishLimit+" FISH    •    "+
+            totalKg.ToString("0.00")+"/"+definition.totalKg.ToString("0.##")+" KG",
+            30,new Color(.94f,.98f,1f,1f));
+        population.fontStyle=FontStyle.Bold;
+        Anchor(population.rectTransform,0,.49f,1,1,28,4,-28,-8);
+
+        var space=Label(panel.transform,
+            definition.width.ToString("0.##")+" × "+definition.depth.ToString("0.##")+
+            " × "+definition.height.ToString("0.##")+" M    •    MAX "+
+            definition.maxFishKg.ToString("0.##")+" KG PER FISH",
+            23,new Color(.66f,.92f,.98f,1f));
+        Anchor(space.rectTransform,0,0,1,.49f,28,8,-28,0);
     }
 
     private void HabitatFishPicker(string id)
@@ -792,7 +817,13 @@ public sealed class ShopWorldHUD : MonoBehaviour
         if(owned==null)
         {Row(d.name,"Purchase this habitat before adding fish.","BACK",()=>Open(id));return;}
 
-        Row("BACK TO "+d.name.ToUpperInvariant(),$"Residents: {owned.fish.Count}/{d.fishLimit}. Select a catch below to move it from your bag into this habitat.","BACK",()=>Open(id));
+        // Use the Fish Bag's compact top controls and familiar fish cards,
+        // retaining the same Back action, sorting, filtering and deposits.
+        var back=Panel("Back to habitat",list,Color.clear);
+        back.AddComponent<LayoutElement>().preferredHeight=70f;
+        var backButton=ButtonAt(back.transform,"BACK TO "+d.name.ToUpperInvariant(),()=>Open(id));
+        Full(backButton.GetComponent<RectTransform>());
+        FishingHudTheme.Panel(backButton.gameObject,1);
 
         var species=progress.Data.bag.Select(f=>f.speciesId).Distinct().OrderBy(speciesId=>FishCatalog.Get(speciesId).Name).ToList();
         if(habitatSpeciesFilter!=-1 && !species.Contains(habitatSpeciesFilter))habitatSpeciesFilter=-1;
