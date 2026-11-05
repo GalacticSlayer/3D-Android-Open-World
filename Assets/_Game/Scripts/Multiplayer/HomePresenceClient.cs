@@ -74,6 +74,8 @@ public sealed class HomePresenceClient : MonoBehaviour
     private string lastError="";
     private float lastErrorLog, lastOwnerAuthLog=-100f;
     public string LiveConnectionError => lastError;
+    public string ConnectedHomeCode => currentHome;
+    public int OtherHomePlayers => ConnectionHealthy ? otherPlayers : 0;
     // An actual successful independent Home heartbeat, not a fishing room.
     public bool ConnectionHealthy =>
         !string.IsNullOrEmpty(currentHome) && string.IsNullOrEmpty(lastError) &&
