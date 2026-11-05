@@ -7,7 +7,7 @@ using UnityEngine.Networking;
 
 // Small, room-independent Home presence channel. Reuses the fishing game's
 // existing remote avatar and animations, while fish continue to swim locally.
-// A player's transient presence expires on Oracle after 4.5 seconds.
+// A player's idle presence lasts through short mobile network pauses.
 [DisallowMultipleComponent]
 public sealed class HomePresenceClient : MonoBehaviour
 {
