@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -20,6 +21,11 @@ public sealed class ShopDimensionManager : MonoBehaviour
     private Vector3 returnPosition;
     private Quaternion returnRotation;
     private bool hasReturn;
+    // Cache only the four glass wall colliders for each placed aquarium.
+    // This avoids scanning the full aquarium hierarchy every HUD frame.
+    private readonly Dictionary<ShopHabitat,BoxCollider[]> aquariumGlass=
+        new Dictionary<ShopHabitat,BoxCollider[]>();
+    private ShopWorldEnvironment cachedGlassWorld;
     private float oldFogDensity;
     private bool oldFog;
     private Color oldFogColor;
@@ -39,9 +45,55 @@ public sealed class ShopDimensionManager : MonoBehaviour
     private void OnDestroy() { if(Instance==this) Instance=null; }
     public bool Near(string id)
     {
-        if(!InDimension || World==null || Traveling) return false;
-        Transform point=World.Point(id);
-        return point!=null && Vector3.Distance(transform.position,point.position)<=5.5f;
+        if(!InDimension || World==null || Traveling)return false;
+        // Home aquariums have no sign anymore: the VIEW HABITAT prompt belongs
+        // to their glass walls only, never the stairs or former sign position.
+        // Ponds, tackle/market counters and the Quay keep their old range.
+        if(InHome && id!="gear" && id!="market")
+        {
+            var habitat=World.Habitat(id);
+            if(habitat!=null)
+            {
+                var definition=ShopCatalog.Habitat(habitat.id);
+                if(definition!=null && !definition.pond)
+                    return NearAquariumGlass(habitat);
+            }
+        }
+        return NearInteractionPoint(id);
+    }
+
+    private bool NearInteractionPoint(string id)
+    {
+        Transform point=World!=null?World.Point(id):null;
+        return point!=null &&
+            (transform.position-point.position).sqrMagnitude<=5.5f*5.5f;
+    }
+
+    private bool NearAquariumGlass(ShopHabitat habitat)
+    {
+        if(cachedGlassWorld!=World)
+        {
+            aquariumGlass.Clear();
+            cachedGlassWorld=World;
+        }
+        if(!aquariumGlass.TryGetValue(habitat,out var panels))
+        {
+            var walls=new List<BoxCollider>(4);
+            foreach(var collider in habitat.GetComponentsInChildren<BoxCollider>(true))
+                if(collider!=null && collider.gameObject.name=="GlassPanel")
+                    walls.Add(collider);
+            panels=walls.ToArray();
+            aquariumGlass[habitat]=panels;
+        }
+        Vector3 playerPosition=transform.position;
+        foreach(var glass in panels)
+        {
+            if(glass==null || !glass.enabled || !glass.gameObject.activeInHierarchy)
+                continue;
+            if((glass.ClosestPoint(playerPosition)-playerPosition).sqrMagnitude<=1f)
+                return true;
+        }
+        return false;
     }
     public string Nearest()
     {
@@ -172,7 +224,9 @@ public sealed class ShopDimensionManager : MonoBehaviour
     }
     public void EnterHabitat(string id)
     {
-        if(!InHome || !Near(id)) return;
+        // Keep the existing Enter Habitat interaction range near the access
+        // point; the new 1 m glass rule applies to VIEW HABITAT prompts only.
+        if(!InHome || (!Near(id) && !NearInteractionPoint(id))) return;
         var h=World.Habitat(id); var progress=GetComponent<ShopProgress>();
         var directory=GetComponent<HomeDirectoryClient>();
         bool visitorTank=directory!=null && directory.IsVisiting && World.VisitorTank(id)!=null;
