@@ -147,6 +147,7 @@ test('same-Home idle avatars remain visible; fish revision and owner tank moves 
     response=api.dispatch('/v1/homes/presence',{code:owner.code,
       session:b,name:'Visitor',pose:{...pose,x:4002}});
     assert.equal(response.players.length,1);
+    assert.equal(response.otherCount,1); // Independent of avatar deserialization.
     assert.equal(response.players[0].name,'Owner');
     assert.equal(response.version,1);
     assert.equal(response.moving,null); // Idle players are full avatars.
@@ -159,6 +160,7 @@ test('same-Home idle avatars remain visible; fish revision and owner tank moves 
       response=api.dispatch('/v1/homes/presence',{code:owner.code,
         session:b,name:'Visitor',pose:{...pose,x:4002}});
       assert.equal(response.players.length,1);
+      assert.equal(response.otherCount,1);
       assert.equal(response.players[0].name,'Owner');
       assert.equal(response.players[0].homeCode,owner.code);
       assert.equal(response.players[0].move,undefined);
@@ -172,6 +174,7 @@ test('same-Home idle avatars remain visible; fish revision and owner tank moves 
     response=api.dispatch('/v1/homes/presence',{code:owner.code,
       session:b,name:'Visitor',pose});
     assert.equal(response.version,changed.version);
+    assert.equal(response.otherCount,1);
     assert.equal(api.dispatch('/v1/homes/get',{code:owner.code}).tanks[0].fish.length,2);
     const move={key:'aq1',x:5,y:0,z:12,yaw:80};
     api.dispatch('/v1/homes/presence',{code:owner.code,session:a,
@@ -284,6 +287,26 @@ test('HTTP Home endpoints work without opening a room and support >4 KB uploads'
   assert.equal(homePresence.ok,true);
   assert.equal(homePresence.owner,true);
   assert.equal(homePresence.players.length,0);
+  assert.equal(homePresence.otherCount,0);
+  // The Android Home client uses this flat world-2 pose format.
+  const visitingPose={world:2,x:4003,y:200,z:4012,yaw:175,
+    heldFishSpecies:-1,heldFishWeight:0,swimming:false,
+    sprinting:false,rodEquipped:false,reeling:false,hasFish:false,
+    lureInWater:false,fishPosing:false,rodTier:7,reelTier:7};
+  const guestPresence=await send('/v1/homes/presence',{
+    code:created.code,session:'2'.repeat(32),name:'Guest',
+    pose:visitingPose
+  });
+  assert.equal(guestPresence.ok,true);
+  assert.equal(guestPresence.otherCount,1);
+  assert.equal(guestPresence.players[0].name,'Offline Fish');
+  const ownerPresence=await send('/v1/homes/presence',{
+    code:created.code,session:'1'.repeat(32),name:'Offline Fish',
+    pose:{...visitingPose,x:4000}
+  });
+  assert.equal(ownerPresence.otherCount,1);
+  assert.equal(ownerPresence.players[0].id,'2'.repeat(32));
+  assert.equal(ownerPresence.players[0].rodTier,7);
   const invalid=await send('/v1/homes/update',{...upload,ownerKey:'a'.repeat(64)});
   assert.equal(invalid.status,403);
   assert.equal((await send('/v1/state',{})).status,401);
