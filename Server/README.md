@@ -250,6 +250,20 @@ Server API on existing TCP 3001:
 - POST /v1/homes/list      (public summaries, 20/page)
 - POST /v1/homes/get       (full snapshot on demand, public/unlisted)
 - POST /v1/homes/check     (lightweight revision check)
+- POST /v1/homes/presence  (transient same-Home avatar poses and tank drag,
+                            no fishing-room session required)
+
+Active players sharing the same Home code are visible to one another without
+opening a fishing room. Home player poses are relayed around three times per
+second, with smooth interpolation handled by the existing Unity remote avatar.
+The server only keeps temporary Home-presence records in RAM; a 4.5-second
+timeout removes disconnected players. A live owner drag sends a tiny temporary
+aquarium position to visitors, and the completed placement persists through the
+existing Home snapshot endpoint. Only the authenticated Home owner can publish
+temporary aquarium moves. Fish still animate entirely on each phone; Home
+presence never transfers fish positions, physics, inventory, or ownership.
+Player visibility is strictly scoped to matching Home codes; fishing-island
+multiplayer remains unchanged.
 
 Directory metadata is kept in memory; full tank and fish snapshots are read
 from disk only on a visit/update. Snapshots live in DATA_DIR/homes, separate
