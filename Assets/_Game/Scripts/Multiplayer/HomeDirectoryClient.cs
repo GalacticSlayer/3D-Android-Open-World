@@ -177,6 +177,19 @@ public sealed class HomeDirectoryClient : MonoBehaviour
         Changed?.Invoke();
     }
 
+    // A Home presence response can succeed for a visitor even when the
+    // owner's saved credential is invalid. Surface that distinction rather
+    // than claiming the owner has synchronized successfully.
+    public void ReportOwnerPresenceUnauthorized()
+    {
+        if(IsVisiting)return;
+        string status="OWNER NOT VERIFIED • "+DisplayHomeCode+
+            ". Check this code against the visitor's Home listing.";
+        if(OwnerSyncStatus==status)return;
+        OwnerSyncStatus=status;
+        Changed?.Invoke();
+    }
+
     // Publish a completed fish transfer immediately while at Home. Never
     // require the separate player-presence channel to be healthy first.
     public void NotifyHabitatFishChanged()
