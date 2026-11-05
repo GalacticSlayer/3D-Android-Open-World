@@ -141,6 +141,7 @@ public sealed class HomePresenceClient : MonoBehaviour
         string previousSession=sessionId;
         currentHome=code;
         otherPlayers=0;
+        lastError="";
         lastMoving=null;
         recentlyPlaced=null;
         placedUntil=0f;
@@ -197,6 +198,7 @@ public sealed class HomePresenceClient : MonoBehaviour
                 lastErrorLog=Time.unscaledTime;
             }
             lastError=reason;
+            directory?.NotifyPresenceUnavailable();
             nextPoll=Time.unscaledTime+2f;
             if(remotes.Count>0 &&
                Time.unscaledTime-lastSuccess>PresenceTimeout)ClearPeers();
