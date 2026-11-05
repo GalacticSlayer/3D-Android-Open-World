@@ -44,6 +44,8 @@ public sealed class HomePresenceClient : MonoBehaviour
     private FishingMultiplayer multiplayer;
     private FirstPersonController player;
     private string currentHome,sessionId;
+    private AquariumMove lastMoving;
+    private float lastMoveSeen;
     private float nextPoll,lastSuccess;
     private bool pending,authorized,quitting;
     private const float PollInterval=.30f;
@@ -94,6 +96,7 @@ public sealed class HomePresenceClient : MonoBehaviour
         string previous=currentHome;
         string previousSession=sessionId;
         currentHome=code;
+        lastMoving=null;
         sessionId=Guid.NewGuid().ToString("N");
         authorized=false;
         lastSuccess=0f;pending=false;
@@ -171,8 +174,17 @@ public sealed class HomePresenceClient : MonoBehaviour
             if(remotes[id]!=null)Destroy(remotes[id].gameObject);
             remotes.Remove(id);
         }
-        // Only owner-authenticated peers can publish a temporary tank pose.
-        // Restore the regular snapshot position as soon as the drag ends.
+        // A completed drag is published through the owner's persistent Home
+        // snapshot shortly afterward. Hold the last transient pose briefly
+        // so the tank doesn't flicker back to its old position between them.
+        if(moving!=null)
+        {
+            lastMoving=moving;
+            lastMoveSeen=Time.unscaledTime;
+        }
+        else if(lastMoving!=null && Time.unscaledTime-lastMoveSeen<.9f)
+            moving=lastMoving;
+        else lastMoving=null;
         if(directory!=null && directory.IsVisiting &&
            travel!=null && travel.World!=null)
         {
@@ -184,6 +196,7 @@ public sealed class HomePresenceClient : MonoBehaviour
     }
     private void ClearPeers()
     {
+        lastMoving=null;
         foreach(var peer in remotes.Values)
             if(peer!=null)Destroy(peer.gameObject);
         remotes.Clear();
