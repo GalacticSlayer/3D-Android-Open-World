@@ -250,13 +250,26 @@ Server API on existing TCP 3001:
 - POST /v1/homes/list      (public summaries, 20/page)
 - POST /v1/homes/get       (full snapshot on demand, public/unlisted)
 - POST /v1/homes/check     (lightweight revision check)
-- POST /v1/homes/presence  (transient same-Home avatar poses and tank drag,
-                            no fishing-room session required)
+- POST /v1/homes/presence  (room-free Home heartbeat: avatars, drag previews,
+                            versioned aquarium and fish updates)
 
 Active players sharing the same Home code are visible to one another without
-opening a fishing room. Home player poses use the existing multiplayer
-avatar format, without depending on aquarium movement. Active Homes poll at
-approximately four times per second; an empty Home polls less frequently.
+opening a fishing room. The Unity Home client automatically starts a separate
+session when the player enters Home, sending only a compact Home-specific pose.
+Active Homes poll at approximately four times per second; an empty Home polls
+less frequently. When visiting, each heartbeat supplies the viewer's
+`knownVersion` and `wantSnapshot`: the server includes the complete aquarium
+layout, pond and fish lists ONLY if the published version has changed.
+The resulting snapshot is applied read-only and all fish movement remains local.
+
+An owner entering Home immediately attempts to publish any unsent, locally
+saved changes. Deposits, withdrawals, placing and storing aquariums use fast
+uploads while anyone else is visiting; while alone they keep the normal
+low-frequency save debounce. If the phone is offline, changes stay in
+ShopProgress/PlayerPrefs and automatically retry when connectivity returns.
+A successful heartbeat is independent of the regular fishing room, and both
+players can see each other even when neither opens a multiplayer server.
+Check `GET /health` for `homePresenceProtocol: 3` before testing a new APK.
 The server only keeps temporary Home-presence records in RAM; a nine-second
 timeout removes disconnected players. A live owner drag sends a tiny temporary
 aquarium position to visitors. A successful placement also sends a short-lived
@@ -272,7 +285,8 @@ Player visibility is strictly scoped to matching Home codes; fishing-island
 multiplayer remains unchanged.
 
 Directory metadata is kept in memory; full tank and fish snapshots are read
-from disk only on a visit/update. Snapshots live in DATA_DIR/homes, separate
+from disk only on a visit, owner update, or a presence heartbeat advertising a
+new revision (never on unchanged 4 Hz movement packets). Snapshots live in DATA_DIR/homes, separate
 from multiplayer sessions and tournament-escrow.json. Do not delete that
 directory when upgrading or restarting the Oracle VM. The existing 4 KiB
 limit is retained for normal 10 Hz movement requests; only owner snapshot
