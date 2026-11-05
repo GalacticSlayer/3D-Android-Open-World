@@ -58,6 +58,8 @@ public sealed class HomeDirectoryClient : MonoBehaviour
     public bool MoreListings { get; private set; }
     public Reply VisitingHome { get; private set; }
     public bool IsVisiting => VisitingHome!=null;
+    // Only used on the owner's own device for the first presence handshake.
+    internal string OwnerCredential => ownerKey;
     public string DisplayHomeCode => OwnerCode!=null && OwnerCode.Length==8
         ?OwnerCode.Substring(0,4)+"-"+OwnerCode.Substring(4):"Registering...";
     public event Action Changed;
@@ -90,6 +92,25 @@ public sealed class HomeDirectoryClient : MonoBehaviour
         if(Instance==this)Instance=null;
     }
     private void MarkDirty(){dirty=true;nextSync=Time.unscaledTime+2.5f;}
+
+    // Placement is visually shared during the drag; commit the new permanent
+    // layout quickly when the owner presses PLACE or MOVE TO STORAGE.
+    public void NotifyAquariumPositionCommitted()
+    {
+        if(progress==null || progress.ReadOnly)return;
+        dirty=true;
+        nextSync=Time.unscaledTime+.35f;
+    }
+
+    // Live presence carries only a version number; a full fish/tank snapshot
+    // is downloaded once when its owner actually publishes a new revision.
+    public void NotifyLiveHomeRevision(int version)
+    {
+        if(VisitingHome==null || version<=VisitingHome.version ||
+           activeDownloads!=0 || travel==null || !travel.InHome)return;
+        nextVisitPoll=Time.unscaledTime+10f;
+        StartCoroutine(CheckVisitingHome());
+    }
     public void SetVisibility(string value)
     {
         if(value!="public" && value!="unlisted" && value!="private")return;
