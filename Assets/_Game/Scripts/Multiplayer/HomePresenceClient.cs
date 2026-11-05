@@ -78,8 +78,12 @@ public sealed class HomePresenceClient : MonoBehaviour
     public bool ConnectionHealthy =>
         !string.IsNullOrEmpty(currentHome) && string.IsNullOrEmpty(lastError) &&
         lastSuccess>0f && Time.unscaledTime-lastSuccess<PresenceTimeout;
-    private const float ActivePollInterval=.25f;
+    // Match FishingMultiplayer's 100 ms post-response delay for occupied
+    // Homes. Remote avatars already use the SAME FishingRemotePlayer
+    // interpolation and walking / animation blending as Open Server.
+    private const float ActivePollInterval=.1f;
     private const float EmptyPollInterval=1.5f;
+    private float PollInterval => otherPlayers>0?ActivePollInterval:EmptyPollInterval;
     private const float PresenceTimeout=10f;
     // Repeat a tiny commit notification while the server saves the owner's
     // permanent snapshot. The visitor pins it until that revision arrives.
@@ -151,8 +155,7 @@ public sealed class HomePresenceClient : MonoBehaviour
             ClearPeers();
         if(!pending && Time.unscaledTime>=nextPoll)
         {
-            nextPoll=Time.unscaledTime+
-                (otherPlayers>0?ActivePollInterval:EmptyPollInterval);
+            nextPoll=Time.unscaledTime+PollInterval;
             StartCoroutine(Poll(currentHome,sessionId));
         }
     }
@@ -272,10 +275,9 @@ public sealed class HomePresenceClient : MonoBehaviour
         // never continuously with normal movement updates.
         lastSuccess=Time.unscaledTime;
         Apply(answer);
-        // Fast movement only while multiple players share a Home. Alone,
-        // reduce requests substantially without making entry take very long.
-        nextPoll=Time.unscaledTime+
-            (otherPlayers>0?ActivePollInterval:EmptyPollInterval);
+        // Exactly the same 100 ms delay after each successful response as
+        // Open Server when occupied; retain the 1.5 s idle heartbeat alone.
+        nextPoll=Time.unscaledTime+PollInterval;
     }
     private void Apply(PresenceReply response)
     {
