@@ -41,6 +41,8 @@ public sealed class ShopDimensionManager : MonoBehaviour
             gameObject.AddComponent<HomeDirectoryClient>();
         if(GetComponent<HomeDirectoryVisitorUI>()==null)
             gameObject.AddComponent<HomeDirectoryVisitorUI>();
+        if(GetComponent<HomePresenceClient>()==null)
+            gameObject.AddComponent<HomePresenceClient>();
     }
     private void OnDestroy() { if(Instance==this) Instance=null; }
     public bool Near(string id)
