@@ -97,6 +97,13 @@ public sealed class HomeDirectoryClient : MonoBehaviour
         nextSync=Time.unscaledTime+2.5f;
         lastReachability=Application.internetReachability;
     }
+    private static bool ValidOwnerCredential(string credential)
+    {
+        if(string.IsNullOrEmpty(credential)||credential.Length!=64)return false;
+        foreach(char c in credential)
+            if(!((c>='a' && c<='f') || (c>='0' && c<='9')))return false;
+        return true;
+    }
     private static bool ValidHomeIdentity(string code,string credential)
     {
         if(string.IsNullOrEmpty(code)||code.Length!=8 ||
@@ -139,6 +146,41 @@ public sealed class HomeDirectoryClient : MonoBehaviour
         // Save() serializes the entire ledger; fish and aquarium positions are
         // left untouched. Never publish the owner credential in a Home snapshot.
         progress.Save();
+    }
+    private IEnumerator ResolveOwnerHomeCode(Action<bool> done)
+    {
+        // The server compares SHA-256 owner hashes. It cannot reveal a Home
+        // from a public player name or an unauthenticated directory listing.
+        // Recover ONLY when we still hold a complete private owner key.
+        Reply resolved=null;
+        yield return Post("/v1/homes/resolve-owner",
+            new Request{ownerKey=ownerKey},r=>resolved=r);
+        if(resolved!=null && resolved.ok &&
+           ValidHomeIdentity(resolved.code,ownerKey))
+        {
+            string previous=OwnerCode;
+            OwnerCode=resolved.code;
+            PlayerPrefs.SetString(CodePref,OwnerCode);
+            PlayerPrefs.SetString(OwnerKeyPref,ownerKey);
+            PlayerPrefs.Save();
+            lastUploaded=null;
+            OwnerSyncStatus="Recovered verified Home "+DisplayHomeCode+
+                " from Oracle; publishing local aquarium changes.";
+            if(previous!=OwnerCode)
+                Debug.LogWarning("[HOME OWNER] Restored Home code "+
+                    DisplayHomeCode+" using the saved owner credential. "+
+                    "The Home presence session will rejoin the correct code.");
+            Changed?.Invoke();
+            done(true);
+        }
+        else
+        {
+            OwnerSyncStatus="Could not recover a Home from the saved owner key. "+
+                (resolved!=null?resolved.error:"Oracle unavailable.");
+            Debug.LogError("[HOME OWNER] "+OwnerSyncStatus);
+            Changed?.Invoke();
+            done(false);
+        }
     }
     private void OnApplicationPause(bool paused)
     {
@@ -348,14 +390,21 @@ public sealed class HomeDirectoryClient : MonoBehaviour
         // visitors in the old listing and makes both players and tanks stale.
         bool hasCode=!string.IsNullOrEmpty(OwnerCode);
         bool hasKey=!string.IsNullOrEmpty(ownerKey);
-        if(hasCode!=hasKey || hasCode && !ValidHomeIdentity(OwnerCode,ownerKey))
+        if(hasCode && !hasKey || hasKey && !ValidOwnerCredential(ownerKey))
         {
-            OwnerSyncStatus="HOME IDENTITY INCOMPLETE for "+DisplayHomeCode+
+            OwnerSyncStatus="HOME OWNER KEY MISSING/INVALID for "+DisplayHomeCode+
                 ". Existing Home preserved; cloud upload blocked.";
             Status=OwnerSyncStatus;
             Debug.LogError("[HOME OWNER] "+OwnerSyncStatus+
                 " Never uninstall/reset game data while recovering.");
             Retry();yield break;
+        }
+        if(hasKey && !ValidHomeIdentity(OwnerCode,ownerKey))
+        {
+            bool recovered=false;
+            yield return ResolveOwnerHomeCode(ok=>recovered=ok);
+            if(!recovered){Retry();yield break;}
+            hasCode=true;
         }
         if(!hasCode)
         {
@@ -390,6 +439,23 @@ public sealed class HomeDirectoryClient : MonoBehaviour
         if(answer==null || !answer.ok)
         {
             Status=answer!=null?answer.error:"Home synchronization unavailable.";
+            // A valid key may belong to the owner's ORIGINAL Home even if
+            // an old reinstall/partial preferences loss changed the code.
+            // Resolve by authenticated owner hash before treating it as a
+            // permanent upload error; never select a Home by player name.
+            if(ValidOwnerCredential(ownerKey) &&
+               (Status=="Home ownership could not be verified." ||
+                Status=="Home not found or private."))
+            {
+                string attempted=OwnerCode;
+                bool recovered=false;
+                yield return ResolveOwnerHomeCode(ok=>recovered=ok);
+                if(recovered && OwnerCode!=attempted)
+                {
+                    sending=false;dirty=true;
+                    nextSync=Time.unscaledTime;yield break;
+                }
+            }
             OwnerSyncStatus="UPLOAD FAILED for "+DisplayHomeCode+": "+Status;
             // A stale Home can still be visited even though owner-only
             // writes fail. Log code and error, never the private owner key.
