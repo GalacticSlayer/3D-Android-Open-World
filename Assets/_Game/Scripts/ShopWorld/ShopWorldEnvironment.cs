@@ -13,6 +13,9 @@ public sealed class ShopWorldEnvironment : MonoBehaviour
     private readonly Dictionary<string,ShopHabitat> aquariumInstances=new Dictionary<string,ShopHabitat>();
     private readonly Dictionary<string,ShopHabitat> visitorAquariums=new Dictionary<string,ShopHabitat>();
     private ShopHabitat visitorPond;
+    private string movingVisitorTank;
+    private readonly List<Collider> movingTankColliders=new List<Collider>();
+    private readonly List<bool> movingColliderStates=new List<bool>();
 
     private void Start()
     {
@@ -207,8 +210,66 @@ public sealed class ShopWorldEnvironment : MonoBehaviour
         if(pedestal!=null)pedestal.gameObject.SetActive(false);
     }
 
+    // Preview positions are transient and never modify another player's
+    // fish, local ShopProgress ledger, or the published Home snapshot.
+    public void SetVisitorLiveAquariumMove(string key,Vector3 localPosition,float yaw)
+    {
+        if(directory==null || !directory.IsVisiting)return;
+        if(movingVisitorTank!=key)RestoreVisitorMove();
+        if(string.IsNullOrEmpty(key))return;
+        if(!visitorAquariums.TryGetValue(key,out var habitat) || habitat==null)return;
+        if(movingVisitorTank!=key)
+        {
+            movingVisitorTank=key;
+            movingTankColliders.Clear();movingColliderStates.Clear();
+            foreach(var c in habitat.GetComponentsInChildren<Collider>(true))
+            {
+                movingTankColliders.Add(c);
+                movingColliderStates.Add(c.enabled);
+                c.enabled=false;
+            }
+            var agent=habitat.GetComponent<HomeVisitorTank>();
+            if(agent!=null)agent.enabled=false;
+            if(habitat.fishRoot!=null)habitat.fishRoot.gameObject.SetActive(false);
+            if(habitat.water!=null)habitat.water.available=false;
+        }
+        habitat.transform.localPosition=localPosition;
+        habitat.transform.localRotation=Quaternion.Euler(0,yaw,0);
+    }
+
+    private void RestoreVisitorMove()
+    {
+        if(string.IsNullOrEmpty(movingVisitorTank))return;
+        if(visitorAquariums.TryGetValue(movingVisitorTank,out var habitat) && habitat!=null)
+        {
+            if(directory!=null && directory.VisitingHome!=null &&
+               directory.VisitingHome.tanks!=null)
+            foreach(var tank in directory.VisitingHome.tanks)
+                if(tank!=null && tank.key==movingVisitorTank)
+                {
+                    habitat.transform.localPosition=new Vector3(tank.x,tank.y,tank.z);
+                    habitat.transform.localRotation=Quaternion.Euler(0,tank.yaw,0);
+                    break;
+                }
+            for(int i=0;i<movingTankColliders.Count;i++)
+                if(movingTankColliders[i]!=null)
+                    movingTankColliders[i].enabled=movingColliderStates[i];
+            if(habitat.water!=null)
+            {
+                var d=ShopCatalog.Habitat(habitat.id);
+                habitat.water.available=d!=null && d.swimmable;
+            }
+            var agent=habitat.GetComponent<HomeVisitorTank>();
+            if(agent!=null)agent.enabled=true;
+        }
+        movingVisitorTank=null;
+        movingTankColliders.Clear();
+        movingColliderStates.Clear();
+    }
+
     private void ClearVisitorHome()
     {
+        RestoreVisitorMove();
         visitingSnapshot=null;
         if(visitorPond!=null)Destroy(visitorPond.gameObject);
         visitorPond=null;
