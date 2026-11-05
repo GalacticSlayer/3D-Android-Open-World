@@ -675,32 +675,25 @@ public sealed class ShopWorldHUD : MonoBehaviour
     {
         var directory=HomeDirectoryClient.Instance;
         if(travel.InHome && directory!=null && directory.IsVisiting &&
-           directory.VisitingHome!=null && directory.VisitingHome.tanks!=null)
+           directory.VisitingHome!=null)
         {
-            foreach(var remote in directory.VisitingHome.tanks)
+            var home=directory.VisitingHome;
+            if(home.pond!=null && home.pond.id==id)
             {
-                if(remote==null || remote.key!=id)continue;
-                var desc=ShopCatalog.Habitat(remote.id);
-                if(desc==null)return;
-                if(!travel.Near(id))
-                {
-                    Row(desc.name,"Approach this aquarium to view its fish.","HOME",()=>{},false);
-                    return;
-                }
-                Row(desc.name,directory.VisitingHome.name+"'s aquarium • Read-only display",
-                    "VISITING",()=>{},false);
-                int count=remote.fish!=null?remote.fish.Length:0;
-                Row("RESIDENTS",count+" fish currently displayed","VIEW ONLY",()=>{},false);
-                if(remote.fish!=null)foreach(var resident in remote.fish)
-                {
-                    if(resident==null)continue;
-                    string species="Fish";
-                    try{species=FishCatalog.Get(resident.speciesId).Name;}catch{}
-                    Row(species,resident.weightKg.ToString("0.00")+" kg • Aquarium resident",
-                        "VIEW ONLY",()=>{},false);
-                }
+                VisitedHabitatPage(home,home.pond,id);
                 return;
             }
+            if(home.tanks!=null)foreach(var remote in home.tanks)
+            {
+                if(remote==null || remote.key!=id)continue;
+                VisitedHabitatPage(home,remote,id);
+                return;
+            }
+            // Never fall back to the visitor's personal fish/save for a
+            // habitat that doesn't exist in the visited Home.
+            Row("Habitat unavailable","This player does not own that habitat.",
+                "VIEW ONLY",()=>{},false);
+            return;
         }
         var owned=progress.Data.Habitat(id);
         var d=ShopCatalog.Habitat(owned!=null?owned.id:id); if(d==null){TravelPage();return;}
@@ -734,6 +727,33 @@ public sealed class ShopWorldHUD : MonoBehaviour
         foreach(var fish in new List<CaughtFishRecord>(owned.fish))
         {var f=fish;Row(FishCatalog.Get(f.speciesId).Name,$"RESIDENT • {FishCatalog.FormatWeight(f.weightKg)}",progress.Data.BagFull?"BAG FULL":"TO BAG",()=>Result(progress.Withdraw(id,f),"Fish returned to bag."),!progress.ReadOnly && !progress.Data.BagFull,fish:f);}
     }
+    private void VisitedHabitatPage(HomeDirectoryClient.Reply home,
+        HomeDirectoryClient.TankInfo remote,string id)
+    {
+        var definition=ShopCatalog.Habitat(remote.id);
+        if(definition==null)return;
+        string location=definition.pond?"pond":"aquarium";
+        if(!travel.Near(id))
+        {
+            Row(definition.name,"Approach this "+location+" to view its fish.",
+                "VIEW ONLY",()=>{},false);
+            return;
+        }
+        Row(definition.name,home.name+"'s "+location+" • Read-only display",
+            "VISITING",()=>{},false);
+        int count=remote.fish!=null?remote.fish.Length:0;
+        Row("RESIDENTS",count+" fish currently displayed","VIEW ONLY",()=>{},false);
+        if(remote.fish==null)return;
+        foreach(var resident in remote.fish)
+        {
+            if(resident==null)continue;
+            string species="Fish";
+            try{species=FishCatalog.Get(resident.speciesId).Name;}catch{}
+            Row(species,resident.weightKg.ToString("0.00")+" kg • "+location+" resident",
+                "VIEW ONLY",()=>{},false);
+        }
+    }
+
     private void HabitatFishPicker(string id)
     {
         var located=progress.Data.Habitat(id);
