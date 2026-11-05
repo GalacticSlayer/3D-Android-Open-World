@@ -130,7 +130,7 @@ test('visiting Homes include the true pond and all pond fish; no-pond snapshots 
   }finally{rmSync(dir,{recursive:true,force:true})}
 });
 
-test('live Home presence is private to one Home, expires and streams owner tank moves',()=>{
+test('same-Home idle avatars remain visible; fish revision and owner tank moves stay separate',()=>{
   const dir=temp();let now=1000;
   try{
     const api=createHomes({directory:dir,clock:()=>now});
@@ -149,20 +149,49 @@ test('live Home presence is private to one Home, expires and streams owner tank 
     assert.equal(response.players.length,1);
     assert.equal(response.players[0].name,'Owner');
     assert.equal(response.version,1);
+    assert.equal(response.moving,null); // Idle players are full avatars.
+    // Repeated idle polls must not require an aquarium drag to show a player.
+    for(let i=0;i<3;i++)
+    {
+      now+=2000;
+      api.dispatch('/v1/homes/presence',{code:owner.code,
+        session:a,name:'Owner',pose});
+      response=api.dispatch('/v1/homes/presence',{code:owner.code,
+        session:b,name:'Visitor',pose:{...pose,x:4002}});
+      assert.equal(response.players.length,1);
+      assert.equal(response.players[0].name,'Owner');
+      assert.equal(response.players[0].homeCode,owner.code);
+      assert.equal(response.players[0].move,undefined);
+      assert.equal(response.moving,null);
+    }
+    // Fish contents still use one persistent revision, not networked fish
+    // positions. Presence advertises the new version immediately.
+    const changed=api.dispatch('/v1/homes/update',{
+      code:owner.code,ownerKey:owner.ownerKey,
+      name:'Owner',visibility:'public',tanks:[{...tank(),fish:[fish(12),fish(15)]}]});
+    response=api.dispatch('/v1/homes/presence',{code:owner.code,
+      session:b,name:'Visitor',pose});
+    assert.equal(response.version,changed.version);
+    assert.equal(api.dispatch('/v1/homes/get',{code:owner.code}).tanks[0].fish.length,2);
     const move={key:'aq1',x:5,y:0,z:12,yaw:80};
     api.dispatch('/v1/homes/presence',{code:owner.code,session:a,
       name:'Owner',pose,move}); // Owner credential cached, not resent.
     response=api.dispatch('/v1/homes/presence',{code:owner.code,
       session:b,name:'Visitor',pose,move:{...move,x:50}});
-    assert.deepEqual(response.players[0].move,move);
+    assert.deepEqual(response.moving,move);
+    assert.equal(response.players[0].move,undefined);
     response=api.dispatch('/v1/homes/presence',{code:owner.code,
       session:a,name:'Owner',pose});
-    assert.equal(response.players[0].move,null); // Visitor can't move aquariums.
+    assert.deepEqual(response.moving,move); // Visitor can't move aquariums.
+    api.dispatch('/v1/homes/presence',{code:owner.code,
+      session:a,name:'Owner',pose}); // End the owner's aquarium drag.
+    assert.equal(api.dispatch('/v1/homes/presence',{code:owner.code,
+      session:b,name:'Visitor',pose}).moving,null);
     assert.equal(api.dispatch('/v1/homes/get',{code:owner.code}).tanks[0].x,12);
     response=api.dispatch('/v1/homes/presence',{code:second.code,
       session:c,name:'Other Home',pose});
     assert.equal(response.players.length,0); // Same world, different Home.
-    now+=5000;
+    now+=10000;
     response=api.dispatch('/v1/homes/presence',{code:owner.code,
       session:b,name:'Visitor',pose});
     assert.equal(response.players.length,0); // Disconnected owner expired.
