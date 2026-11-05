@@ -342,10 +342,9 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
         });
         settingsVisibility=HeadingAt(target,"",21);
         ButtonAt(target,"PUBLIC • LISTED IN DIRECTORY",()=>directory?.SetVisibility("public"));
-        ButtonAt(target,"UNLISTED • CODE ONLY",()=>directory?.SetVisibility("unlisted"));
-        ButtonAt(target,"PRIVATE • ONLY ME",()=>directory?.SetVisibility("private"));
-        ButtonAt(target,"BACK TO AQUARIUMS",ClosePopup);
+        ButtonAt(target,"PRIVATE ~ CODE ONLY",()=>directory?.SetVisibility("unlisted"));
         UpdateSettingsLabels();
+        TopRightClose();
     }
 
     private string VisibilityLabel()
@@ -398,17 +397,15 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
                 keyboard.numpadEnterKey.wasPressedThisFrame))
                 ConfirmSearch(value);
         });
-        ButtonAt(target,"ENTER / SEARCH",()=>ConfirmSearch(searchField!=null?searchField.text:""));
-        // Preserve access to unlisted Homes by an exact code; those Homes are
-        // intentionally absent from public search results.
-        ButtonAt(target,"VISIT BY HOME CODE",()=>
-        {
-            if(directory==null || searchField==null)return;
-            string code=searchField.text;
-            ClosePopup();
-            directory.Visit(code);
-        });
-        ButtonAt(target,"CANCEL",ClosePopup);
+        ButtonAt(target,"SEARCH",()=>ConfirmSearch(searchField!=null?searchField.text:""));
+        // The same search field handles names and Home codes, including
+        // code-only Homes. There is no separate Visit by Code action.
+        var cancel=ButtonAt(popupRoot.transform,"CANCEL",ClosePopup,8);
+        var rect=cancel.GetComponent<RectTransform>();
+        rect.anchorMin=rect.anchorMax=new Vector2(1f,1f);
+        rect.pivot=new Vector2(1f,1f);
+        rect.anchoredPosition=new Vector2(-17f,-15f);
+        rect.sizeDelta=new Vector2(185f,64f);
         searchField.ActivateInputField();
     }
 
@@ -436,14 +433,15 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
             sortChoiceLabels[i]=option.GetComponentInChildren<Text>();
         }
         UpdateSortLabels();
-        ButtonAt(target,"APPLY SORT",()=>
+        BottomAction("APPLY SORT",true,()=>
         {
             if(directory==null || directory.Busy)return;
             sort=pendingSort;
             ClosePopup();
+            UpdateMainButtonLabels();
             Query(searchQuery);
-        });
-        ButtonAt(target,"CANCEL",ClosePopup);
+        },7);
+        BottomAction("CANCEL",false,ClosePopup,8);
     }
 
     private void UpdateSortLabels()
@@ -488,12 +486,13 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
         return field;
     }
 
-    private Button ButtonAt(Transform parent,string caption,UnityEngine.Events.UnityAction action)
+    private Button ButtonAt(Transform parent,string caption,UnityEngine.Events.UnityAction action,
+        int style=1)
     {
         var go=new GameObject(caption,typeof(RectTransform),typeof(Image),
             typeof(Button),typeof(LayoutElement));
         go.transform.SetParent(parent,false);
-        FishingHudTheme.Panel(go,1);
+        FishingHudTheme.Panel(go,style);
         go.GetComponent<LayoutElement>().preferredHeight=64;
         var button=go.GetComponent<Button>();
         button.targetGraphic=go.GetComponent<Image>();
