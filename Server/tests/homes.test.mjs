@@ -536,6 +536,7 @@ test('HTTP Home endpoints work without opening a room and support >4 KB uploads'
   const healthResponse=await health.json();
   assert.equal(healthResponse.homePresenceProtocol,4);
   assert.equal(healthResponse.homeUploadDiagnostics,true);
+  assert.equal(healthResponse.unityNullPondCompatible,true);
   const created=await send('/v1/homes/register',{name:'Offline Fish'});
   assert.equal(created.ok,true);
   const resolved=await send('/v1/homes/resolve-owner',
