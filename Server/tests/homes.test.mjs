@@ -221,6 +221,95 @@ test('same-Home idle avatars remain visible; fish revision and owner tank moves 
   }finally{rmSync(dir,{recursive:true,force:true})}
 });
 
+test('room-free Home heartbeat sends avatars and only changed aquarium/fish snapshots',()=>{
+  const dir=temp();let now=1000;
+  try{
+    const api=createHomes({directory:dir,clock:()=>now});
+    const owner=api.dispatch('/v1/homes/register',{name:'Home Owner'});
+    const other=api.dispatch('/v1/homes/register',{name:'Different Home'});
+    const meta={code:owner.code,ownerKey:owner.ownerKey,
+      name:'Home Owner',visibility:'public'};
+    const initial={...tank(),x:15,y:0,z:18,yaw:30,fish:[fish(8)]};
+    const first=api.dispatch('/v1/homes/update',
+      {...meta,tanks:[initial],pond:null});
+    api.dispatch('/v1/homes/update',{code:other.code,
+      ownerKey:other.ownerKey,name:'Other',visibility:'public',tanks:[tank()]});
+
+    // No fishing-room token or join/open API is used. These are exactly
+    // Home-specific, compact world-2 client poses.
+    const homePose={world:2,x:4000,y:200,z:4004,yaw:90,
+      heldFishSpecies:-1,heldFishWeight:0,rodTier:7,reelTier:7,
+      swimming:false,sprinting:false,rodEquipped:false,hasFish:false};
+    const a='a'.repeat(32),b='b'.repeat(32),c='c'.repeat(32);
+    let r=api.dispatch('/v1/homes/presence',{
+      code:owner.code,session:a,name:'Owner',ownerKey:owner.ownerKey,
+      pose:homePose,knownVersion:-1,wantSnapshot:false});
+    assert.equal(r.otherCount,0);
+    assert.equal(r.snapshot,null);
+
+    r=api.dispatch('/v1/homes/presence',{
+      code:owner.code,session:b,name:'Visitor',pose:{...homePose,x:4005},
+      knownVersion:-1,wantSnapshot:true});
+    assert.equal(r.otherCount,1);
+    assert.equal(r.players[0].name,'Owner'); // Idle, no tank movement.
+    assert.equal(r.snapshot.version,first.version);
+    assert.equal(r.snapshot.tanks[0].x,15);
+    assert.equal(r.snapshot.tanks[0].fish.length,1);
+    const baseline=r.snapshot.version;
+
+    // No duplicate fish lists/geometry in normal 4Hz presence traffic.
+    for(let i=0;i<5;i++)
+    {
+      now+=250;
+      api.dispatch('/v1/homes/presence',{
+        code:owner.code,session:a,name:'Owner',pose:homePose});
+      r=api.dispatch('/v1/homes/presence',{
+        code:owner.code,session:b,name:'Visitor',pose:homePose,
+        knownVersion:baseline,wantSnapshot:true});
+      assert.equal(r.otherCount,1);
+      assert.equal(r.players[0].name,'Owner');
+      assert.equal(r.snapshot,null);
+    }
+
+    // The owner moved the aquarium while offline: once it reconnects and
+    // publishes its latest saved state, a single heartbeat returns both
+    // final position AND the full fish additions (no extra GET/check).
+    const moved={...initial,x:40,z:36,yaw:150,fish:[fish(8),fish(12)]};
+    const updated=api.dispatch('/v1/homes/update',
+      {...meta,tanks:[moved],pond:{id:'pond',fish:[fish(20)]}});
+    r=api.dispatch('/v1/homes/presence',{
+      code:owner.code,session:b,name:'Visitor',pose:homePose,
+      knownVersion:baseline,wantSnapshot:true});
+    assert.equal(r.version,updated.version);
+    assert.equal(r.snapshot.version,updated.version);
+    assert.equal(r.snapshot.tanks[0].x,40);
+    assert.equal(r.snapshot.tanks[0].z,36);
+    assert.equal(r.snapshot.tanks[0].yaw,150);
+    assert.equal(r.snapshot.tanks[0].fish.length,2);
+    assert.equal(r.snapshot.pond.fish.length,1);
+    assert.equal(r.players[0].name,'Owner');
+
+    const reduced={...moved,fish:[fish(12)]};
+    const removed=api.dispatch('/v1/homes/update',
+      {...meta,tanks:[reduced],pond:{id:'pond',fish:[]}});
+    r=api.dispatch('/v1/homes/presence',{
+      code:owner.code,session:b,name:'Visitor',pose:homePose,
+      knownVersion:updated.version,wantSnapshot:true});
+    assert.equal(r.snapshot.version,removed.version);
+    assert.equal(r.snapshot.tanks[0].fish.length,1);
+    assert.equal(r.snapshot.tanks[0].x,40);
+    assert.equal(r.snapshot.pond.fish.length,0);
+
+    // Other Homes are separate even if both Unity worlds share coordinates.
+    r=api.dispatch('/v1/homes/presence',{
+      code:other.code,session:c,name:'Other',pose:homePose,
+      knownVersion:0,wantSnapshot:true});
+    assert.equal(r.otherCount,0);
+    assert.equal(r.players.length,0);
+    assert.equal(r.snapshot.tanks.length,1);
+  }finally{rmSync(dir,{recursive:true,force:true})}
+});
+
 test('completed aquarium positions and fish changes survive repeated visits and server restart',()=>{
   const dir=temp();
   try{
