@@ -195,17 +195,41 @@ public sealed class HomeDirectoryClient : MonoBehaviour
     }
     private IEnumerator DownloadList(string query,int page,string sort)
     {
-        Busy=true;Changed?.Invoke();
+        // A fresh search/sort begins at page zero; subsequent pages append to
+        // the existing list so the HUD can scroll continuously without paging UI.
+        Busy=true;
+        if(page==0)
+        {
+            Listings=new HomeInfo[0];
+            ListingPage=0;
+            TotalListings=0;
+            MoreListings=false;
+        }
+        Changed?.Invoke();
         Reply answer=null;
         yield return Post("/v1/homes/list",new Request{query=query,page=page,sort=sort,excludeCode=OwnerCode},r=>answer=r);
         Busy=false;
         if(answer!=null&&answer.ok)
         {
-            Listings=answer.homes??new HomeInfo[0];
+            var incoming=answer.homes??new HomeInfo[0];
+            if(page>0)
+            {
+                var combined=new HomeInfo[Listings.Length+incoming.Length];
+                Array.Copy(Listings,combined,Listings.Length);
+                Array.Copy(incoming,0,combined,Listings.Length,incoming.Length);
+                Listings=combined;
+            }
+            else Listings=incoming;
             ListingPage=answer.page;TotalListings=answer.total;MoreListings=answer.more;
             Status=TotalListings+" public Homes";
         }
-        else Status=answer!=null?answer.error:"Could not load public Homes.";
+        else
+        {
+            // Do not automatically repeat a failed page while the user remains
+            // scrolled to the bottom; allow another browse/search to retry.
+            MoreListings=false;
+            Status=answer!=null?answer.error:"Could not load public Homes.";
+        }
         Changed?.Invoke();
     }
     public void Visit(string code)
