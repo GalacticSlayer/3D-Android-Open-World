@@ -17,6 +17,7 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
     private Text status, settingsCode, settingsVisibility;
     private InputField searchField;
     private GameObject popupRoot, emptyNotice;
+    private Transform popupContent;
     private PopupMode popupMode;
     private readonly Text[] sortChoiceLabels=new Text[3];
     private static readonly string[] SortKeys={"recent","fish","biggest"};
@@ -121,11 +122,14 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
     private void Refresh()
     {
         if(directory==null || results==null)return;
-        bool showStatus=directory.Busy;
-        // The directory's general synchronization status is separate from this
-        // browsing UI; do not fill the page with duplicate labels.
-        status.text=directory.Busy?"LOADING HOMES...":"";
-        status.gameObject.SetActive(showStatus);
+        // Only show request progress or errors, not general sync metadata.
+        string note=directory.Status??"";
+        bool error=!directory.Busy &&
+            (note.Contains("Could not") || note.Contains("Cannot contact") ||
+             note.Contains("unavailable") || note.Contains("Home not found") ||
+             note.Contains("This is your Home"));
+        status.text=directory.Busy?"LOADING HOMES...":error?note:"";
+        status.gameObject.SetActive(directory.Busy || error);
         UpdateSettingsLabels();
         AppendResults();
     }
@@ -190,18 +194,42 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
         ClosePopup();
         popupMode=kind;
         popupRoot=new GameObject("Aquarium "+kind+" Popup",typeof(RectTransform),
-            typeof(Image),typeof(VerticalLayoutGroup));
+            typeof(Image));
         popupRoot.transform.SetParent(overlayParent,false);
         var rect=popupRoot.GetComponent<RectTransform>();
         rect.anchorMin=new Vector2(.17f,.14f);
         rect.anchorMax=new Vector2(.83f,.87f);
         rect.offsetMin=rect.offsetMax=Vector2.zero;
         FishingHudTheme.Panel(popupRoot);
-        var group=popupRoot.GetComponent<VerticalLayoutGroup>();
-        group.padding=new RectOffset(22,22,16,16);
+
+        // Settings contain several controls. Keep the lower buttons reachable
+        // on shorter Android displays rather than clipping their layout.
+        var viewport=new GameObject("Popup Scroll View",typeof(RectTransform),
+            typeof(Image),typeof(RectMask2D),typeof(ScrollRect));
+        viewport.transform.SetParent(popupRoot.transform,false);
+        var vr=viewport.GetComponent<RectTransform>();
+        vr.anchorMin=Vector2.zero;vr.anchorMax=Vector2.one;
+        vr.offsetMin=new Vector2(18,15);vr.offsetMax=new Vector2(-18,-15);
+        var background=viewport.GetComponent<Image>();
+        background.color=Color.clear;background.raycastTarget=true;
+        var content=new GameObject("Popup Rows",typeof(RectTransform),
+            typeof(VerticalLayoutGroup),typeof(ContentSizeFitter));
+        content.transform.SetParent(viewport.transform,false);
+        popupContent=content.transform;
+        var cr=content.GetComponent<RectTransform>();
+        cr.anchorMin=new Vector2(0,1);cr.anchorMax=Vector2.one;
+        cr.pivot=new Vector2(.5f,1);
+        cr.sizeDelta=Vector2.zero;
+        var group=content.GetComponent<VerticalLayoutGroup>();
+        group.padding=new RectOffset(6,6,6,6);
         group.spacing=7;
         group.childControlHeight=true;group.childControlWidth=true;
         group.childForceExpandHeight=false;group.childForceExpandWidth=true;
+        content.GetComponent<ContentSizeFitter>().verticalFit=ContentSizeFitter.FitMode.PreferredSize;
+        var popupScroll=viewport.GetComponent<ScrollRect>();
+        popupScroll.viewport=vr;popupScroll.content=cr;
+        popupScroll.horizontal=false;popupScroll.scrollSensitivity=38;
+        popupScroll.movementType=ScrollRect.MovementType.Clamped;
         switch(kind)
         {
             case PopupMode.Settings: BuildSettingsPopup();break;
@@ -214,6 +242,7 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
     private void ClosePopup()
     {
         popupMode=PopupMode.None;
+        popupContent=null;
         searchField=null;
         settingsCode=null;
         settingsVisibility=null;
@@ -228,7 +257,7 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
 
     private void BuildSettingsPopup()
     {
-        var target=popupRoot.transform;
+        var target=popupContent;
         HeadingAt(target,"AQUARIUM SETTINGS",32);
         HeadingAt(target,"MY HOME CODE",25);
         settingsCode=HeadingAt(target,"",28);
@@ -256,7 +285,7 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
 
     private void BuildSearchPopup()
     {
-        var target=popupRoot.transform;
+        var target=popupContent;
         HeadingAt(target,"SEARCH PLAYER HOMES",32);
         searchField=Field(target,"Player name or Home code",40);
         searchField.text=searchQuery;
@@ -295,7 +324,7 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
 
     private void BuildSortPopup()
     {
-        var target=popupRoot.transform;
+        var target=popupContent;
         pendingSort=sort;
         HeadingAt(target,"SORT PLAYER HOMES",32);
         for(int i=0;i<SortKeys.Length;i++)
