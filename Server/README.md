@@ -256,8 +256,11 @@ Server API on existing TCP 3001:
 Active players sharing the same Home code are visible to one another without
 opening a fishing room. The Unity Home client automatically starts a separate
 session when the player enters Home, sending only a compact Home-specific pose.
-Active Homes poll at approximately four times per second; an empty Home polls
-less frequently. When visiting, each heartbeat supplies the viewer's
+When at least two players share a Home, its room-free presence channel uses
+the same 100 ms (nominal 10 Hz) post-response polling delay and the same
+FishingRemotePlayer interpolation as Open Server. An empty Home keeps its
+1.5-second heartbeat to minimize traffic. When visiting, each heartbeat
+supplies the viewer's
 `knownVersion` and `wantSnapshot`: the server includes the complete aquarium
 layout, pond and fish lists ONLY if the published version has changed.
 The resulting snapshot is applied read-only and all fish movement remains local.
