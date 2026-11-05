@@ -162,7 +162,9 @@ public sealed class HomePresenceClient : MonoBehaviour
         var request=new PresenceRequest{
             code=code,session=id,
             name=multiplayer!=null?multiplayer.PlayerName:"Angler",
-            pose=multiplayer!=null?multiplayer.LocalPose():null
+            // Home presence is visual-only, so use the locally equipped
+            // rod tier instead of the fishing-room compatibility downgrade.
+            pose=multiplayer!=null?multiplayer.LocalPose(forLocalPresentation:true):null
         };
         if(!authorized && directory!=null && !directory.IsVisiting)
             request.ownerKey=directory.OwnerCredential;
