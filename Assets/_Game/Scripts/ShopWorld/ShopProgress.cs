@@ -202,8 +202,22 @@ public sealed class ShopProgress : MonoBehaviour
     public bool CanManage => !ReadOnly && ShopDimensionManager.Instance!=null &&
         ShopDimensionManager.Instance.InHome &&
         (HomeDirectoryClient.Instance==null || !HomeDirectoryClient.Instance.IsVisiting);
-    public bool Deposit(string id,CaughtFishRecord fish) => CanManage && ShopDimensionManager.Instance.Near(id) && Commit(Data.Deposit(id,fish));
-    public bool Withdraw(string id,CaughtFishRecord fish) => CanManage && ShopDimensionManager.Instance.Near(id) && Commit(Data.Withdraw(id,fish));
+    public bool Deposit(string id,CaughtFishRecord fish)
+    {
+        if(!CanManage || !ShopDimensionManager.Instance.Near(id) ||
+           !Commit(Data.Deposit(id,fish)))return false;
+        // Only a completed fish transfer triggers a live snapshot upload.
+        // Save() already queued the normal update if the Home is empty.
+        HomeDirectoryClient.Instance?.NotifyHabitatFishChanged();
+        return true;
+    }
+    public bool Withdraw(string id,CaughtFishRecord fish)
+    {
+        if(!CanManage || !ShopDimensionManager.Instance.Near(id) ||
+           !Commit(Data.Withdraw(id,fish)))return false;
+        HomeDirectoryClient.Instance?.NotifyHabitatFishChanged();
+        return true;
+    }
     public int TakeBait()
     {
         if(ReadOnly) return 0;
