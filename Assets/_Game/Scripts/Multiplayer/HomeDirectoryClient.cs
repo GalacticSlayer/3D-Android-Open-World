@@ -149,7 +149,7 @@ public sealed class HomeDirectoryClient : MonoBehaviour
     {
         if(progress==null || progress.ReadOnly)return;
         dirty=true;
-        nextSync=Time.unscaledTime+.35f;
+        nextSync=Time.unscaledTime+(LiveGuestsAtMyHome?0.05f:0.35f);
     }
 
     // Live presence carries only a version number; a full fish/tank snapshot
