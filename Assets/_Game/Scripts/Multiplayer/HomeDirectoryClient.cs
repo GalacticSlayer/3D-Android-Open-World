@@ -208,6 +208,29 @@ public sealed class HomeDirectoryClient : MonoBehaviour
         Changed?.Invoke();
         Reply answer=null;
         yield return Post("/v1/homes/list",new Request{query=query,page=page,sort=sort,excludeCode=OwnerCode},r=>answer=r);
+
+        // Exact codes also find Unlisted (PRIVATE ~ CODE ONLY) Homes. They are
+        // never exposed through the public listing/search endpoint, so make
+        // one read-only lookup only if a normal search returned no matches.
+        // Checking the public directory FIRST also avoids confusing an
+        // eight-letter player name with a Home code.
+        string code=ExtractHomeCode(query);
+        if(page==0 && answer!=null && answer.ok && answer.total==0 &&
+           code!=null && !string.Equals(code,OwnerCode,StringComparison.OrdinalIgnoreCase))
+        {
+            Reply byCode=null;
+            yield return Post("/v1/homes/get",new Request{code=code},r=>byCode=r);
+            if(byCode!=null && byCode.ok)
+            {
+                answer.homes=new[]{new HomeInfo{
+                    code=byCode.code,name=byCode.name,visibility=byCode.visibility,
+                    updatedAt=byCode.updatedAt,version=byCode.version,
+                    aquariums=byCode.aquariums,fish=byCode.fish,biggest=byCode.biggest}};
+                answer.total=1;
+                answer.more=false;
+            }
+        }
+
         Busy=false;
         if(answer!=null&&answer.ok)
         {
@@ -232,6 +255,20 @@ public sealed class HomeDirectoryClient : MonoBehaviour
         }
         Changed?.Invoke();
     }
+    // Format matches the server's eight-character unambiguous Home IDs.
+    // Users may enter either WQKB-Y5ZF or WQKBY5ZF.
+    private static string ExtractHomeCode(string query)
+    {
+        if(string.IsNullOrEmpty(query))return null;
+        string code=query.Replace("-","").Replace(" ","").Trim().ToUpperInvariant();
+        if(code.Length!=8)return null;
+        foreach(char c in code)
+            if(!((c>='A' && c<='H') || (c>='J' && c<='N') ||
+                 (c>='P' && c<='Z') || (c>='2' && c<='9')))
+                return null;
+        return code;
+    }
+
     public void Visit(string code)
     {
         if(Busy || travel==null || travel.Traveling ||
