@@ -21,7 +21,7 @@ public sealed class HomePresenceClient : MonoBehaviour
         public string code,session,name,ownerKey;
         public bool leave;
         public FishingMultiplayer.Pose pose;
-        public AquariumMove move;
+        public AquariumMove move,placed;
     }
     [Serializable] private sealed class PresenceReply
     {
@@ -31,7 +31,7 @@ public sealed class HomePresenceClient : MonoBehaviour
         // Use the exact same peer model as FishingMultiplayer.Reply; Home
         // presence must not rely on a special subclass or moving tank data.
         public FishingMultiplayer.Peer[] players;
-        public AquariumMove moving;
+        public AquariumMove moving,placed;
     }
 
     public static HomePresenceClient Instance { get; private set; }
@@ -43,14 +43,27 @@ public sealed class HomePresenceClient : MonoBehaviour
     private FishingMultiplayer multiplayer;
     private FirstPersonController player;
     private string currentHome,sessionId;
-    private AquariumMove lastMoving;
-    private float lastMoveSeen;
+    private AquariumMove lastMoving,recentlyPlaced;
+    private float lastMoveSeen,placedUntil;
     private float nextPoll,lastSuccess;
     private bool pending,authorized,quitting;
     private int otherPlayers;
     private const float ActivePollInterval=.25f;
     private const float EmptyPollInterval=1.5f;
     private const float PresenceTimeout=10f;
+    // Repeat a tiny commit notification while the server saves the owner's
+    // permanent snapshot. The visitor pins it until that revision arrives.
+    private const float PlacementAnnouncementSeconds=12f;
+
+    public void AnnounceAquariumPlacement(string key,Vector3 position,float yaw)
+    {
+        if(directory==null || directory.IsVisiting ||
+           travel==null || !travel.InHome || string.IsNullOrEmpty(key))return;
+        recentlyPlaced=new AquariumMove{key=key,x=position.x,y=position.y,
+            z=position.z,yaw=yaw};
+        placedUntil=Time.unscaledTime+PlacementAnnouncementSeconds;
+        nextPoll=Time.unscaledTime;
+    }
 
     // The owner's aquarium fish changes use the fast path ONLY while at
     // least one actual guest is present in this same Home.
@@ -118,6 +131,8 @@ public sealed class HomePresenceClient : MonoBehaviour
         currentHome=code;
         otherPlayers=0;
         lastMoving=null;
+        recentlyPlaced=null;
+        placedUntil=0f;
         sessionId=Guid.NewGuid().ToString("N");
         authorized=false;
         lastSuccess=0f;pending=false;
@@ -141,8 +156,17 @@ public sealed class HomePresenceClient : MonoBehaviour
             request.ownerKey=directory.OwnerCredential;
         if(directory!=null && !directory.IsVisiting && placement!=null &&
            placement.TryGetMovingAquarium(out string key,out Vector3 position,out float yaw))
+        {
             request.move=new AquariumMove{key=key,x=position.x,y=position.y,
                 z=position.z,yaw=yaw};
+            // Beginning another drag supersedes any announcement about this
+            // same aquarium's previous placement.
+            if(recentlyPlaced!=null && recentlyPlaced.key==key)
+                recentlyPlaced=null;
+        }
+        if(recentlyPlaced!=null && Time.unscaledTime<placedUntil)
+            request.placed=recentlyPlaced;
+        else recentlyPlaced=null;
 
         PresenceReply answer=null;
         yield return Post(request,r=>answer=r);
@@ -221,10 +245,22 @@ public sealed class HomePresenceClient : MonoBehaviour
         if(directory!=null && directory.IsVisiting &&
            travel!=null && travel.World!=null)
         {
+            var world=travel.World;
+            if(response.placed!=null)
+            {
+                var placed=response.placed;
+                world.CommitVisitorLiveAquariumPlacement(placed.key,
+                    new Vector3(placed.x,placed.y,placed.z),placed.yaw);
+                if(lastMoving!=null && lastMoving.key==placed.key)
+                {
+                    lastMoving=null;
+                    moving=null; // A confirmed placement ends that drag.
+                }
+            }
             if(moving!=null)
-                travel.World.SetVisitorLiveAquariumMove(moving.key,
+                world.SetVisitorLiveAquariumMove(moving.key,
                     new Vector3(moving.x,moving.y,moving.z),moving.yaw);
-            else travel.World.SetVisitorLiveAquariumMove(null,Vector3.zero,0);
+            else world.SetVisitorLiveAquariumMove(null,Vector3.zero,0);
         }
     }
     private void ClearPeers()
