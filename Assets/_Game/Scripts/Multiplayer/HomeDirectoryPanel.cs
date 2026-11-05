@@ -35,7 +35,10 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
         var panel=go.AddComponent<HomeDirectoryPanel>();
         panel.directory=HomeDirectoryClient.Instance;
         panel.scroll=parent.GetComponentInParent<ScrollRect>();
-        panel.overlayParent=panel.scroll!=null?panel.scroll.transform.parent:parent;
+        // Overlay the entire HUD canvas (not just its inset content frame)
+        // so tapping ANYWHERE outside the popup dismisses it.
+        panel.overlayParent=panel.scroll!=null && panel.scroll.transform.parent!=null
+            ?panel.scroll.transform.parent.parent:parent;
         panel.BuildUi();
     }
 
