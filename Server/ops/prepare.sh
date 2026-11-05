@@ -4,10 +4,20 @@ export GIT_TERMINAL_PROMPT=0
 base=/opt/fishing-server
 export npm_config_cache="$base/npm-cache"
 repo="$base/source"
+# This is the game repository that owns main and its deployed Home APIs.
+# Do not follow the original upstream fork: those commits lag behind this project.
+source_url="https://github.com/GalacticSlayer/3D-Android-Open-World.git"
 if [[ ! -d "$repo/.git" ]]; then
   git clone --depth=1 --filter=blob:none --single-branch --branch main --no-checkout \
-    https://github.com/EthanL1245/3D-Android-Open-World.git "$repo" >&2
+    "$source_url" "$repo" >&2
   git -C "$repo" sparse-checkout set --no-cone /Server/runtime/ >&2
+else
+  # Repair older installations whose origin still points at EthanL1245.
+  current_url=$(git -C "$repo" remote get-url origin)
+  if [[ "$current_url" != "$source_url" ]]; then
+    git -C "$repo" remote set-url origin "$source_url"
+    echo "Updated fishing server source to GalacticSlayer main" >&2
+  fi
 fi
 git -C "$repo" fetch --depth=1 origin main >&2
 revision=$(git -C "$repo" rev-parse FETCH_HEAD)
