@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
 
 // Public Homes are the primary content of this page. Search, sort and the
 // player's own Home settings open as temporary overlays instead of taking up
@@ -264,8 +265,10 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
         // SEARCH does the same on a touchscreen.
         searchField.onEndEdit.AddListener(value=>
         {
-            if(popupMode==PopupMode.Search &&
-               (Input.GetKey(KeyCode.Return) || Input.GetKey(KeyCode.KeypadEnter)))
+            var keyboard=Keyboard.current;
+            if(popupMode==PopupMode.Search && keyboard!=null &&
+               (keyboard.enterKey.wasPressedThisFrame ||
+                keyboard.numpadEnterKey.wasPressedThisFrame))
                 ConfirmSearch(value);
         });
         ButtonAt(target,"ENTER / SEARCH",()=>ConfirmSearch(searchField!=null?searchField.text:""));
