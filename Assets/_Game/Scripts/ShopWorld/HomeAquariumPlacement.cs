@@ -54,6 +54,17 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         if(boxMaterial!=null)Destroy(boxMaterial);
         if(storageSignMaterial!=null)Destroy(storageSignMaterial);
     }
+    // A brief, read-only position sample for people visiting this Home live.
+    // No fish data or permanent save state is streamed during a drag.
+    public bool TryGetMovingAquarium(out string key,out Vector3 localPosition,out float yaw)
+    {
+        key=pendingKey;
+        localPosition=localTarget;
+        yaw=localYaw;
+        return AtHome && IsPlacing && ghost!=null &&
+            !string.IsNullOrEmpty(key) && hiddenSource!=null;
+    }
+
     private bool AtHome => travel!=null && travel.InHome && !travel.Traveling &&
         travel.World!=null && progress!=null && !progress.ReadOnly &&
         (HomeDirectoryClient.Instance==null || !HomeDirectoryClient.Instance.IsVisiting);
@@ -202,6 +213,7 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
            transform.position.y>aquarium.transform.position.y+.4f)return;
 
         if(!progress.StoreAquarium(aquarium.instanceKey))return;
+        HomeDirectoryClient.Instance?.NotifyAquariumPositionCommitted();
         ShopActionAudio.Play(this,ShopActionAudio.Cue.AquariumStored);
         nearest=null;
         moveToStorageButton.gameObject.SetActive(false);
@@ -470,6 +482,7 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         if(!valid || !CanPlace())return; // Always recheck at the moment of purchase.
         if(!progress.PlaceAquarium(pendingKey,localTarget.x,localTarget.y,localTarget.z,localYaw))
             return;
+        HomeDirectoryClient.Instance?.NotifyAquariumPositionCommitted();
         ShopActionAudio.Play(this,ShopActionAudio.Cue.AquariumPlaced);
         CancelPlacement();
     }
