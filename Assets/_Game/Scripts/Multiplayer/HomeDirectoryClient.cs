@@ -108,6 +108,15 @@ public sealed class HomeDirectoryClient : MonoBehaviour
         nextSync=Time.unscaledTime+.05f;
     }
 
+    public void NotifyPresenceUnavailable()
+    {
+        // Older Oracle releases might still serve the saved-Home API even if
+        // /presence is missing. Continue retrieving the owner's real saved
+        // aquarium and fish revisions rather than leaving a guest frozen.
+        if(VisitingHome!=null && travel!=null && travel.InHome)
+            nextVisitPoll=Mathf.Min(nextVisitPoll,Time.unscaledTime+2f);
+    }
+
     // Placement is visually shared during the drag; commit the new permanent
     // layout quickly when the owner presses PLACE or MOVE TO STORAGE.
     public void NotifyAquariumPositionCommitted()
@@ -210,7 +219,13 @@ public sealed class HomeDirectoryClient : MonoBehaviour
         }
         if(visitEntered && Time.unscaledTime>=nextVisitPoll && activeDownloads==0)
         {
-            nextVisitPoll=Time.unscaledTime+10f;
+            var presence=HomePresenceClient.Instance;
+            bool liveUnavailable=presence!=null &&
+                !string.IsNullOrEmpty(presence.LiveConnectionError);
+            // Normal alone/offline behavior is still one check per 10s.
+            // Only an actual live-presence API failure enables this 2s
+            // fallback for saved aquarium/fish snapshots.
+            nextVisitPoll=Time.unscaledTime+(liveUnavailable?2f:10f);
             StartCoroutine(CheckVisitingHome());
         }
     }
