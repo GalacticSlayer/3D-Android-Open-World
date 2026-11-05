@@ -23,7 +23,7 @@ public sealed class HomeDirectoryVisitorUI : MonoBehaviour
         scaler.uiScaleMode=CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution=new Vector2(1920,1080);
         scaler.matchWidthOrHeight=.5f;
-        var button=new GameObject("Return To My Home",typeof(RectTransform),
+        var button=new GameObject("Return Home",typeof(RectTransform),
             typeof(Image),typeof(Button));
         button.transform.SetParent(go.transform,false);
         var rect=button.GetComponent<RectTransform>();
@@ -42,7 +42,7 @@ public sealed class HomeDirectoryVisitorUI : MonoBehaviour
         label.transform.SetParent(button.transform,false);
         var text=label.GetComponent<Text>();
         text.font=Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        text.text="RETURN TO MY HOME";text.fontSize=29;
+        text.text="RETURN HOME";text.fontSize=29;
         text.color=Color.white;text.alignment=TextAnchor.MiddleCenter;
         text.raycastTarget=false;
         var t=label.GetComponent<RectTransform>();
