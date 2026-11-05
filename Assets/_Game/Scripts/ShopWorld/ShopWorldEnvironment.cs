@@ -12,6 +12,7 @@ public sealed class ShopWorldEnvironment : MonoBehaviour
     private HomeDirectoryClient directory;
     private readonly Dictionary<string,ShopHabitat> aquariumInstances=new Dictionary<string,ShopHabitat>();
     private readonly Dictionary<string,ShopHabitat> visitorAquariums=new Dictionary<string,ShopHabitat>();
+    private ShopHabitat visitorPond;
 
     private void Start()
     {
@@ -37,7 +38,13 @@ public sealed class ShopWorldEnvironment : MonoBehaviour
             var definition=ShopCatalog.Habitat(h.id);
             if(definition==null)continue;
             if(definition.pond)h.gameObject.SetActive(!visiting && progress.Data.Habitat(h.id)!=null);
-            else h.gameObject.SetActive(false);
+            else
+            {
+                // Home aquariums have no sign or pedestal. The shop displays and
+                // the separate storage-box sign are unaffected.
+                HideHomeAquariumSign(h);
+                h.gameObject.SetActive(false);
+            }
         }
         if(visiting)
         {
@@ -65,6 +72,7 @@ public sealed class ShopWorldEnvironment : MonoBehaviour
                     clone.name=definition.name+" ["+ownership.instanceKey+"]";
                     instance=clone.GetComponent<ShopHabitat>();
                     instance.instanceKey=ownership.instanceKey;
+                    HideHomeAquariumSign(instance);
                     aquariumInstances[ownership.instanceKey]=instance;
                     clone.transform.localPosition=new Vector3(ownership.localX,ownership.localY,ownership.localZ);
                     clone.transform.localRotation=Quaternion.Euler(0,ownership.yaw,0);
@@ -72,6 +80,7 @@ public sealed class ShopWorldEnvironment : MonoBehaviour
                 }
                 else
                 {
+                    HideHomeAquariumSign(instance);
                     instance.transform.localPosition=new Vector3(ownership.localX,ownership.localY,ownership.localZ);
                     instance.transform.localRotation=Quaternion.Euler(0,ownership.yaw,0);
                     if(!instance.gameObject.activeSelf &&
@@ -86,7 +95,13 @@ public sealed class ShopWorldEnvironment : MonoBehaviour
                 aquariumInstances.Remove(key);
             }
         }
-        if(emptyPondCover!=null)emptyPondCover.SetActive(!visiting && progress.Data.CurrentHabitat(true)==null);
+        // A Home with no pond must have walkable garden ground, including when
+        // visiting a player who never bought one. Previously this was always
+        // disabled for visitors, leaving the foundation hole exposed.
+        bool hasPond=visiting
+            ? directory.VisitingHome!=null && directory.VisitingHome.pond!=null
+            : progress.Data.CurrentHabitat(true)!=null;
+        if(emptyPondCover!=null)emptyPondCover.SetActive(!hasPond);
     }
     private string visitingSnapshot;
     private void RenderVisitorHome(HomeDirectoryClient.Reply snapshot)
@@ -97,6 +112,7 @@ public sealed class ShopWorldEnvironment : MonoBehaviour
         if(visitingSnapshot==key)return;
         ClearVisitorHome();
         visitingSnapshot=key;
+        RenderVisitorPond(snapshot.pond);
         foreach(var tank in snapshot.tanks)
         {
             if(tank==null || visitorAquariums.ContainsKey(tank.key))continue;
@@ -112,18 +128,14 @@ public sealed class ShopWorldEnvironment : MonoBehaviour
             var habitat=clone.GetComponent<ShopHabitat>();
             habitat.instanceKey=tank.key;
             habitat.enabled=false; // Never bind another player's fish to our save.
+            HideHomeAquariumSign(habitat);
             if(d.swimmable && clone.GetComponent<AquariumAccessStyle>()==null)
                 clone.AddComponent<AquariumAccessStyle>();
             if(habitat.water!=null)habitat.water.available=d.swimmable;
-            if(habitat.purchaseBarrier!=null)habitat.purchaseBarrier.enabled=false;
-            if(habitat.label!=null)
-            {
-                habitat.label.text=d.name.ToUpperInvariant()+"  ["+tank.key.ToUpperInvariant()+"]\n"+
-                    snapshot.name.ToUpperInvariant()+"'S HOME  |  "+
-                    (tank.fish!=null?tank.fish.Length:0)+" FISH";
-                var sign=habitat.label.GetComponent<ShopSign>();
-                if(sign!=null)sign.Fit();
-            }
+            // Nano / Reef are NOT swimmable. Restore the invisible solid top,
+            // exactly as on the owner's purchased aquarium.
+            if(habitat.purchaseBarrier!=null)
+                habitat.purchaseBarrier.enabled=!d.swimmable;
             if(habitat.fishRoot!=null)habitat.fishRoot.gameObject.SetActive(false);
             var fish=clone.AddComponent<HomeVisitorTank>();
             fish.Configure(habitat,tank,progress.transform);
@@ -131,15 +143,49 @@ public sealed class ShopWorldEnvironment : MonoBehaviour
             clone.SetActive(true);
         }
     }
+    private void RenderVisitorPond(HomeDirectoryClient.TankInfo pond)
+    {
+        if(pond==null)return; // Missing in older snapshots means no pond.
+        var definition=ShopCatalog.Habitat(pond.id);
+        var template=Template(pond.id);
+        if(definition==null || !definition.pond || template==null)return;
+        var clone=Instantiate(template.gameObject,transform,false);
+        foreach(var part in clone.GetComponentsInChildren<Transform>(true))
+            part.gameObject.isStatic=false;
+        clone.name="Visited Home Pond - "+definition.name;
+        var habitat=clone.GetComponent<ShopHabitat>();
+        habitat.enabled=false; // Prevent binding to the visitor's own save.
+        if(habitat.water!=null)habitat.water.available=true;
+        if(habitat.purchaseBarrier!=null)habitat.purchaseBarrier.enabled=false;
+        if(habitat.fishRoot!=null)habitat.fishRoot.gameObject.SetActive(false);
+        var fish=clone.AddComponent<HomeVisitorTank>();
+        fish.Configure(habitat,pond,progress.transform);
+        visitorPond=habitat;
+        clone.SetActive(true);
+    }
+
+    private static void HideHomeAquariumSign(ShopHabitat habitat)
+    {
+        if(habitat==null)return;
+        var definition=ShopCatalog.Habitat(habitat.id);
+        if(definition==null || definition.pond)return;
+        if(habitat.label!=null)habitat.label.gameObject.SetActive(false);
+        var pedestal=habitat.transform.Find("SignPedestal");
+        if(pedestal!=null)pedestal.gameObject.SetActive(false);
+    }
+
     private void ClearVisitorHome()
     {
         visitingSnapshot=null;
+        if(visitorPond!=null)Destroy(visitorPond.gameObject);
+        visitorPond=null;
         foreach(var h in visitorAquariums.Values)
             if(h!=null)Destroy(h.gameObject);
         visitorAquariums.Clear();
     }
     public ShopHabitat VisitorTank(string key)
     {
+        if(visitorPond!=null && visitorPond.id==key)return visitorPond;
         return visitorAquariums.TryGetValue(key,out var h)?h:null;
     }
 
@@ -154,9 +200,13 @@ public sealed class ShopWorldEnvironment : MonoBehaviour
             if(h!=null && h.gameObject.activeInHierarchy)yield return h;
         foreach(var h in visitorAquariums.Values)
             if(h!=null && h.gameObject.activeInHierarchy)yield return h;
+        if(visitorPond!=null && visitorPond.gameObject.activeInHierarchy)
+            yield return visitorPond;
     }
     public ShopHabitat Habitat(string id)
     {
+        if(visitorPond!=null && visitorPond.id==id &&
+           visitorPond.gameObject.activeInHierarchy)return visitorPond;
         if(!string.IsNullOrEmpty(id) && visitorAquariums.TryGetValue(id,out var guest) &&
            guest!=null && guest.gameObject.activeInHierarchy)return guest;
         if(!string.IsNullOrEmpty(id) && aquariumInstances.TryGetValue(id,out var exact) &&
