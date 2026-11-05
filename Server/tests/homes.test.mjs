@@ -7,7 +7,7 @@ import {createHomes} from '../runtime/homes.mjs';
 import {createSessionServer} from '../runtime/sessions.mjs';
 
 const temp=()=>mkdtempSync(join(tmpdir(),'aquarium-homes-test-'));
-const fish=(kg=12)=>({speciesId:8,biomeId:0,weightKg:kg});
+const fish=(kg=12)=>({speciesId:8,biomeId:'suncrest',weightKg:kg});
 const tank=(key='aq1',weight=12)=>({
   key,id:'reef',x:12,y:0,z:22,yaw:90,fish:[fish(weight)]
 });
