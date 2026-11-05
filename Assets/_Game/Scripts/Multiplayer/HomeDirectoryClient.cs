@@ -113,6 +113,10 @@ public sealed class HomeDirectoryClient : MonoBehaviour
            snapshot.code!=VisitingHome.code ||
            snapshot.version<=VisitingHome.version)return;
         VisitingHome=snapshot;
+        Debug.Log("[HOME SNAPSHOT] Updated "+snapshot.code+
+            " to version "+snapshot.version+
+            " with "+(snapshot.tanks!=null?snapshot.tanks.Length:0)+
+            " aquariums and "+snapshot.fish+" fish.");
         nextVisitPoll=Time.unscaledTime+30f;
         if(travel!=null && travel.InHome && travel.World!=null)
             travel.World.RefreshHomeView();
@@ -312,6 +316,9 @@ public sealed class HomeDirectoryClient : MonoBehaviour
             Retry();yield break;
         }
         lastUploaded=fingerprint;
+        Debug.Log("[HOME SAVE] Published "+OwnerCode+
+            " revision "+answer.version+" ("+
+            upload.tanks.Length+" aquariums).");
         // A save during an in-flight upload remains pending.
         dirty=JsonUtility.ToJson(CurrentUpload())!=fingerprint;
         retrySeconds=10f;sending=false;
