@@ -24,7 +24,7 @@ internal static class ShopActionAudioImporter
 
     static ShopActionAudioImporter()
     {
-        EditorApplication.delayCall+=Import;
+        EditorApplication.delayCall+=()=>{ Import(); };
     }
 
     [MenuItem("Tools/Open World/Import Aquarium and Shop Sounds")]
