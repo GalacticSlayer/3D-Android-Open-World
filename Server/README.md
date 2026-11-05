@@ -259,10 +259,15 @@ avatar format, without depending on aquarium movement. Active Homes poll at
 approximately four times per second; an empty Home polls less frequently.
 The server only keeps temporary Home-presence records in RAM; a nine-second
 timeout removes disconnected players. A live owner drag sends a tiny temporary
-aquarium position to visitors, and the completed placement persists through the
-existing Home snapshot endpoint. Only the authenticated Home owner can publish
-temporary aquarium moves. Fish still animate entirely on each phone; Home
-presence never transfers fish positions, physics, inventory, or ownership.
+aquarium position to visitors. A successful placement also sends a short-lived
+`placed` announcement. Visitors pin the final aquarium position (and restore
+its colliders and fish animation) until the disk-backed Home snapshot confirms
+the position. A canceled drag has no `placed` announcement and reverts.
+Owners publish permanent aquarium positions and fish additions/removals through
+the same atomic Home snapshot endpoint, so revisiting or restarting the server
+does not reset them. Only authenticated owners can broadcast moves or placements.
+Fish still animate entirely on each phone; Home presence never transfers fish
+positions, physics, inventory, or ownership.
 Player visibility is strictly scoped to matching Home codes; fishing-island
 multiplayer remains unchanged.
 
