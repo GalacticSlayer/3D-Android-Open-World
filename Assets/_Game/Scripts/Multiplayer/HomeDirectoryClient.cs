@@ -11,7 +11,7 @@ using UnityEngine.Networking;
 [DisallowMultipleComponent]
 public sealed class HomeDirectoryClient : MonoBehaviour
 {
-    [Serializable] public sealed class FishInfo { public int speciesId,biomeId; public float weightKg; }
+    [Serializable] public sealed class FishInfo { public int speciesId; public string biomeId; public float weightKg; }
     [Serializable] public sealed class TankInfo
     {
         public string key,id;
