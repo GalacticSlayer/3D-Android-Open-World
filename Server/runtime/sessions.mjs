@@ -204,6 +204,10 @@ export function createSessionServer({ clock = Date.now, timeout = 30000, ledgerP
       {reply(429,{ok:false,error:'Too many Home registrations from this connection.'});req.resume();return;}
     }
     if (!(req.headers['content-type'] || '').startsWith('application/json')) {reply(415,{ok:false,error:'JSON required.'});req.resume();return;}
+    // Minimal owner-upload diagnostics. Never log ownerKey, fish lists, names
+    // or full request bodies. These messages allow a stale published Home to
+    // be investigated from server logs without rebuilding an Android APK.
+    let homeUploadCode='unknown';
     try {
       let size=0; const chunks=[];
       // Only Home layout uploads need a larger limit; 10 Hz movement stays at 4 KB.
@@ -212,8 +216,20 @@ export function createSessionServer({ clock = Date.now, timeout = 30000, ledgerP
       let data;
       try {data=JSON.parse(Buffer.concat(chunks).toString('utf8'));} catch {fail(400,'Invalid JSON.');}
       if (!data || typeof data !== 'object' || Array.isArray(data)) fail(400,'Invalid request.');
-      reply(200,dispatch(req.url,data,(req.headers.authorization || '').replace(/^Bearer /,'')));
-    } catch (e) { reply(e.status || 500,{ok:false,error:e.status ? e.message : 'Server error.'}); }
+      if(req.url==='/v1/homes/update' && typeof data.code==='string' &&
+         /^[A-HJ-NP-Z2-9]{8}$/.test(data.code))
+        homeUploadCode=data.code;
+      const outcome=dispatch(req.url,data,(req.headers.authorization || '').replace(/^Bearer /,''));
+      if(req.url==='/v1/homes/update')
+        console.info('[HOME UPLOAD ACCEPTED]',homeUploadCode,'version',
+          outcome.version,'aquariums',Array.isArray(data.tanks)?data.tanks.length:'invalid');
+      reply(200,outcome);
+    } catch (e) {
+      if(req.url==='/v1/homes/update')
+        console.warn('[HOME UPLOAD REJECTED]',homeUploadCode,
+          'HTTP',e.status || 500,'reason',e.status ? e.message : 'Server error');
+      reply(e.status || 500,{ok:false,error:e.status ? e.message : 'Server error.'});
+    }
   });
   server.maxConnections=128;
   server.keepAliveTimeout=5000;
