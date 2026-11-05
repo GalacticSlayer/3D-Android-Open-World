@@ -34,12 +34,14 @@ public sealed class HomeDirectoryClient : MonoBehaviour
         public FishInfo biggest;
         public HomeInfo[] homes;
         public TankInfo[] tanks;
+        public TankInfo pond;
     }
     [Serializable] private sealed class Request
     {
         public string code,ownerKey,name,visibility,query,sort,excludeCode;
         public int page;
         public TankInfo[] tanks;
+        public TankInfo pond;
     }
 
     private const string OwnerKeyPref="OpenWorld.Home.OwnerKey.v1";
@@ -113,11 +115,24 @@ public sealed class HomeDirectoryClient : MonoBehaviour
         }
         return result.ToArray();
     }
+    private TankInfo CurrentPond()
+    {
+        if(progress==null || progress.Data==null)return null;
+        var owned=progress.Data.CurrentHabitat(true);
+        if(owned==null)return null;
+        var definition=ShopCatalog.Habitat(owned.id);
+        if(definition==null || !definition.pond)return null;
+        var fish=new List<FishInfo>();
+        if(owned.fish!=null)foreach(var f in owned.fish)
+            if(f!=null)fish.Add(new FishInfo{speciesId=f.speciesId,
+                biomeId=f.biomeId,weightKg=Mathf.Round(f.weightKg*1000f)/1000f});
+        return new TankInfo{id=owned.id,key="pond",fish=fish.ToArray()};
+    }
     private Request CurrentUpload() => new Request{
         code=OwnerCode,ownerKey=ownerKey,
         name=progress!=null&&progress.Data!=null
             ?ShopProgress.NormalizePlayerName(progress.Data.playerName):"Angler",
-        visibility=Visibility,tanks=CurrentTanks()
+        visibility=Visibility,tanks=CurrentTanks(),pond=CurrentPond()
     };
     private void Update()
     {
