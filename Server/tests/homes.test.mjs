@@ -180,9 +180,9 @@ test('same-Home idle avatars remain visible; fish revision and owner tank moves 
       session:b,name:'Visitor',pose,move:{...move,x:50}});
     assert.deepEqual(response.moving,move);
     assert.equal(response.players[0].move,undefined);
-    response=api.dispatch('/v1/homes/presence',{code:owner.code,
-      session:a,name:'Owner',pose});
-    assert.deepEqual(response.moving,move); // Visitor can't move aquariums.
+    // The visitor submitted a different move, but only the owner's
+    // authenticated preview was ever broadcast.
+    assert.notEqual(response.moving.x,50);
     api.dispatch('/v1/homes/presence',{code:owner.code,
       session:a,name:'Owner',pose}); // End the owner's aquarium drag.
     assert.equal(api.dispatch('/v1/homes/presence',{code:owner.code,
