@@ -183,7 +183,12 @@ export function createSessionServer({ clock = Date.now, timeout = 30000, ledgerP
       limit = { start:clock(), count:0, opens:0 }; limits.set(ip,limit);
     }
     if (++limit.count > 100) { reply(429,{ok:false,error:'Too many requests.'});req.resume();return; }
-    if (req.method === 'GET' && req.url === '/health') { reply(200,{ok:true,protocol:PROTOCOL});return; }
+    // Explicit capability marker lets Android clients and developers detect
+    // an Oracle server still running an old Home presence release.
+    if (req.method === 'GET' && req.url === '/health') {
+      reply(200,{ok:true,protocol:PROTOCOL,homePresenceProtocol:2});
+      return;
+    }
     if (req.method !== 'POST' || !['/v1/open','/v1/join','/v1/state','/v1/leave','/v1/tournament','/v1/tournament-receipt','/v1/tournament-catches','/v1/boss','/v1/boss-receipt',
       '/v1/homes/register','/v1/homes/update','/v1/homes/list','/v1/homes/get','/v1/homes/check','/v1/homes/presence'].includes(req.url)) {reply(404,{ok:false,error:'Not found.'});req.resume();return;}
     if ((req.url === '/v1/open' || req.url === '/v1/join') && ++limit.opens > 4) {reply(429,{ok:false,error:'Wait a moment before trying again.'});req.resume();return;}
