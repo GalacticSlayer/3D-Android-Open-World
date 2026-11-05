@@ -14,7 +14,7 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
     private ScrollRect scroll;
     private Transform overlayParent;
     private RectTransform results;
-    private Text status, settingsCode, settingsVisibility, settingsSync;
+    private Text status, settingsCode, settingsVisibility, settingsSync, settingsLive;
     private Button settingsButton,sortButton;
     private InputField searchField;
     private GameObject popupRoot, popupBackdrop, emptyNotice;
@@ -98,6 +98,7 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
 
     private void LateUpdate()
     {
+        if(popupMode==PopupMode.Settings)UpdateSettingsLabels();
         // Request 20 more only when the player approaches the bottom. A busy
         // request cannot overlap the next one, and cached rows stay mounted.
         if(directory==null || scroll==null || popupMode!=PopupMode.None ||
@@ -300,6 +301,7 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
         settingsCode=null;
         settingsVisibility=null;
         settingsSync=null;
+        settingsLive=null;
         for(int i=0;i<sortChoiceLabels.Length;i++)sortChoiceLabels[i]=null;
         var backdrop=popupBackdrop;
         popupBackdrop=null;
@@ -348,6 +350,7 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
         // This makes an owner/visitor code split or rejected cloud save
         // diagnosable on Android without an editor console or another build.
         settingsSync=HeadingAt(target,"",20);
+        settingsLive=HeadingAt(target,"",20);
         settingsVisibility=HeadingAt(target,"",21);
         ButtonAt(target,"PUBLIC • LISTED IN DIRECTORY",()=>directory?.SetVisibility("public"));
         ButtonAt(target,"PRIVATE ~ CODE ONLY",()=>directory?.SetVisibility("unlisted"));
@@ -385,6 +388,19 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
             settingsCode.text=directory!=null?directory.DisplayHomeCode:"Registering...";
         if(settingsSync!=null && directory!=null)
             settingsSync.text="CLOUD HOME: "+directory.OwnerSyncStatus;
+        if(settingsLive!=null)
+        {
+            var presence=HomePresenceClient.Instance;
+            settingsLive.text=presence==null?"LIVE HOME: Not initialized":
+                presence.ConnectionHealthy
+                ?"LIVE HOME: Connected to "+presence.ConnectedHomeCode+
+                    " • "+presence.OtherHomePlayers+" others"
+                :"LIVE HOME: "+(string.IsNullOrEmpty(presence.ConnectedHomeCode)
+                    ?"Waiting for a Home code"
+                    :string.IsNullOrEmpty(presence.LiveConnectionError)
+                        ?"Connecting to "+presence.ConnectedHomeCode
+                        :presence.LiveConnectionError);
+        }
         if(settingsVisibility!=null && directory!=null)
             settingsVisibility.text="VISIBILITY: "+VisibilityLabel()+
                 " • Public is the default. Code-only Homes can be visited with their code.";
