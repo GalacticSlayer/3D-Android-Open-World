@@ -111,7 +111,12 @@ export function createHomes({directory,clock=Date.now}={}){
     const q=typeof data?.query==='string'?data.query.trim().toLowerCase().slice(0,40):'';
     const page=Number.isInteger(data?.page)?Math.max(0,Math.min(10000,data.page)):0;
     const sort=data?.sort==='fish'?'fish':data?.sort==='biggest'?'biggest':'recent';
+    // Cosmetic self-exclusion happens before pagination so pages remain full and
+    // totals reflect only other players' public aquariums.
+    const exclude=typeof data?.excludeCode==='string'&&codePattern.test(data.excludeCode)
+      ?data.excludeCode:'';
     const entries=[...homes.values()].filter(h=>h.visibility==='public'&&h.aquariums>0&&
+      h.code!==exclude&&
       (!q||h.name.toLowerCase().includes(q)||h.code.toLowerCase().includes(q)))
       .map(publicInfo);
     entries.sort((a,b)=>sort==='fish'?b.fish-a.fish||b.updatedAt-a.updatedAt:
