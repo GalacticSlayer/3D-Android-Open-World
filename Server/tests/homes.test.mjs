@@ -138,6 +138,14 @@ test('owner and two visitors must share the same published code and verified cre
     // visitors still enter the original Home from the public directory.
     const original=api.dispatch('/v1/homes/register',{name:'Collector'});
     const replacement=api.dispatch('/v1/homes/register',{name:'Collector'});
+    // Only the private owner key can resolve the right published Home.
+    const recovered=api.dispatch('/v1/homes/resolve-owner',
+      {ownerKey:original.ownerKey});
+    assert.equal(recovered.code,original.code);
+    assert.throws(()=>api.dispatch('/v1/homes/resolve-owner',
+      {ownerKey:'0'.repeat(64)}),e=>e.status===404);
+    assert.throws(()=>api.dispatch('/v1/homes/resolve-owner',
+      {ownerKey:'not-an-owner-key'}),e=>e.status===403);
     const initial={code:original.code,ownerKey:original.ownerKey,
       name:'Collector',visibility:'public',tanks:[tank()]};
     const first=api.dispatch('/v1/homes/update',initial);
@@ -180,6 +188,10 @@ test('owner and two visitors must share the same published code and verified cre
     assert.equal(fresh.version,saved.version);
     assert.equal(fresh.tanks[0].x,48);
     assert.equal(fresh.tanks[0].fish.length,2);
+    // The resolver reconstructs the credential index after a VM restart.
+    const restarted=createHomes({directory:dir});
+    assert.equal(restarted.dispatch('/v1/homes/resolve-owner',
+      {ownerKey:original.ownerKey}).code,original.code);
   }finally{rmSync(dir,{recursive:true,force:true})}
 });
 
@@ -466,9 +478,12 @@ test('HTTP Home endpoints work without opening a room and support >4 KB uploads'
     return {status:r.status,...await r.json()};
   };
   const health=await fetch('http://127.0.0.1:'+server.address().port+'/health');
-  assert.equal((await health.json()).homePresenceProtocol,3);
+  assert.equal((await health.json()).homePresenceProtocol,4);
   const created=await send('/v1/homes/register',{name:'Offline Fish'});
   assert.equal(created.ok,true);
+  const resolved=await send('/v1/homes/resolve-owner',
+    {ownerKey:created.ownerKey});
+  assert.equal(resolved.code,created.code);
   const tanks=[tank(),{...tank('aq2'),fish:Array(80).fill(fish(20))},
     {...tank('aq3'),fish:Array(80).fill(fish(25))}];
   const upload={code:created.code,ownerKey:created.ownerKey,name:'Offline Fish',visibility:'public',tanks};
