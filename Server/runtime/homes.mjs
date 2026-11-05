@@ -43,7 +43,9 @@ export function createHomes({directory,clock=Date.now}={}){
     if(!value||typeof value!=='object')bad(400,'Invalid fish record.');
     if(!Number.isInteger(value.speciesId)||value.speciesId<0||value.speciesId>511||
        !finite(value.weightKg,0.001,1500)||
-       !Number.isInteger(value.biomeId)||value.biomeId<0||value.biomeId>4)
+       (value.biomeId!=null &&
+        (typeof value.biomeId!=='string'||value.biomeId.length>96||
+         /[\x00-\x1f\x7f]/.test(value.biomeId))))
        bad(400,'Invalid fish record.');
     return {speciesId:value.speciesId,weightKg:Math.round(value.weightKg*1000)/1000,biomeId:value.biomeId};
   }
