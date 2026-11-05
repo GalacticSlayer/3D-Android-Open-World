@@ -14,6 +14,16 @@ public sealed class ShopWorldEnvironment : MonoBehaviour
     private readonly Dictionary<string,ShopHabitat> visitorAquariums=new Dictionary<string,ShopHabitat>();
     private ShopHabitat visitorPond;
     private string movingVisitorTank;
+    private struct CommittedPlacement
+    {
+        public Vector3 position;
+        public float yaw;
+    }
+    // A successful placement is a pending visual override until the latest
+    // disk-backed Home snapshot contains that exact transform. This prevents
+    // an old snapshot from teleporting a visitor's aquarium backwards.
+    private readonly Dictionary<string,CommittedPlacement> pendingPlacements=
+        new Dictionary<string,CommittedPlacement>();
     private readonly List<Collider> movingTankColliders=new List<Collider>();
     private readonly List<bool> movingColliderStates=new List<bool>();
 
@@ -145,10 +155,25 @@ public sealed class ShopWorldEnvironment : MonoBehaviour
         // Rebuild only when the owner changes their published snapshot.
         string key=snapshot.code+":"+snapshot.version;
         if(visitingSnapshot==key)return;
-        ClearVisitorHome();
+        // Preserve the current preview across unrelated fish/pond revisions.
+        string previewKey=movingVisitorTank;
+        Vector3 previewPosition=Vector3.zero;
+        float previewYaw=0f;
+        if(!string.IsNullOrEmpty(previewKey) &&
+           visitorAquariums.TryGetValue(previewKey,out var preview) && preview!=null)
+        {
+            previewPosition=preview.transform.localPosition;
+            previewYaw=preview.transform.localEulerAngles.y;
+        }
+        else previewKey=null;
+        ClearVisitorHome(true);
         visitingSnapshot=key;
         RenderVisitorPond(snapshot.pond);
-        if(snapshot.tanks==null)return;
+        if(snapshot.tanks==null)
+        {
+            pendingPlacements.Clear();
+            return;
+        }
         foreach(var tank in snapshot.tanks)
         {
             if(tank==null || visitorAquariums.ContainsKey(tank.key))continue;
@@ -178,7 +203,78 @@ public sealed class ShopWorldEnvironment : MonoBehaviour
             visitorAquariums[tank.key]=habitat;
             clone.SetActive(true);
         }
+        ReconcileCommittedPlacements(snapshot);
+        if(!string.IsNullOrEmpty(previewKey))
+            SetVisitorLiveAquariumMove(previewKey,previewPosition,previewYaw);
     }
+
+    private static bool MatchesCommittedPosition(HomeDirectoryClient.TankInfo published,
+        CommittedPlacement commit)
+    {
+        return (new Vector3(published.x,published.y,published.z)-commit.position)
+            .sqrMagnitude<=.0025f &&
+            Mathf.Abs(Mathf.DeltaAngle(published.yaw,commit.yaw))<=.5f;
+    }
+
+    private void ReconcileCommittedPlacements(HomeDirectoryClient.Reply snapshot)
+    {
+        foreach(var key in new List<string>(pendingPlacements.Keys))
+        {
+            if(!visitorAquariums.TryGetValue(key,out var habitat) || habitat==null)
+            {
+                // A removed aquarium must disappear, not remain pinned.
+                pendingPlacements.Remove(key);
+                continue;
+            }
+            var pending=pendingPlacements[key];
+            bool published=false;
+            foreach(var tank in snapshot.tanks)
+            {
+                if(tank==null || tank.key!=key)continue;
+                published=MatchesCommittedPosition(tank,pending);
+                break;
+            }
+            if(published)
+            {
+                // Now the server's durable layout agrees. All subsequent
+                // visits can use it without any transient override.
+                pendingPlacements.Remove(key);
+            }
+            else
+            {
+                habitat.transform.localPosition=pending.position;
+                habitat.transform.localRotation=Quaternion.Euler(0,pending.yaw,0);
+            }
+        }
+    }
+
+    public void CommitVisitorLiveAquariumPlacement(string key,
+        Vector3 localPosition,float yaw)
+    {
+        if(directory==null || !directory.IsVisiting ||
+           string.IsNullOrEmpty(key))return;
+        if(!visitorAquariums.TryGetValue(key,out var habitat) || habitat==null)
+            return;
+        var committed=new CommittedPlacement{position=localPosition,yaw=yaw};
+        bool alreadyPublished=false;
+        var snapshot=directory.VisitingHome;
+        if(snapshot!=null && snapshot.tanks!=null)
+            foreach(var tank in snapshot.tanks)
+                if(tank!=null && tank.key==key &&
+                   MatchesCommittedPosition(tank,committed))
+                {
+                    alreadyPublished=true;
+                    break;
+                }
+        if(alreadyPublished)pendingPlacements.Remove(key);
+        else pendingPlacements[key]=committed;
+        habitat.transform.localPosition=localPosition;
+        habitat.transform.localRotation=Quaternion.Euler(0,yaw,0);
+        // Restore collision and local fish simulation immediately when the
+        // owner's drag ends, but do not move the aquarium back to old data.
+        if(movingVisitorTank==key)RestoreVisitorMove();
+    }
+
     private void RenderVisitorPond(HomeDirectoryClient.TankInfo pond)
     {
         if(pond==null)return; // Missing in older snapshots means no pond.
@@ -215,6 +311,10 @@ public sealed class ShopWorldEnvironment : MonoBehaviour
     public void SetVisitorLiveAquariumMove(string key,Vector3 localPosition,float yaw)
     {
         if(directory==null || !directory.IsVisiting)return;
+        // A new drag supersedes an earlier, not-yet-acknowledged placement
+        // of the same aquarium.
+        if(!string.IsNullOrEmpty(key) && movingVisitorTank!=key)
+            pendingPlacements.Remove(key);
         if(movingVisitorTank!=key)RestoreVisitorMove();
         if(string.IsNullOrEmpty(key))return;
         if(!visitorAquariums.TryGetValue(key,out var habitat) || habitat==null)return;
@@ -242,8 +342,13 @@ public sealed class ShopWorldEnvironment : MonoBehaviour
         if(string.IsNullOrEmpty(movingVisitorTank))return;
         if(visitorAquariums.TryGetValue(movingVisitorTank,out var habitat) && habitat!=null)
         {
-            if(directory!=null && directory.VisitingHome!=null &&
-               directory.VisitingHome.tanks!=null)
+            if(pendingPlacements.TryGetValue(movingVisitorTank,out var committed))
+            {
+                habitat.transform.localPosition=committed.position;
+                habitat.transform.localRotation=Quaternion.Euler(0,committed.yaw,0);
+            }
+            else if(directory!=null && directory.VisitingHome!=null &&
+                    directory.VisitingHome.tanks!=null)
             foreach(var tank in directory.VisitingHome.tanks)
                 if(tank!=null && tank.key==movingVisitorTank)
                 {
@@ -267,9 +372,10 @@ public sealed class ShopWorldEnvironment : MonoBehaviour
         movingColliderStates.Clear();
     }
 
-    private void ClearVisitorHome()
+    private void ClearVisitorHome(bool preservePlacements=false)
     {
         RestoreVisitorMove();
+        if(!preservePlacements)pendingPlacements.Clear();
         visitingSnapshot=null;
         if(visitorPond!=null)Destroy(visitorPond.gameObject);
         visitorPond=null;
