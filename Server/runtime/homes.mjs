@@ -20,6 +20,10 @@ export function createHomes({directory,clock=Date.now}={}){
   if(!directory)throw new Error('Home data directory is required');
   fs.mkdirSync(directory,{recursive:true,mode:0o700});
   const homes=new Map();
+  // Transient presence is memory-only: no avatar or fish simulation goes to
+  // disk, and leaving one Home does not affect other Homes or fishing rooms.
+  const visitors=new Map();
+  const presenceTtlMs=4500;
   for(const file of fs.readdirSync(directory)){
     if(!/^[A-HJ-NP-Z2-9]{8}\.json$/.test(file))continue;
     try{
@@ -149,7 +153,59 @@ export function createHomes({directory,clock=Date.now}={}){
     const snapshot=read(h.code);
     return {ok:true,...info,tanks:copy(snapshot.tanks),pond:copy(snapshot.pond??null)};
   }
+  function presence(data){
+    const code=typeof data?.code==='string'?data.code.toUpperCase():'';
+    if(!codePattern.test(code))bad(400,'Invalid Home code.');
+    const home=homes.get(code);
+    if(!home || home.visibility==='private' && !owner(home,data.ownerKey))
+      bad(404,'Home not found or private.');
+
+    const session=data?.session;
+    if(typeof session!=='string' || !/^[a-f0-9]{32}$/.test(session))
+      bad(400,'Invalid Home presence session.');
+    let room=visitors.get(code);
+    if(!room){room=new Map();visitors.set(code,room);}
+    const now=clock();
+    for(const [key,peer] of room)
+      if(now-peer.seen>presenceTtlMs)room.delete(key);
+    if(data.leave===true)
+    {
+      room.delete(session);
+    }
+    else
+    {
+      const p=data.pose;
+      if(!p || p.world!==2 ||
+         ![p.x,p.y,p.z,p.yaw].every(n=>finite(n,-100000,100000)) ||
+         (p.heldFishSpecies!==undefined &&
+           (!Number.isInteger(p.heldFishSpecies) ||
+             p.heldFishSpecies < -1 || p.heldFishSpecies > 511)) ||
+         (p.heldFishWeight!==undefined &&
+           !finite(p.heldFishWeight,0,1500)))
+        bad(400,'Invalid Home player pose.');
+      if(!room.has(session) && room.size>=12)
+        bad(429,'This Home has reached its live visitor limit.');
+      room.set(session,{id:session,name:nameOf(data.name),seen:now,pose:{
+        x:p.x,y:p.y,z:p.z,yaw:p.yaw,world:2,homeCode:code,
+        swimming:p.swimming===true,sprinting:p.sprinting===true,
+        rodEquipped:p.rodEquipped===true,reeling:p.reeling===true,
+        hasFish:p.hasFish===true,lureInWater:p.lureInWater===true,
+        heldFishSpecies:p.heldFishSpecies??-1,
+        heldFishWeight:p.heldFishWeight??0,
+        fishPosing:p.fishPosing===true,
+        rodTier:Number.isInteger(p.rodTier)?Math.max(0,Math.min(6,p.rodTier)):0,
+        reelTier:Number.isInteger(p.reelTier)?Math.max(0,Math.min(6,p.reelTier)):0
+      }});
+    }
+    const players=[];
+    for(const [id,peer] of room)if(id!==session)
+      players.push({id,name:peer.name,...peer.pose});
+    if(room.size===0)visitors.delete(code);
+    return {ok:true,code,version:home.version,players};
+  }
+
   return {dispatch(route,data){
+    if(route==='/v1/homes/presence')return presence(data);
     if(route==='/v1/homes/register')return register(data);
     if(route==='/v1/homes/update')return update(data);
     if(route==='/v1/homes/list')return list(data);
