@@ -57,6 +57,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
     private bool dirty;
     private string shopSession, bagPicker, habitatPicker;
     private int bagSort, speciesFilter=-1, habitatSort, habitatSpeciesFilter=-1;
+    private bool homeHabitatPage;
     private GameObject menuShortcut, indexShortcut, baitShortcut;
     private RawImage baitPicture;
     private Text baitQuantity, baitName;
@@ -104,7 +105,17 @@ public sealed class ShopWorldHUD : MonoBehaviour
         string nearest=travel.Nearest();
         bool aquariumInteraction=HomeAquariumPlacement.IsPlacing || HomeAquariumPlacement.StorageOpen;
         nearbyButton.SetActive(!posing && !MenuOpen && !aquariumInteraction && nearest!=null && !travel.Traveling);
-        if(nearest!=null) nearLabel.text=nearest=="gear" ? "OPEN TACKLE STORE" : nearest=="market" ? "SELL FISH" : "VIEW HABITAT";
+        if(nearest!=null)
+        {
+            bool isHabitat=nearest!="gear" && nearest!="market";
+            nearLabel.text=nearest=="gear" ? "OPEN TACKLE STORE" :
+                nearest=="market" ? "SELL FISH" : "VIEW HABITAT";
+            // Home habitat interactions sit above the hotbar, not over it.
+            float y=travel.InHome && isHabitat?245f:130f;
+            var rect=nearbyButton.GetComponent<RectTransform>();
+            if(!Mathf.Approximately(rect.anchoredPosition.y,y))
+                rect.anchoredPosition=new Vector2(0f,y);
+        }
         if(!posing && !MenuOpen && !aquariumInteraction && nearest!=null && Keyboard.current!=null && Keyboard.current.eKey.wasPressedThisFrame) Open(nearest);
 
         if(travel.Traveling) { feedback.text="Traveling..."; return; }
@@ -283,6 +294,15 @@ public sealed class ShopWorldHUD : MonoBehaviour
         wallet.text=$"{progress.Data.coins:N0} COINS   /   {progress.Data.bag.Count}/{ShopLedger.BagLimit} FISH IN BAG   /   LOCATION: {(travel.InHome?"HOME":travel.InShop?"TIDEGLASS QUAY":ReefCatalog.Zones[IslandExpansionWorld.FishingBiome(player.transform.position)].name.ToUpperInvariant())}";
         feedback.text=progress.ReadOnly ? progress.Notice : message;
         string habitatAddId=page.StartsWith(HabitatAddPrefix,StringComparison.Ordinal)?page.Substring(HabitatAddPrefix.Length):null;
+        string habitatId=habitatAddId??page;
+        var activeHabitat=travel.InHome && travel.World!=null
+            ?travel.World.Habitat(habitatId):null;
+        homeHabitatPage=travel.InHome && (activeHabitat!=null ||
+            habitatAddId!=null && progress.Data.Habitat(habitatAddId)!=null);
+        var habitatOwned=homeHabitatPage?progress.Data.Habitat(habitatId):null;
+        var habitatDefinition=homeHabitatPage
+            ?ShopCatalog.Habitat(activeHabitat!=null?activeHabitat.id:
+                habitatOwned!=null?habitatOwned.id:habitatId):null;
         heading.text=shopSession=="gear"?"TACKLE STORE":shopSession=="market"?"SELL FISH":"MENU / TRAVEL";
         bool index=page=="islands" || page=="reef-fish";
         if(index)heading.text=page=="islands"?"ISLAND / BIOME INDEX":ReefCatalog.Zones[indexBiome].name.ToUpperInvariant()+" • FISH INDEX";
@@ -308,10 +328,12 @@ public sealed class ShopWorldHUD : MonoBehaviour
         }
         if(habitatAddId!=null)
         {
-            var habitatOwned=progress.Data.Habitat(habitatAddId);
-            var habitat=ShopCatalog.Habitat(habitatOwned!=null?habitatOwned.id:habitatAddId);
-            heading.text=habitat!=null?"ADD FISH • "+habitat.name.ToUpperInvariant():"ADD FISH";
+            var located=progress.Data.Habitat(habitatAddId);
+            var habitat=ShopCatalog.Habitat(located!=null?located.id:habitatAddId);
+            heading.text=habitat!=null?"ADD FISH TO "+habitat.name.ToUpperInvariant():"ADD FISH";
         }
+        else if(homeHabitatPage && habitatDefinition!=null)
+            heading.text=habitatDefinition.name;
         bool independent=index || page=="bait" || page=="stats" || habitatAddId!=null;
         SetStorePresentation(shopSession=="gear");
         perspectiveToggle.gameObject.SetActive(page=="travel");
@@ -324,7 +346,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
             profileNameInput.interactable=!progress.ReadOnly;
         }
         bool fishIndex=page=="reef-fish";
-        heading.gameObject.SetActive(!fishIndex);wallet.gameObject.SetActive(!fishIndex);
+        heading.gameObject.SetActive(!fishIndex);wallet.gameObject.SetActive(!fishIndex && !homeHabitatPage);
         feedback.gameObject.SetActive(!fishIndex);scroll.gameObject.SetActive(!fishIndex);
         scroll.verticalScrollbar.gameObject.SetActive(!fishIndex);
         foreach(var tab in navigationTabs)tab.SetActive(page=="travel");
@@ -349,14 +371,18 @@ public sealed class ShopWorldHUD : MonoBehaviour
     private void SetStorePresentation(bool tackle)
     {
         bool market=page=="market" || page=="sell-confirm" || page=="bait" || page=="bag" || page=="equipment";
-        bool themed=tackle || market || page=="multiplayer" || page=="homes";
+        bool themed=tackle || market || page=="multiplayer" || page=="homes" || homeHabitatPage;
         storeHeader.SetActive(themed);storeBody.SetActive(themed);
         var headerSymbol=storeHeader.GetComponentInChildren<FishingHudSymbol>();
         if(headerSymbol!=null)
         {
-            headerSymbol.kind=page=="bag"?FishingHudSymbol.Kind.Fish:page=="equipment"?FishingHudSymbol.Kind.Rod:
-                (page=="multiplayer" || page=="homes")?FishingHudSymbol.Kind.People:FishingHudSymbol.Kind.Cart;
-            headerSymbol.SetVerticesDirty();
+            headerSymbol.gameObject.SetActive(!homeHabitatPage);
+            if(!homeHabitatPage)
+            {
+                headerSymbol.kind=page=="bag"?FishingHudSymbol.Kind.Fish:page=="equipment"?FishingHudSymbol.Kind.Rod:
+                    (page=="multiplayer" || page=="homes")?FishingHudSymbol.Kind.People:FishingHudSymbol.Kind.Cart;
+                headerSymbol.SetVerticesDirty();
+            }
         }
         // The item surface reaches the frame bottom, with equal 20-unit list insets.
         Anchor(storeBody.GetComponent<RectTransform>(),0,0,1,1,0,0,0,tackle?-258:-158);
@@ -369,7 +395,8 @@ public sealed class ShopWorldHUD : MonoBehaviour
         r.anchorMax=sharedFrame?new Vector2(.975f,.9725f):new Vector2(.955f,.955f);
         r.offsetMin=r.offsetMax=Vector2.zero;
         heading.fontSize=themed?52:43;heading.resizeTextMaxSize=themed?52:43;
-        heading.fontStyle=themed?FontStyle.Bold:FontStyle.Normal;heading.color=themed?Color.white:gold;
+        heading.fontStyle=themed?FontStyle.Bold:FontStyle.Normal;
+        heading.color=homeHabitatPage?new Color(1f,.87f,.22f,1f):themed?Color.white:gold;
         Anchor(heading.rectTransform,0,1,1,1,themed?132:24,themed?-82:-62,themed?-270:-150,-12);
         wallet.color=themed?new Color(.67f,.93f,1f):Color.white;
         Anchor(wallet.rectTransform,0,1,1,1,themed?132:24,themed?-118:-92,themed?-270:-24,themed?-80:-62);
@@ -385,7 +412,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
         if(handle!=null)handle.color=themed?FishingHudTheme.Cyan:gold;
         feedback.color=themed?new Color(.67f,.93f,1f):gold;
         // Keep purchase/sale messages clear of the newly extended item list.
-        if(themed)Anchor(feedback.rectTransform,0,1,1,1,24,-150,-24,-130);
+        if(themed && !homeHabitatPage)Anchor(feedback.rectTransform,0,1,1,1,24,-150,-24,-130);
         else Anchor(feedback.rectTransform,0,0,1,0,24,10,-24,60);
         heading.supportRichText=page=="travel";
         if(page=="travel")
@@ -819,7 +846,8 @@ public sealed class ShopWorldHUD : MonoBehaviour
     private void Result(bool ok,string success) { message=ok?success:"Action unavailable. Check coins, ownership, capacity and distance to the shop."; Refresh(false); }
     private void Row(string title,string detail,string action,Action callback,bool enabled=true,CaughtFishRecord fish=null,string gear=null)
     {
-        bool market=page=="market" || page=="sell-confirm" || page=="bait" || page=="bag" || page=="equipment";
+        bool market=page=="market" || page=="sell-confirm" || page=="bait" ||
+            page=="bag" || page=="equipment" || homeHabitatPage;
         GameObject row=Panel("Item",list,new Color(0.07f,0.12f,0.14f,1));
         row.AddComponent<LayoutElement>().preferredHeight=page=="reef-fish"?340:market?200:184;
         var accent=Panel("Accent",row.transform,gold); Anchor(accent.GetComponent<RectTransform>(),0,0,0,1,0,0,4,0);
