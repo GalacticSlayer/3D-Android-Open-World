@@ -15,8 +15,9 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
     private Transform overlayParent;
     private RectTransform results;
     private Text status, settingsCode, settingsVisibility;
+    private Button settingsButton,sortButton;
     private InputField searchField;
-    private GameObject popupRoot, emptyNotice;
+    private GameObject popupRoot, popupBackdrop, emptyNotice;
     private Transform popupContent;
     private PopupMode popupMode;
     private readonly Text[] sortChoiceLabels=new Text[3];
@@ -49,7 +50,7 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
         GetComponent<ContentSizeFitter>().verticalFit=ContentSizeFitter.FitMode.PreferredSize;
 
         // The shared HUD already displays PLAYER AQUARIUMS and the top-right BACK.
-        ButtonAt(transform,"AQUARIUM SETTINGS",()=>OpenPopup(PopupMode.Settings));
+        settingsButton=ButtonAt(transform,"AQUARIUM SETTINGS: PUBLIC",()=>OpenPopup(PopupMode.Settings));
 
         var controls=new GameObject("Search and Sort Controls",
             typeof(RectTransform),typeof(LayoutElement));
@@ -57,8 +58,13 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
         controls.GetComponent<LayoutElement>().preferredHeight=74;
         var search=ButtonAt(controls.transform,"SEARCH HOMES",()=>OpenPopup(PopupMode.Search));
         HalfWidth(search.GetComponent<RectTransform>(),0f,.5f);
-        var sortButton=ButtonAt(controls.transform,"SORT HOMES",()=>OpenPopup(PopupMode.Sort));
+        sortButton=ButtonAt(controls.transform,"SORT HOMES: MOST RECENT",()=>OpenPopup(PopupMode.Sort));
         HalfWidth(sortButton.GetComponent<RectTransform>(),.5f,1f);
+        // The longest current sort label should fit even on narrow displays.
+        var sortCaption=sortButton.GetComponentInChildren<Text>();
+        sortCaption.resizeTextForBestFit=true;
+        sortCaption.resizeTextMinSize=14;
+        sortCaption.resizeTextMaxSize=24;
 
         status=HeadingAt(transform,"",21);
         status.GetComponent<LayoutElement>().preferredHeight=42;
@@ -131,6 +137,7 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
         status.text=directory.Busy?"LOADING HOMES...":error?note:"";
         status.gameObject.SetActive(directory.Busy || error);
         UpdateSettingsLabels();
+        UpdateMainButtonLabels();
         AppendResults();
     }
 
@@ -274,13 +281,37 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
         UpdateSettingsLabels();
     }
 
+    private string VisibilityLabel()
+    {
+        if(directory==null)return "PUBLIC";
+        if(directory.Visibility=="unlisted")return "PRIVATE ~ CODE ONLY";
+        if(directory.Visibility=="private")return "PRIVATE ~ HIDDEN"; // Legacy setting
+        return "PUBLIC";
+    }
+
+    private void UpdateMainButtonLabels()
+    {
+        if(settingsButton!=null)
+        {
+            var caption=settingsButton.GetComponentInChildren<Text>();
+            if(caption!=null)caption.text="AQUARIUM SETTINGS: "+VisibilityLabel();
+        }
+        if(sortButton!=null)
+        {
+            var caption=sortButton.GetComponentInChildren<Text>();
+            int index=Array.IndexOf(SortKeys,sort);
+            if(caption!=null)caption.text="SORT HOMES: "+
+                SortLabels[index<0?0:index];
+        }
+    }
+
     private void UpdateSettingsLabels()
     {
         if(settingsCode!=null)
             settingsCode.text=directory!=null?directory.DisplayHomeCode:"Registering...";
         if(settingsVisibility!=null && directory!=null)
-            settingsVisibility.text="Visibility: "+directory.Visibility.ToUpperInvariant()+
-                " • Public is the default. Private Homes cannot be visited.";
+            settingsVisibility.text="VISIBILITY: "+VisibilityLabel()+
+                " • Public is the default. Code-only Homes can be visited with their code.";
     }
 
     private void BuildSearchPopup()
