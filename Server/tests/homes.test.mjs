@@ -180,13 +180,27 @@ test('same-Home idle avatars remain visible; fish revision and owner tank moves 
       session:b,name:'Visitor',pose,move:{...move,x:50}});
     assert.deepEqual(response.moving,move);
     assert.equal(response.players[0].move,undefined);
+    assert.equal(response.placed,null); // A drag is not a placement.
     // The visitor submitted a different move, but only the owner's
     // authenticated preview was ever broadcast.
     assert.notEqual(response.moving.x,50);
     api.dispatch('/v1/homes/presence',{code:owner.code,
-      session:a,name:'Owner',pose}); // End the owner's aquarium drag.
-    assert.equal(api.dispatch('/v1/homes/presence',{code:owner.code,
-      session:b,name:'Visitor',pose}).moving,null);
+      session:a,name:'Owner',pose}); // Cancel: there is no committed placement.
+    response=api.dispatch('/v1/homes/presence',{code:owner.code,
+      session:b,name:'Visitor',pose});
+    assert.equal(response.moving,null);
+    assert.equal(response.placed,null);
+    assert.equal(api.dispatch('/v1/homes/get',{code:owner.code}).tanks[0].x,12);
+
+    const finalPlacement={key:'aq1',x:24,y:0,z:18,yaw:135};
+    api.dispatch('/v1/homes/presence',{code:owner.code,session:a,
+      name:'Owner',pose,placed:finalPlacement});
+    response=api.dispatch('/v1/homes/presence',{code:owner.code,
+      session:b,name:'Visitor',pose,placed:{...finalPlacement,x:999}});
+    assert.deepEqual(response.placed,finalPlacement);
+    assert.equal(response.moving,null);
+    // The placement announcement is visual only. The persistent snapshot is
+    // deliberately unchanged until the authenticated Home update succeeds.
     assert.equal(api.dispatch('/v1/homes/get',{code:owner.code}).tanks[0].x,12);
     response=api.dispatch('/v1/homes/presence',{code:second.code,
       session:c,name:'Other Home',pose});
@@ -201,6 +215,46 @@ test('same-Home idle avatars remain visible; fish revision and owner tank moves 
       {code:owner.code,session:b,name:'Visitor',pose}),e=>e.status===404);
     assert.equal(api.dispatch('/v1/homes/presence',{code:owner.code,
       session:a,ownerKey:owner.ownerKey,name:'Owner',pose}).ok,true);
+  }finally{rmSync(dir,{recursive:true,force:true})}
+});
+
+test('completed aquarium positions and fish changes survive repeated visits and server restart',()=>{
+  const dir=temp();
+  try{
+    let api=createHomes({directory:dir});
+    const home=api.dispatch('/v1/homes/register',{name:'Permanent Home'});
+    const owner={code:home.code,ownerKey:home.ownerKey,
+      name:'Permanent Home',visibility:'public'};
+    const original={...tank(),fish:[fish(8)]};
+    const first=api.dispatch('/v1/homes/update',{...owner,tanks:[original]});
+    const final={...original,x:48,y:0,z:30,yaw:155,
+      fish:[fish(8),fish(19),fish(31)]};
+    const placed=api.dispatch('/v1/homes/update',{...owner,tanks:[final]});
+    assert.equal(placed.version,first.version+1);
+    let visitor=api.dispatch('/v1/homes/get',{code:home.code});
+    assert.equal(visitor.tanks[0].x,48);
+    assert.equal(visitor.tanks[0].yaw,155);
+    assert.equal(visitor.tanks[0].fish.length,3);
+    assert.equal(api.dispatch('/v1/homes/update',
+      {...owner,tanks:[final]}).version,placed.version);
+    // Removing fish must persist without changing the aquarium's position.
+    const reduced={...final,fish:[fish(8),fish(31)]};
+    api.dispatch('/v1/homes/update',{...owner,tanks:[reduced]});
+    api=createHomes({directory:dir});
+    visitor=api.dispatch('/v1/homes/get',{code:home.code});
+    assert.equal(visitor.tanks[0].x,48);
+    assert.equal(visitor.tanks[0].z,30);
+    assert.equal(visitor.tanks[0].yaw,155);
+    assert.deepEqual(visitor.tanks[0].fish,reduced.fish);
+    // A second actual placement supersedes the first, permanently.
+    const movedAgain={...reduced,x:11,z:43,yaw:260};
+    api.dispatch('/v1/homes/update',{...owner,tanks:[movedAgain]});
+    api=createHomes({directory:dir});
+    visitor=api.dispatch('/v1/homes/get',{code:home.code});
+    assert.equal(visitor.tanks[0].x,11);
+    assert.equal(visitor.tanks[0].z,43);
+    assert.equal(visitor.tanks[0].yaw,260);
+    assert.deepEqual(visitor.tanks[0].fish,reduced.fish);
   }finally{rmSync(dir,{recursive:true,force:true})}
 });
 
