@@ -27,7 +27,15 @@ internal static class ShopActionAudioImporter
         EditorApplication.delayCall+=Import;
     }
 
-    private static void Import()
+    [MenuItem("Tools/Open World/Import Aquarium and Shop Sounds")]
+    private static void ImportManually()
+    {
+        int count=Import();
+        if(count==0)
+            Debug.Log("No missing aquarium/store audio found. Place the four supplied MP3s in Downloads or the project's Shop Audio folder, then retry.");
+    }
+
+    private static int Import()
     {
         string downloads=Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),"Downloads");
@@ -58,5 +66,6 @@ internal static class ShopActionAudioImporter
             AssetDatabase.Refresh();
             Debug.Log("Imported "+imported+" aquarium/shop sounds into "+Destination+".");
         }
+        return imported;
     }
 }
