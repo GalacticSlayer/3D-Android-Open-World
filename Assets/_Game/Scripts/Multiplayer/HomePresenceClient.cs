@@ -239,7 +239,10 @@ public sealed class HomePresenceClient : MonoBehaviour
             lastMoving=moving;
             lastMoveSeen=Time.unscaledTime;
         }
-        else if(lastMoving!=null && Time.unscaledTime-lastMoveSeen<.9f)
+        // Give a completed placement announcement time to arrive after the
+        // last drag packet. This is only a brief in-flight grace period;
+        // confirmed placements remain pinned until saved on the server.
+        else if(lastMoving!=null && Time.unscaledTime-lastMoveSeen<2f)
             moving=lastMoving;
         else lastMoving=null;
         if(directory!=null && directory.IsVisiting &&
