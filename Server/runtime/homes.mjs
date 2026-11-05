@@ -23,7 +23,7 @@ export function createHomes({directory,clock=Date.now}={}){
   // Transient presence is memory-only: no avatar or fish simulation goes to
   // disk, and leaving one Home does not affect other Homes or fishing rooms.
   const visitors=new Map();
-  const presenceTtlMs=4500;
+  const presenceTtlMs=9000; // Mobile network pauses should not hide idle avatars.
   let lastPresenceSweep=0;
   for(const file of fs.readdirSync(directory)){
     if(!/^[A-HJ-NP-Z2-9]{8}\.json$/.test(file))continue;
@@ -227,11 +227,18 @@ export function createHomes({directory,clock=Date.now}={}){
         reelTier:Number.isInteger(p.reelTier)?Math.max(0,Math.min(6,p.reelTier)):0
       }});
     }
+    // Return exactly the same peer structure as /v1/state. Keeping the
+    // single owner's temporary tank drag separate guarantees idle players
+    // always serialize as complete avatars, even when nothing is being moved.
     const players=[];
-    for(const [id,peer] of room)if(id!==session)
-      players.push({id,name:peer.name,...peer.pose,move:peer.move});
+    let moving=null;
+    for(const [id,peer] of room)
+    {
+      if(peer.authorized && peer.move!=null)moving=peer.move;
+      if(id!==session)players.push({id,name:peer.name,...peer.pose});
+    }
     if(room.size===0)visitors.delete(code);
-    return {ok:true,code,version:home.version,owner:authorized,players};
+    return {ok:true,code,version:home.version,owner:authorized,players,moving};
   }
 
   return {dispatch(route,data){
