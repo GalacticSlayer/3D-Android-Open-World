@@ -254,9 +254,10 @@ Server API on existing TCP 3001:
                             no fishing-room session required)
 
 Active players sharing the same Home code are visible to one another without
-opening a fishing room. Home player poses are relayed around three times per
-second, with smooth interpolation handled by the existing Unity remote avatar.
-The server only keeps temporary Home-presence records in RAM; a 4.5-second
+opening a fishing room. Home player poses use the existing multiplayer
+avatar format, without depending on aquarium movement. Active Homes poll at
+approximately four times per second; an empty Home polls less frequently.
+The server only keeps temporary Home-presence records in RAM; a nine-second
 timeout removes disconnected players. A live owner drag sends a tiny temporary
 aquarium position to visitors, and the completed placement persists through the
 existing Home snapshot endpoint. Only the authenticated Home owner can publish
