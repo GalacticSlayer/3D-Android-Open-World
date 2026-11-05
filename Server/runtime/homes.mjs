@@ -157,8 +157,7 @@ export function createHomes({directory,clock=Date.now}={}){
     const code=typeof data?.code==='string'?data.code.toUpperCase():'';
     if(!codePattern.test(code))bad(400,'Invalid Home code.');
     const home=homes.get(code);
-    if(!home || home.visibility==='private' && !owner(home,data.ownerKey))
-      bad(404,'Home not found or private.');
+    if(!home)bad(404,'Home not found or private.');
 
     const session=data?.session;
     if(typeof session!=='string' || !/^[a-f0-9]{32}$/.test(session))
@@ -168,6 +167,13 @@ export function createHomes({directory,clock=Date.now}={}){
     const now=clock();
     for(const [key,peer] of room)
       if(now-peer.seen>presenceTtlMs)room.delete(key);
+    // Authenticate the owner's first request, then cache that identity
+    // only for this short-lived, random session. No ownership token is sent
+    // with every 4 Hz movement packet.
+    const previous=room.get(session);
+    const authorized=previous?.authorized===true || owner(home,data.ownerKey);
+    if(home.visibility==='private' && !authorized)
+      bad(404,'Home not found or private.');
     if(data.leave===true)
     {
       room.delete(session);
@@ -185,7 +191,18 @@ export function createHomes({directory,clock=Date.now}={}){
         bad(400,'Invalid Home player pose.');
       if(!room.has(session) && room.size>=12)
         bad(429,'This Home has reached its live visitor limit.');
-      room.set(session,{id:session,name:nameOf(data.name),seen:now,pose:{
+      const m=data.move;
+      let moving=null;
+      if(m!=null && authorized)
+      {
+        if(typeof m.key!=='string' || !/^aq[1-9][0-9]{0,9}$/.test(m.key) ||
+           ![m.x,m.y,m.z].every(n=>finite(n,-150,150)) ||
+           !finite(m.yaw,-720,720))
+          bad(400,'Invalid live aquarium preview.');
+        moving={key:m.key,x:m.x,y:m.y,z:m.z,yaw:m.yaw};
+      }
+      room.set(session,{id:session,name:nameOf(data.name),
+        seen:now,authorized,move:moving,pose:{
         x:p.x,y:p.y,z:p.z,yaw:p.yaw,world:2,homeCode:code,
         swimming:p.swimming===true,sprinting:p.sprinting===true,
         rodEquipped:p.rodEquipped===true,reeling:p.reeling===true,
@@ -199,7 +216,7 @@ export function createHomes({directory,clock=Date.now}={}){
     }
     const players=[];
     for(const [id,peer] of room)if(id!==session)
-      players.push({id,name:peer.name,...peer.pose});
+      players.push({id,name:peer.name,...peer.pose,move:peer.move});
     if(room.size===0)visitors.delete(code);
     return {ok:true,code,version:home.version,players};
   }
