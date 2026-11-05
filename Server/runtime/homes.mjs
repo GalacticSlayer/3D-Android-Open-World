@@ -105,11 +105,14 @@ export function createHomes({directory,clock=Date.now}={}){
     if(!h||!owner(h,data.ownerKey))bad(403,'Home ownership could not be verified.');
     if(!choices.has(data.visibility))bad(400,'Invalid Home privacy.');
     const tanks=validateTanks(data.tanks);
-    const pond=validatePond(data.pond);
+    const currentRecord=read(h.code);
+    // Older Android clients only know aquariums. Their updates should not
+    // silently wipe an already-published pond from a newer client.
+    const pond=data.pond===undefined
+      ?currentRecord.pond??null:validatePond(data.pond);
     const name=nameOf(data.name);
     // Idempotent when a client retries a timed-out upload.
     const next=JSON.stringify({tanks,pond,name,visibility:data.visibility});
-    const currentRecord=read(h.code);
     const current=JSON.stringify({tanks:currentRecord.tanks,pond:currentRecord.pond??null,
       name:h.name,visibility:h.visibility});
     if(next===current)return {ok:true,version:h.version,updatedAt:h.updatedAt};
