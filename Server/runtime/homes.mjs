@@ -78,8 +78,23 @@ export function createHomes({directory,clock=Date.now}={}){
   }
   function validatePond(value){
     if(value==null)return null; // Old snapshots and Homes without a pond.
-    if(typeof value!=='object'||!pondTypes.has(value.id)||
-       !Array.isArray(value.fish)||value.fish.length>50)
+    // Unity JsonUtility serializes a null inline [Serializable] TankInfo
+    // as an object with default fields instead of JSON null. A player who
+    // has NOT purchased a pond therefore sends {id:"",fish:[]} (or {}).
+    // Previously this rejected the ENTIRE Home update, freezing aquarium
+    // positions and resident fish even when the tanks themselves were valid.
+    // Only tolerate an entirely empty/default pond placeholder; a real
+    // pond with an invalid tier, fish list, or location still fails closed.
+    if(typeof value==='object' && !Array.isArray(value) &&
+       (value.id==null || value.id==='') &&
+       (value.key==null || value.key==='') &&
+       (value.fish==null || Array.isArray(value.fish)&&value.fish.length===0) &&
+       ['x','y','z','yaw'].every(k=>value[k]==null || value[k]===0) &&
+       Object.keys(value).every(k=>['id','key','fish','x','y','z','yaw'].includes(k)))
+      return null;
+    if(typeof value!=='object'||Array.isArray(value)||
+       !pondTypes.has(value.id)||!Array.isArray(value.fish)||
+       value.fish.length>50)
        bad(400,'Invalid Home pond.');
     return {id:value.id,fish:value.fish.map(getRecord)};
   }
