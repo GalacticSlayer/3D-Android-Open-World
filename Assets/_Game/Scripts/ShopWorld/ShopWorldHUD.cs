@@ -195,7 +195,14 @@ public sealed class ShopWorldHUD : MonoBehaviour
         travelHeadingIcon=modal.transform.Find("HudPin").gameObject;
         BuildProfileName();
         wallet=Label(modal.transform,"",22,Color.white); Anchor(wallet.rectTransform,0,1,1,1,24,-92,-24,-62);
-        Button close=ButtonAt(modal.transform,"CLOSE",CloseMenuPage); menuClose=close; Rect(close.GetComponent<RectTransform>(),Vector2.one,Vector2.one,Vector2.one,new Vector2(-18,-16),new Vector2(160,64));
+        Button close=ButtonAt(modal.transform,"CLOSE",()=>
+        {
+            // The Player Aquariums page returns directly to Multiplayer.
+            // All other menus retain their existing Close/Back behavior.
+            if(page=="homes")Open("multiplayer");
+            else CloseMenuPage();
+        });
+        menuClose=close; Rect(close.GetComponent<RectTransform>(),Vector2.one,Vector2.one,Vector2.one,new Vector2(-18,-16),new Vector2(160,64));
         perspectiveToggle=ButtonAt(modal.transform,"",()=>
         {
             var view=FishingThirdPersonView.For(player);
@@ -284,6 +291,8 @@ public sealed class ShopWorldHUD : MonoBehaviour
         if(page=="bait")heading.text="BAIT / LURES";
         if(page=="multiplayer")heading.text="MULTIPLAYER";
         if(page=="homes")heading.text="PLAYER AQUARIUMS";
+        var closeCaption=menuClose!=null?menuClose.GetComponentInChildren<Text>():null;
+        if(closeCaption!=null)closeCaption.text=page=="homes"?"BACK":"CLOSE";
         if(page=="stats")heading.text="PERSONAL STATS";
         // Only the gold Personal Stats heading has a crisp, thin black border.
         // Keep the shared heading unchanged on every other shop/menu page.
