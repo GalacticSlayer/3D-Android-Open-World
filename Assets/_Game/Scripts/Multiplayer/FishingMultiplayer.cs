@@ -247,7 +247,11 @@ public sealed class FishingMultiplayer : MonoBehaviour
         {
             if(remote==null)continue;
             bool sharedIsland=(travel==null || travel.Destination==0) && remote.World==0;
-            bool sharedHome=travel!=null && travel.InHome && remote.World==2 &&
+            // HomePresenceClient now renders every peer in the SAME Home,
+            // even without a fishing room. Avoid duplicate avatars when two
+            // players are also connected to the same fishing server room.
+            bool sharedHome=HomePresenceClient.Instance==null &&
+                travel!=null && travel.InHome && remote.World==2 &&
                 !string.IsNullOrEmpty(localHome) && remote.HomeCode==localHome;
             remote.gameObject.SetActive(current && (sharedIsland || sharedHome));
         }
