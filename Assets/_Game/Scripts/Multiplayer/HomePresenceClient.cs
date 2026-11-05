@@ -29,7 +29,7 @@ public sealed class HomePresenceClient : MonoBehaviour
     }
     [Serializable] private sealed class PresenceReply
     {
-        public bool ok;
+        public bool ok,owner;
         public string code,error;
         public int version;
         public HomePeer[] players;
@@ -123,15 +123,19 @@ public sealed class HomePresenceClient : MonoBehaviour
         PresenceReply answer=null;
         yield return Post(request,r=>answer=r);
         // Ignore a delayed response after changing Homes or leaving.
-        if(currentHome!=code || sessionId!=id){pending=false;yield break;}
+        if(currentHome!=code || sessionId!=id)yield break;
         pending=false;
         if(answer==null || !answer.ok)
         {
+            // Reauthenticate after a VM restart or expired presence session.
+            authorized=false;
             nextPoll=Time.unscaledTime+2f;
             if(Time.unscaledTime-lastSuccess>3f)ClearPeers();
             yield break;
         }
-        authorized=true; // Owner credential is needed only on first handshake.
+        authorized=directory!=null && directory.IsVisiting || answer.owner;
+        // The owner key is sent on first handshake (or after an expiration),
+        // never continuously with normal movement updates.
         lastSuccess=Time.unscaledTime;
         nextPoll=Time.unscaledTime+PollInterval;
         Apply(answer);
