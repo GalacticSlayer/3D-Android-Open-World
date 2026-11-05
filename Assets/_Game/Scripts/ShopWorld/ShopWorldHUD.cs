@@ -110,8 +110,9 @@ public sealed class ShopWorldHUD : MonoBehaviour
             bool isHabitat=nearest!="gear" && nearest!="market";
             nearLabel.text=nearest=="gear" ? "OPEN TACKLE STORE" :
                 nearest=="market" ? "SELL FISH" : "VIEW HABITAT";
-            // Home habitat interactions sit above the hotbar, not over it.
-            float y=travel.InHome && isHabitat?245f:130f;
+            // The Home action must clear both the hotbar and the separate
+            // Move Aquarium / Move to Storage controls at Y=230.
+            float y=travel.InHome && isHabitat?325f:130f;
             var rect=nearbyButton.GetComponent<RectTransform>();
             if(!Mathf.Approximately(rect.anchoredPosition.y,y))
                 rect.anchoredPosition=new Vector2(0f,y);
