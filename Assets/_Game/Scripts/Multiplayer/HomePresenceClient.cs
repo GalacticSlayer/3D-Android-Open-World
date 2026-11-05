@@ -405,7 +405,9 @@ public sealed class HomePresenceClient : MonoBehaviour
                 Encoding.UTF8.GetBytes(JsonUtility.ToJson(body)));
             request.downloadHandler=new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type","application/json");
-            request.timeout=4;
+            // A changed Home can include multiple resident fish records.
+            // Give the first larger response room on slower mobile Wi-Fi.
+            request.timeout=8;
             yield return request.SendWebRequest();
             PresenceReply reply=null;
             if(request.downloadHandler!=null &&
