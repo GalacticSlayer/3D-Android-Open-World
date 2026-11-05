@@ -204,18 +204,22 @@ export function createHomes({directory,clock=Date.now}={}){
         bad(400,'Invalid Home player pose.');
       if(!room.has(session) && room.size>=12)
         bad(429,'This Home has reached its live visitor limit.');
-      const m=data.move;
-      let moving=null;
-      if(m!=null && authorized)
-      {
-        if(typeof m.key!=='string' || !/^aq[1-9][0-9]{0,9}$/.test(m.key) ||
-           ![m.x,m.y,m.z].every(n=>finite(n,-150,150)) ||
-           !finite(m.yaw,-720,720))
-          bad(400,'Invalid live aquarium preview.');
-        moving={key:m.key,x:m.x,y:m.y,z:m.z,yaw:m.yaw};
+      // Live drags and successful placements are separate. A completed
+      // placement stays visually pinned until the persistent Home revision
+      // arrives; canceled drags have no completed placement to publish.
+      function aquariumPosition(value,label){
+        if(value==null)return null;
+        if(typeof value.key!=='string' ||
+           !/^aq[1-9][0-9]{0,9}$/.test(value.key) ||
+           ![value.x,value.y,value.z].every(n=>finite(n,-150,150)) ||
+           !finite(value.yaw,-720,720))
+          bad(400,'Invalid '+label+'.');
+        return {key:value.key,x:value.x,y:value.y,z:value.z,yaw:value.yaw};
       }
+      const moving=authorized?aquariumPosition(data.move,'live aquarium preview'):null;
+      const placed=authorized?aquariumPosition(data.placed,'completed aquarium placement'):null;
       room.set(session,{id:session,name:nameOf(data.name),
-        seen:now,authorized,move:moving,pose:{
+        seen:now,authorized,move:moving,placed,pose:{
         x:p.x,y:p.y,z:p.z,yaw:p.yaw,world:2,homeCode:code,
         swimming:p.swimming===true,sprinting:p.sprinting===true,
         rodEquipped:p.rodEquipped===true,reeling:p.reeling===true,
@@ -231,14 +235,19 @@ export function createHomes({directory,clock=Date.now}={}){
     // single owner's temporary tank drag separate guarantees idle players
     // always serialize as complete avatars, even when nothing is being moved.
     const players=[];
-    let moving=null;
+    let moving=null,placed=null;
     for(const [id,peer] of room)
     {
-      if(peer.authorized && peer.move!=null)moving=peer.move;
+      if(peer.authorized)
+      {
+        if(peer.move!=null)moving=peer.move;
+        if(peer.placed!=null)placed=peer.placed;
+      }
       if(id!==session)players.push({id,name:peer.name,...peer.pose});
     }
     if(room.size===0)visitors.delete(code);
-    return {ok:true,code,version:home.version,owner:authorized,players,moving};
+    return {ok:true,code,version:home.version,owner:authorized,
+      players,moving,placed};
   }
 
   return {dispatch(route,data){
