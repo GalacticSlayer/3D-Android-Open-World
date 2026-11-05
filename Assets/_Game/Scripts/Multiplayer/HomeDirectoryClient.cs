@@ -67,7 +67,8 @@ public sealed class HomeDirectoryClient : MonoBehaviour
     private ShopProgress progress;
     private ShopDimensionManager travel;
     private string ownerKey,lastUploaded;
-    private bool dirty=true,sending,visitEntered;
+    private bool dirty=true,sending,visitEntered,wasAtOwnHome;
+    private NetworkReachability lastReachability;
     private float nextSync, nextVisitPoll, retrySeconds=10f;
     private int activeDownloads;
     private void Awake()
@@ -85,13 +86,38 @@ public sealed class HomeDirectoryClient : MonoBehaviour
         travel=GetComponent<ShopDimensionManager>();
         if(progress!=null)progress.Changed+=MarkDirty;
         nextSync=Time.unscaledTime+2.5f;
+        lastReachability=Application.internetReachability;
+    }
+    private void OnApplicationPause(bool paused)
+    {
+        if(!paused && dirty)
+            nextSync=Mathf.Min(nextSync,Time.unscaledTime);
     }
     private void OnDestroy()
     {
         if(progress!=null)progress.Changed-=MarkDirty;
         if(Instance==this)Instance=null;
     }
-    private void MarkDirty(){dirty=true;nextSync=Time.unscaledTime+2.5f;}
+    private void MarkDirty()
+    {
+        dirty=true;
+        nextSync=Time.unscaledTime+
+            (LiveGuestsAtMyHome?0.05f:2.5f);
+    }
+
+    public void ApplyHeartbeatSnapshot(Reply snapshot)
+    {
+        // The visitor never writes remote fish or aquarium positions to their
+        // own PlayerPrefs. Only apply newer, versioned owner snapshots in RAM.
+        if(snapshot==null || !snapshot.ok || VisitingHome==null ||
+           snapshot.code!=VisitingHome.code ||
+           snapshot.version<=VisitingHome.version)return;
+        VisitingHome=snapshot;
+        nextVisitPoll=Time.unscaledTime+30f;
+        if(travel!=null && travel.InHome && travel.World!=null)
+            travel.World.RefreshHomeView();
+        Changed?.Invoke();
+    }
 
     private bool LiveGuestsAtMyHome =>
         travel!=null && travel.InHome && !IsVisiting &&
@@ -149,14 +175,8 @@ public sealed class HomeDirectoryClient : MonoBehaviour
         // The presence response already contains the authoritative revision.
         yield return Post("/v1/homes/get",
             new Request{code=previous.code},r=>snapshot=r);
-        if(VisitingHome==previous && snapshot!=null && snapshot.ok &&
-           snapshot.version>previous.version)
-        {
-            VisitingHome=snapshot;
-            if(travel!=null && travel.InHome && travel.World!=null)
-                travel.World.RefreshHomeView();
-            Changed?.Invoke();
-        }
+        if(VisitingHome==previous && snapshot!=null && snapshot.ok)
+            ApplyHeartbeatSnapshot(snapshot);
         activeDownloads--;
     }
     public void SetVisibility(string value)
@@ -205,6 +225,30 @@ public sealed class HomeDirectoryClient : MonoBehaviour
     };
     private void Update()
     {
+        // Every entry to the owner's Home attempts to publish the current
+        // layout, regardless of fishing-room state. Save changes remain on
+        // disk (ShopProgress/PlayerPrefs) until networking becomes available.
+        bool atOwnHome=travel!=null && travel.InHome && !travel.Traveling &&
+            !IsVisiting;
+        if(atOwnHome && !wasAtOwnHome)
+        {
+            dirty=true;
+            nextSync=Time.unscaledTime;
+            retrySeconds=3f;
+        }
+        wasAtOwnHome=atOwnHome;
+        // Do not rely solely on a long exponential retry interval after Wi-Fi
+        // returns. This is a wake-up hint, not a hard network-availability gate.
+        var reachability=Application.internetReachability;
+        if(reachability!=lastReachability)
+        {
+            lastReachability=reachability;
+            if(dirty && reachability!=NetworkReachability.NotReachable)
+            {
+                nextSync=Time.unscaledTime;
+                retrySeconds=3f;
+            }
+        }
         // A damaged, read-only local save must NEVER overwrite a valid
         // previously published Home with the fallback empty ledger.
         if(progress!=null && !progress.ReadOnly && dirty && !sending &&
@@ -221,11 +265,11 @@ public sealed class HomeDirectoryClient : MonoBehaviour
         {
             var presence=HomePresenceClient.Instance;
             bool liveUnavailable=presence!=null &&
-                !string.IsNullOrEmpty(presence.LiveConnectionError);
-            // Normal alone/offline behavior is still one check per 10s.
-            // Only an actual live-presence API failure enables this 2s
-            // fallback for saved aquarium/fish snapshots.
-            nextVisitPoll=Time.unscaledTime+(liveUnavailable?2f:10f);
+                !presence.ConnectionHealthy;
+            // The normal heartbeat already sends changed fish and aquarium
+            // snapshots. Keep only an occasional 30s verification check while
+            // connected, and use 2s fallback checks if the heartbeat fails.
+            nextVisitPoll=Time.unscaledTime+(liveUnavailable?2f:30f);
             StartCoroutine(CheckVisitingHome());
         }
     }
@@ -280,7 +324,10 @@ public sealed class HomeDirectoryClient : MonoBehaviour
     {
         sending=false;dirty=true;
         nextSync=Time.unscaledTime+retrySeconds;
-        retrySeconds=Mathf.Min(120f,retrySeconds*2f);
+        // When the owner is standing in Home, recover quickly after mobile
+        // connectivity returns. Outside Home keep the existing low-traffic
+        // background retry behavior.
+        retrySeconds=Mathf.Min(wasAtOwnHome?20f:120f,retrySeconds*2f);
         Changed?.Invoke();
     }
     public void Browse(string query,int page,string sort)
