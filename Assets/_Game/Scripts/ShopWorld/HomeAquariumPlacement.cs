@@ -153,7 +153,13 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
     private void ContextAction()
     {
         if(currentContextIsBox)OpenStorage();
-        else if(nearest!=null)Begin(nearest.instanceKey);
+        else if(nearest!=null)
+        {
+            Begin(nearest.instanceKey);
+            // Picking up plays only for the explicit MOVE AQUARIUM action,
+            // not when selecting a stored aquarium to place for the first time.
+            if(IsPlacing)ShopActionAudio.Play(this,ShopActionAudio.Cue.AquariumPickup);
+        }
     }
 
     private void MoveToStorage()
@@ -320,7 +326,6 @@ public sealed class HomeAquariumPlacement : MonoBehaviour
         placeButton.gameObject.SetActive(true);
         cancelButton.gameObject.SetActive(true);
         placementHint.gameObject.SetActive(true);
-        ShopActionAudio.Play(this,ShopActionAudio.Cue.AquariumPickup);
     }
 
     private void UpdatePreview()
