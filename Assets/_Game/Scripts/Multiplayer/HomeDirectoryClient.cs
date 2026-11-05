@@ -129,14 +129,8 @@ public sealed class HomeDirectoryClient : MonoBehaviour
         Changed?.Invoke();
     }
 
-    private bool LiveGuestsAtMyHome =>
-        travel!=null && travel.InHome && !IsVisiting &&
-        HomePresenceClient.Instance!=null &&
-        HomePresenceClient.Instance.HasOtherPlayersInMyHome;
-
-    // Called ONLY after a successful deposit/withdraw. With an active guest,
-    // publish the changed list of fish promptly. Alone, Save() has already
-    // scheduled the regular 2.5-second debounced Home update.
+    // Publish a completed fish transfer immediately while at Home. Never
+    // require the separate player-presence channel to be healthy first.
     public void NotifyHabitatFishChanged()
     {
         if(progress==null || progress.ReadOnly || IsVisiting)return;
@@ -162,16 +156,16 @@ public sealed class HomeDirectoryClient : MonoBehaviour
         nextSync=Time.unscaledTime+.05f;
     }
 
-    // Live presence carries only a version number; a full fish/tank snapshot
-    // is downloaded once when its owner actually publishes a new revision.
+    // Optional faster notice from live player presence. The independent
+    // visitor polling loop works even when this notification never arrives.
     public void NotifyLiveHomeRevision(int version,bool anotherPlayerPresent)
     {
-        // Only a live, shared Home needs the immediate path. Visitors who are
-        // alone keep the existing ten-second version-check mechanism.
+        // Never let a failed or delayed live-notice download stall the
+        // normal 2-second revision checks.
         if(!anotherPlayerPresent || VisitingHome==null ||
            version<=VisitingHome.version || activeDownloads!=0 ||
            travel==null || !travel.InHome || travel.Traveling)return;
-        nextVisitPoll=Time.unscaledTime+10f;
+        nextVisitPoll=Time.unscaledTime+VisitorCheckInterval;
         StartCoroutine(DownloadLiveHomeRevision(version));
     }
 
@@ -332,7 +326,7 @@ public sealed class HomeDirectoryClient : MonoBehaviour
         Status="Home published • "+DisplayHomeCode;
         Changed?.Invoke();
         if(dirty)nextSync=Time.unscaledTime+
-            (LiveGuestsAtMyHome ? 0.05f : 2.5f);
+            (travel!=null && travel.InHome && !IsVisiting?0.1f:2.5f);
     }
     private void Retry()
     {
