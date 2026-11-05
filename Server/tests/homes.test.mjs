@@ -195,6 +195,61 @@ test('owner and two visitors must share the same published code and verified cre
   }finally{rmSync(dir,{recursive:true,force:true})}
 });
 
+test('Unity null pond placeholder does not reject aquarium and fish uploads',()=>{
+  const dir=temp();let now=1000;
+  try{
+    const api=createHomes({directory:dir,clock:()=>now});
+    const registered=api.dispatch('/v1/homes/register',{name:'No Pond Owner'});
+    const base={code:registered.code,ownerKey:registered.ownerKey,
+      name:'No Pond Owner',visibility:'public'};
+    // Unity JsonUtility serializes a null inline TankInfo as a default
+    // instance rather than JSON null. This was the real-world HTTP 400 cause.
+    const unityNullPond={id:'',key:'',x:0,y:0,z:0,yaw:0,fish:[]};
+    const initial=api.dispatch('/v1/homes/update',
+      {...base,tanks:[tank()],pond:unityNullPond});
+    assert.equal(initial.version,1);
+    let visitor=api.dispatch('/v1/homes/get',{code:base.code});
+    assert.equal(visitor.pond,null);
+    assert.equal(visitor.tanks[0].x,12);
+
+    // Changing the position and adding a fish must be accepted even when
+    // the same default pond is supplied on every Home upload.
+    now+=2000;
+    const moved=api.dispatch('/v1/homes/update',{...base,
+      tanks:[{...tank(),x:37,z:42,yaw:180,fish:[fish(7),fish(19)]}],
+      pond:unityNullPond});
+    assert.equal(moved.version,2);
+    const check=api.dispatch('/v1/homes/check',{code:base.code});
+    assert.equal(check.version,2);
+    visitor=api.dispatch('/v1/homes/get',{code:base.code});
+    assert.equal(visitor.tanks[0].x,37);
+    assert.equal(visitor.tanks[0].z,42);
+    assert.equal(visitor.tanks[0].yaw,180);
+    assert.equal(visitor.tanks[0].fish.length,2);
+    assert.equal(visitor.pond,null);
+    assert.equal(api.dispatch('/v1/homes/update',
+      {...base,tanks:[{...tank(),x:37,z:42,yaw:180,
+        fish:[fish(7),fish(19)]}],pond:{}}).version,2);
+
+    // Existing pond ownership stays intact, while malformed nonempty data
+    // remains rejected. Security validation has NOT been loosened for fish.
+    now+=2000;
+    const withPond=api.dispatch('/v1/homes/update',{...base,
+      tanks:visitor.tanks,pond:{id:'garden',fish:[fish(12)]}});
+    assert.equal(withPond.version,3);
+    assert.equal(api.dispatch('/v1/homes/get',{code:base.code}).pond.fish.length,1);
+    assert.throws(()=>api.dispatch('/v1/homes/update',{...base,
+      tanks:visitor.tanks,pond:{id:'invalid',fish:[]}}),e=>e.status===400);
+    assert.throws(()=>api.dispatch('/v1/homes/update',{...base,
+      tanks:visitor.tanks,pond:{id:'',fish:[fish(10)]}}),e=>e.status===400);
+    assert.throws(()=>api.dispatch('/v1/homes/update',{...base,
+      tanks:visitor.tanks,pond:{id:'',key:'untrusted',fish:[]}}),e=>e.status===400);
+    assert.throws(()=>api.dispatch('/v1/homes/update',{...base,
+      tanks:visitor.tanks,pond:{id:'garden',fish:Array(51).fill(fish())}}),
+      e=>e.status===400);
+  }finally{rmSync(dir,{recursive:true,force:true})}
+});
+
 test('saved Home directory alone synchronizes aquarium and fish revisions without presence',()=>{
   const dir=temp();
   try{
