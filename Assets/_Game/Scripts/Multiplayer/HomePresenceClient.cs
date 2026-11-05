@@ -16,10 +16,6 @@ public sealed class HomePresenceClient : MonoBehaviour
         public string key;
         public float x,y,z,yaw;
     }
-    [Serializable] public sealed class HomePeer : FishingMultiplayer.Peer
-    {
-        public AquariumMove move;
-    }
     [Serializable] private sealed class PresenceRequest
     {
         public string code,session,name,ownerKey;
@@ -32,7 +28,10 @@ public sealed class HomePresenceClient : MonoBehaviour
         public bool ok,owner;
         public string code,error;
         public int version;
-        public HomePeer[] players;
+        // Use the exact same peer model as FishingMultiplayer.Reply; Home
+        // presence must not rely on a special subclass or moving tank data.
+        public FishingMultiplayer.Peer[] players;
+        public AquariumMove moving;
     }
 
     public static HomePresenceClient Instance { get; private set; }
@@ -48,7 +47,24 @@ public sealed class HomePresenceClient : MonoBehaviour
     private float lastMoveSeen;
     private float nextPoll,lastSuccess;
     private bool pending,authorized,quitting;
-    private const float PollInterval=.30f;
+    private int otherPlayers;
+    private const float ActivePollInterval=.25f;
+    private const float EmptyPollInterval=1.5f;
+    private const float PresenceTimeout=10f;
+
+    // The owner's aquarium fish changes use the fast path ONLY while at
+    // least one actual guest is present in this same Home.
+    public bool HasOtherPlayersInMyHome =>
+        directory!=null && !directory.IsVisiting &&
+        !string.IsNullOrEmpty(currentHome) &&
+        currentHome==directory.OwnerCode &&
+        otherPlayers>0 && Time.unscaledTime-lastSuccess<PresenceTimeout;
+
+    // The fishing-room presentation falls back to its own peers if the
+    // independent Home-presence endpoint temporarily becomes unavailable.
+    public bool HasLivePresence =>
+        !string.IsNullOrEmpty(currentHome) &&
+        otherPlayers>0 && Time.unscaledTime-lastSuccess<PresenceTimeout;
 
     private void Awake()
     {
@@ -84,10 +100,14 @@ public sealed class HomePresenceClient : MonoBehaviour
             return;
         }
         if(currentHome!=code)ChangeHome(code);
-        if(Time.unscaledTime-lastSuccess>3f)ClearPeers();
+        // Never hide an idle avatar just because there is no active tank
+        // drag. A brief mobile HTTP hiccup also must not destroy/recreate it.
+        if(remotes.Count>0 && Time.unscaledTime-lastSuccess>PresenceTimeout)
+            ClearPeers();
         if(!pending && Time.unscaledTime>=nextPoll)
         {
-            nextPoll=Time.unscaledTime+PollInterval;
+            nextPoll=Time.unscaledTime+
+                (otherPlayers>0?ActivePollInterval:EmptyPollInterval);
             StartCoroutine(Poll(currentHome,sessionId));
         }
     }
@@ -96,6 +116,7 @@ public sealed class HomePresenceClient : MonoBehaviour
         string previous=currentHome;
         string previousSession=sessionId;
         currentHome=code;
+        otherPlayers=0;
         lastMoving=null;
         sessionId=Guid.NewGuid().ToString("N");
         authorized=false;
@@ -133,23 +154,27 @@ public sealed class HomePresenceClient : MonoBehaviour
             // Reauthenticate after a VM restart or expired presence session.
             authorized=false;
             nextPoll=Time.unscaledTime+2f;
-            if(Time.unscaledTime-lastSuccess>3f)ClearPeers();
+            if(remotes.Count>0 &&
+               Time.unscaledTime-lastSuccess>PresenceTimeout)ClearPeers();
             yield break;
         }
         authorized=directory!=null && directory.IsVisiting || answer.owner;
         // The owner key is sent on first handshake (or after an expiration),
         // never continuously with normal movement updates.
         lastSuccess=Time.unscaledTime;
-        nextPoll=Time.unscaledTime+PollInterval;
         Apply(answer);
+        // Fast movement only while multiple players share a Home. Alone,
+        // reduce requests substantially without making entry take very long.
+        nextPoll=Time.unscaledTime+
+            (otherPlayers>0?ActivePollInterval:EmptyPollInterval);
     }
     private void Apply(PresenceReply response)
     {
         if(response.code!=currentHome)return;
-        directory?.NotifyLiveHomeRevision(response.version);
-        var peers=response.players??new HomePeer[0];
+        var peers=response.players??new FishingMultiplayer.Peer[0];
         var present=new HashSet<string>();
-        AquariumMove moving=null;
+        // Aquarium drag updates travel separately from avatar presence.
+        AquariumMove moving=response.moving;
         foreach(var peer in peers)
         {
             if(peer==null || string.IsNullOrEmpty(peer.id) ||
@@ -163,9 +188,13 @@ public sealed class HomePresenceClient : MonoBehaviour
                 remotes[peer.id]=avatar;
             }
             avatar.Receive(peer);
-            if(!avatar.gameObject.activeSelf)avatar.gameObject.SetActive(true);
-            if(peer.move!=null && moving==null)moving=peer.move;
+            if(!avatar.gameObject.activeSelf)
+                avatar.gameObject.SetActive(true);
         }
+        otherPlayers=present.Count;
+        // When the owner publishes a changed tank/fish snapshot, guests
+        // download it immediately. A guest alone keeps the old 10s polling.
+        directory?.NotifyLiveHomeRevision(response.version,otherPlayers>0);
         var removed=new List<string>();
         foreach(var entry in remotes)
             if(!present.Contains(entry.Key))removed.Add(entry.Key);
@@ -196,6 +225,7 @@ public sealed class HomePresenceClient : MonoBehaviour
     }
     private void ClearPeers()
     {
+        otherPlayers=0;
         lastMoving=null;
         foreach(var peer in remotes.Values)
             if(peer!=null)Destroy(peer.gameObject);
