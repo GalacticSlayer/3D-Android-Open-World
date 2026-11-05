@@ -98,6 +98,13 @@ public sealed class ShopWorldHUD : MonoBehaviour
         // Keep the other shortcuts working and restore the menu button afterward.
         menuShortcut.SetActive(!posing && !MenuOpen && !FishingExperienceToast.IsShowingXp);
         poseShortcut.SetActive(!posing && !MenuOpen && !travel.Traveling && fishing != null && fishing.CanPoseWithFish);
+        // RETURN HOME occupies the normal second button slot during visits.
+        // Move Pose below it instead of placing two touch controls together.
+        var visitor=HomeDirectoryClient.Instance;
+        float poseY=travel.InHome && visitor!=null && visitor.IsVisiting?-224f:-136f;
+        var poseRect=poseShortcut.GetComponent<RectTransform>();
+        if(!Mathf.Approximately(poseRect.anchoredPosition.y,poseY))
+            poseRect.anchoredPosition=new Vector2(-36f,poseY);
         poseLabel.text = posing ? "STOP POSING" : "POSE";
         indexShortcut.SetActive(!posing && !MenuOpen);baitShortcut.SetActive(!posing && !MenuOpen);RefreshBaitShortcut();
         bool independentPage=page=="bait" || page.StartsWith(HabitatAddPrefix,StringComparison.Ordinal);
