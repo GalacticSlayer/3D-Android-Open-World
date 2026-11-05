@@ -310,14 +310,14 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
         }
     }
 
-    private void TopRightClose()
+    private void TopRightClose(string caption="CLOSE")
     {
-        var button=ButtonAt(popupRoot.transform,"CLOSE",ClosePopup,8);
+        var button=ButtonAt(popupRoot.transform,caption,ClosePopup,8);
         var rect=button.GetComponent<RectTransform>();
         rect.anchorMin=rect.anchorMax=new Vector2(1f,1f);
         rect.pivot=new Vector2(1f,1f);
         rect.anchoredPosition=new Vector2(-17f,-15f);
-        rect.sizeDelta=new Vector2(185f,64f);
+        rect.sizeDelta=new Vector2(230f,68f);
     }
 
     private Button BottomAction(string caption,bool left,
@@ -403,12 +403,7 @@ public sealed class HomeDirectoryPanel : MonoBehaviour
         ButtonAt(target,"SEARCH",()=>ConfirmSearch(searchField!=null?searchField.text:""));
         // The same search field handles names and Home codes, including
         // code-only Homes. There is no separate Visit by Code action.
-        var cancel=ButtonAt(popupRoot.transform,"CANCEL",ClosePopup,8);
-        var rect=cancel.GetComponent<RectTransform>();
-        rect.anchorMin=rect.anchorMax=new Vector2(1f,1f);
-        rect.pivot=new Vector2(1f,1f);
-        rect.anchoredPosition=new Vector2(-17f,-15f);
-        rect.sizeDelta=new Vector2(185f,64f);
+        TopRightClose("CANCEL");
         searchField.ActivateInputField();
     }
 
