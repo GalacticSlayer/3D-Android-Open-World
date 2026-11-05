@@ -225,7 +225,9 @@ clearing app data or reinstalling without preserving PlayerPrefs loses ownership
 of that published Home. It is not a cross-device account or cloud backup.
 
 Only individual aquarium identity, type, local placement, rotation and resident
-species/biome/weight are published. Fish bags, coins, gear, progress, movement
+species/biome/weight, plus the owned Home pond tier and its residents, are
+published. A missing pond restores the solid garden plot during visits.
+Fish bags, coins, gear, progress, movement
 and full save files are not uploaded. Owners' changes upload after a 2.5-second
 debounce and retry after interruptions. An unchanged Home does not upload again,
 even if other game saves happen. Visitors download a snapshot once, then check
