@@ -16,11 +16,21 @@ public sealed class HomeVisitorTank : MonoBehaviour
         if(Time.unscaledTime<nextCheck)return;
         nextCheck=Time.unscaledTime+.5f;
         var d=ShopCatalog.Habitat(tank.id);
+        if(d==null || habitat.water==null)return;
         float range=55f+Mathf.Max(d.width,d.depth)*.6f;
         bool visible=(observer.position-transform.position).sqrMagnitude<range*range;
-        if(visible&&!spawned)SpawnFish();
-        if(habitat.fishRoot.gameObject.activeSelf!=visible)
-            habitat.fishRoot.gameObject.SetActive(visible);
+        if(!visible)
+        {
+            if(habitat.fishRoot.gameObject.activeSelf)
+                habitat.fishRoot.gameObject.SetActive(false);
+            return;
+        }
+        // Size the visual meshes while their parent is ACTIVE. Creating fish
+        // under an inactive Residents object can produce zero/stale renderer
+        // bounds and make remote fish invisible or incorrectly scaled.
+        if(!habitat.fishRoot.gameObject.activeSelf)
+            habitat.fishRoot.gameObject.SetActive(true);
+        if(!spawned)SpawnFish();
     }
     private void SpawnFish()
     {
