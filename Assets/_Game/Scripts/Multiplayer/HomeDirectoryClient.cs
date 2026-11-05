@@ -93,6 +93,21 @@ public sealed class HomeDirectoryClient : MonoBehaviour
     }
     private void MarkDirty(){dirty=true;nextSync=Time.unscaledTime+2.5f;}
 
+    private bool LiveGuestsAtMyHome =>
+        travel!=null && travel.InHome && !IsVisiting &&
+        HomePresenceClient.Instance!=null &&
+        HomePresenceClient.Instance.HasOtherPlayersInMyHome;
+
+    // Called ONLY after a successful deposit/withdraw. With an active guest,
+    // publish the changed list of fish promptly. Alone, Save() has already
+    // scheduled the regular 2.5-second debounced Home update.
+    public void NotifyHabitatFishChanged()
+    {
+        if(progress==null || progress.ReadOnly || !LiveGuestsAtMyHome)return;
+        dirty=true;
+        nextSync=Time.unscaledTime+.05f;
+    }
+
     // Placement is visually shared during the drag; commit the new permanent
     // layout quickly when the owner presses PLACE or MOVE TO STORAGE.
     public void NotifyAquariumPositionCommitted()
@@ -104,12 +119,36 @@ public sealed class HomeDirectoryClient : MonoBehaviour
 
     // Live presence carries only a version number; a full fish/tank snapshot
     // is downloaded once when its owner actually publishes a new revision.
-    public void NotifyLiveHomeRevision(int version)
+    public void NotifyLiveHomeRevision(int version,bool anotherPlayerPresent)
     {
-        if(VisitingHome==null || version<=VisitingHome.version ||
-           activeDownloads!=0 || travel==null || !travel.InHome)return;
+        // Only a live, shared Home needs the immediate path. Visitors who are
+        // alone keep the existing ten-second version-check mechanism.
+        if(!anotherPlayerPresent || VisitingHome==null ||
+           version<=VisitingHome.version || activeDownloads!=0 ||
+           travel==null || !travel.InHome || travel.Traveling)return;
         nextVisitPoll=Time.unscaledTime+10f;
-        StartCoroutine(CheckVisitingHome());
+        StartCoroutine(DownloadLiveHomeRevision(version));
+    }
+
+    private IEnumerator DownloadLiveHomeRevision(int advertisedVersion)
+    {
+        var previous=VisitingHome;
+        if(previous==null || advertisedVersion<=previous.version)yield break;
+        activeDownloads++;
+        Reply snapshot=null;
+        // Avoid a second /check round trip while someone is physically here.
+        // The presence response already contains the authoritative revision.
+        yield return Post("/v1/homes/get",
+            new Request{code=previous.code},r=>snapshot=r);
+        if(VisitingHome==previous && snapshot!=null && snapshot.ok &&
+           snapshot.version>previous.version)
+        {
+            VisitingHome=snapshot;
+            if(travel!=null && travel.InHome && travel.World!=null)
+                travel.World.RefreshHomeView();
+            Changed?.Invoke();
+        }
+        activeDownloads--;
     }
     public void SetVisibility(string value)
     {
@@ -215,7 +254,8 @@ public sealed class HomeDirectoryClient : MonoBehaviour
         retrySeconds=10f;sending=false;
         Status="Home published • "+DisplayHomeCode;
         Changed?.Invoke();
-        if(dirty)nextSync=Time.unscaledTime+2.5f;
+        if(dirty)nextSync=Time.unscaledTime+
+            (LiveGuestsAtMyHome?.05f:2.5f);
     }
     private void Retry()
     {
