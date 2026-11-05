@@ -130,6 +130,59 @@ test('visiting Homes include the true pond and all pond fish; no-pond snapshots 
   }finally{rmSync(dir,{recursive:true,force:true})}
 });
 
+test('owner and two visitors must share the same published code and verified credential',()=>{
+  const dir=temp();let now=1000;
+  try{
+    const api=createHomes({directory:dir,clock:()=>now});
+    // Simulates an Android reinstall registering a second code while two
+    // visitors still enter the original Home from the public directory.
+    const original=api.dispatch('/v1/homes/register',{name:'Collector'});
+    const replacement=api.dispatch('/v1/homes/register',{name:'Collector'});
+    const initial={code:original.code,ownerKey:original.ownerKey,
+      name:'Collector',visibility:'public',tanks:[tank()]};
+    const first=api.dispatch('/v1/homes/update',initial);
+    const pose={world:2,x:0,y:0,z:0,yaw:0};
+    const guestA='a'.repeat(32),guestB='b'.repeat(32),owner='c'.repeat(32);
+    api.dispatch('/v1/homes/presence',{code:original.code,session:guestA,
+      name:'GuestA',pose});
+    const together=api.dispatch('/v1/homes/presence',{
+      code:original.code,session:guestB,name:'GuestB',pose});
+    assert.equal(together.otherCount,1);
+    assert.equal(together.players[0].name,'GuestA');
+
+    // Owner enters the DIFFERENT Home via Travel: both visitors stay in
+    // the original Home, and its saved tank positions remain frozen.
+    const split=api.dispatch('/v1/homes/presence',{
+      code:replacement.code,ownerKey:replacement.ownerKey,
+      session:owner,name:'Owner',pose});
+    assert.equal(split.owner,true);
+    assert.equal(split.otherCount,0);
+    assert.equal(api.dispatch('/v1/homes/get',{code:original.code}).version,
+      first.version);
+    assert.throws(()=>api.dispatch('/v1/homes/update',{
+      ...initial,ownerKey:replacement.ownerKey,tanks:[{...tank(),x:48}]}),
+      e=>e.status===403);
+
+    // Reusing the verified ORIGINAL code/key fixes BOTH symptoms: mutual
+    // presence and an authorized new aquarium revision.
+    const joined=api.dispatch('/v1/homes/presence',{
+      code:original.code,ownerKey:original.ownerKey,
+      session:owner,name:'Owner',pose});
+    assert.equal(joined.owner,true);
+    assert.equal(joined.otherCount,2);
+    const guestView=api.dispatch('/v1/homes/presence',{
+      code:original.code,session:guestB,name:'GuestB',pose});
+    assert.equal(guestView.otherCount,2);
+    assert.equal(guestView.players.some(p=>p.name==='Owner'),true);
+    const saved=api.dispatch('/v1/homes/update',{
+      ...initial,tanks:[{...tank(),x:48,fish:[fish(13),fish(16)]}]});
+    const fresh=api.dispatch('/v1/homes/get',{code:original.code});
+    assert.equal(fresh.version,saved.version);
+    assert.equal(fresh.tanks[0].x,48);
+    assert.equal(fresh.tanks[0].fish.length,2);
+  }finally{rmSync(dir,{recursive:true,force:true})}
+});
+
 test('saved Home directory alone synchronizes aquarium and fish revisions without presence',()=>{
   const dir=temp();
   try{
