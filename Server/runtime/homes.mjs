@@ -240,7 +240,19 @@ export function createHomes({directory,clock=Date.now}={}){
       // arrives; canceled drags have no completed placement to publish.
       function aquariumPosition(value,label){
         if(value==null)return null;
-        if(typeof value.key!=='string' ||
+        // Unity's JsonUtility may encode a null inline [Serializable]
+        // AquariumMove as {} or its default-valued fields. The owner sends
+        // both optional move and placed on *every* presence heartbeat.
+        // Rejecting an empty placeholder here used to reject the entire
+        // authenticated owner's heartbeat, while visitor heartbeats worked.
+        // Exactly the same serialization issue previously blocked pond saves.
+        if(typeof value==='object' && !Array.isArray(value) &&
+           (value.key==null || value.key==='') &&
+           ['x','y','z','yaw'].every(k=>value[k]==null || value[k]===0) &&
+           Object.keys(value).every(k=>['key','x','y','z','yaw'].includes(k)))
+          return null;
+        if(!value || typeof value!=='object' || Array.isArray(value) ||
+           typeof value.key!=='string' ||
            !/^aq[1-9][0-9]{0,9}$/.test(value.key) ||
            ![value.x,value.y,value.z].every(n=>finite(n,-150,150)) ||
            !finite(value.yaw,-720,720))
