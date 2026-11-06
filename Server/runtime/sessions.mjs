@@ -186,7 +186,7 @@ export function createSessionServer({ clock = Date.now, timeout = 30000, ledgerP
     // Explicit capability marker lets Android clients and developers detect
     // an Oracle server still running an old Home presence release.
     if (req.method === 'GET' && req.url === '/health') {
-      reply(200,{ok:true,protocol:PROTOCOL,homePresenceProtocol:4,homeUploadDiagnostics:true,unityNullPondCompatible:true});
+      reply(200,{ok:true,protocol:PROTOCOL,homePresenceProtocol:4,homeUploadDiagnostics:true,unityNullPondCompatible:true,unityNullHomeMoveCompatible:true});
       return;
     }
     if (req.method !== 'POST' || !['/v1/open','/v1/join','/v1/state','/v1/leave','/v1/tournament','/v1/tournament-receipt','/v1/tournament-catches','/v1/boss','/v1/boss-receipt',
