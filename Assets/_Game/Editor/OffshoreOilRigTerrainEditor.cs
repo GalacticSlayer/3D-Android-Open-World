@@ -102,7 +102,12 @@ public sealed class OffshoreOilRigTerrainEditor : IProcessSceneWithReport
             throw new InvalidOperationException("South seabed is not axis-aligned.");
 
         GameObject root = Root(scene);
-        bool created = false;
+        // An obsolete 1.7 km-wide water-targeting trigger is left over from the
+        // old boat-placement system. Modern placement raycasts against the
+        // mathematical ocean plane (BoatClearance.TryGetWaterTarget), so this
+        // box is not needed and looks like a huge invisible obstruction in the
+        // Scene view. Do not delete the ocean or touch any other collider.
+        bool created = RemoveLegacyBoatPlacementTrigger(scene);
         Material material = null;
         GameObject skirts = FindChild(root, "Perimeter Drop-offs");
         if (skirts == null)
@@ -160,38 +165,149 @@ public sealed class OffshoreOilRigTerrainEditor : IProcessSceneWithReport
             visibility.terrain = tile;
             created = true;
         }
-        // The final oil-rig structure can replace this small temporary deck.
-        // A real collider/arrival prevents unlocked fast travel from dropping
-        // the player into 220-m-deep water. No existing terrain is touched.
-        GameObject platform = FindChild(root, "Offshore Oil Rig Starter Platform");
-        Vector3 rigCenter = expansion.PelagicCenter + Vector3.back * SouthDistance;
-        float platformHeight = ocean.BaseWaterLevel + 1f;
-        if (platform == null)
+        // Upgrade an already-created and possibly locally saved OilRigSeabed
+        // instead of leaving it flat/deep forever. SetHeights only on the new
+        // offshore tile; never on the existing Suncrest or South Ocean data.
+        Terrain rigTerrain = oil.GetComponent<Terrain>();
+        if (rigTerrain == null || rigTerrain.terrainData == null)
+            throw new InvalidOperationException("The Offshore Oil Rig tile has no editable TerrainData.");
+        if (rigTerrain.terrainData == original.terrainData ||
+            (south != null && south.terrain != null &&
+             rigTerrain.terrainData == south.terrain.terrainData))
+            throw new InvalidOperationException("Refusing to sculpt: the Offshore tile shares TerrainData with an existing island.");
+        var rigProfile = oil.GetComponent<OffshoreOilRigTerrain>();
+        if (rigProfile == null)
         {
-            platform = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            platform.name = "Offshore Oil Rig Starter Platform";
-            SceneManager.MoveGameObjectToScene(platform, scene);
-            platform.transform.SetParent(root.transform, false);
-            platform.transform.position = new Vector3(rigCenter.x, platformHeight, rigCenter.z);
-            platform.transform.localScale = new Vector3(24f, 1f, 24f);
-            platform.layer = original.gameObject.layer;
-            var renderer = platform.GetComponent<MeshRenderer>();
-            renderer.sharedMaterial = LoadOrCreateMaterial(persist);
-            renderer.shadowCastingMode = ShadowCastingMode.Off;
-            // The user may replace/delete this placeholder once the full rig
-            // prefab is supplied. The island discovery and fish habitat are not
-            // dependent on this temporary mesh.
+            rigProfile = oil.AddComponent<OffshoreOilRigTerrain>();
+            rigProfile.terrain = rigTerrain;
             created = true;
         }
-        if (FindChild(platform, OffshoreOilRigZone.ArrivalName) == null)
+        Vector3 rigCenter = expansion.PelagicCenter + Vector3.back * SouthDistance;
+        if (rigProfile.SeabedProfileVersion < 1)
         {
-            GameObject marker = new GameObject(OffshoreOilRigZone.ArrivalName);
-            marker.transform.SetParent(platform.transform, false);
-            marker.transform.position = new Vector3(rigCenter.x, ocean.BaseWaterLevel + 2.2f, rigCenter.z);
-            marker.transform.rotation = Quaternion.LookRotation(Vector3.forward, Vector3.up);
+            RaiseOilRigMound(rigTerrain, ocean.BaseWaterLevel, rigCenter);
+            rigProfile.MarkSeabedProfileApplied(1);
+            EditorUtility.SetDirty(rigTerrain.terrainData);
+            EditorUtility.SetDirty(rigProfile);
+            created = true;
+        }
+
+        // Retire the old 24 x 24 m cube that used to provide solid footing.
+        // It would be buried inside the new mound and leave an unwanted box
+        // collider at the arrival point. Keep only its transform/arrival child;
+        // if the player already replaced it with custom artwork, leave that.
+        GameObject platform = FindChild(root, "Offshore Oil Rig Starter Platform");
+        if (platform == null)
+        {
+            platform = new GameObject("Offshore Oil Rig Starter Platform");
+            SceneManager.MoveGameObjectToScene(platform, scene);
+            platform.transform.SetParent(root.transform, false);
+            platform.transform.position = rigCenter;
+            created = true;
+        }
+        if (RetireLegacyStarterCube(platform)) created = true;
+
+        Vector3 spawn = new Vector3(rigCenter.x,
+            rigTerrain.SampleHeight(rigCenter) + rigTerrain.transform.position.y + 1.6f,
+            rigCenter.z);
+        GameObject markerObject = FindChild(platform, OffshoreOilRigZone.ArrivalName);
+        if (markerObject == null)
+        {
+            markerObject = new GameObject(OffshoreOilRigZone.ArrivalName);
+            markerObject.transform.SetParent(platform.transform, false);
+            markerObject.transform.position = spawn;
+            markerObject.transform.rotation = Quaternion.LookRotation(Vector3.forward, Vector3.up);
+            created = true;
+        }
+        else if (markerObject.transform.position.y < spawn.y - 0.4f)
+        {
+            // Lift the previously generated marker from the old water-level
+            // platform up onto the new exposed terrain. Do not move custom
+            // arrival points already above the surface of the mound.
+            markerObject.transform.position = spawn;
             created = true;
         }
         return created;
+    }
+
+    // The original OceanWater already follows the player, and the boats now
+    // aim at a mathematical sea-level plane. The obsolete trigger is neither
+    // a water renderer nor an obstacle that boats need.
+    static bool RemoveLegacyBoatPlacementTrigger(Scene scene)
+    {
+        foreach (GameObject go in scene.GetRootGameObjects())
+        {
+            if (go.name != "BoatPlacementWater" || go.layer != 4) continue;
+            BoxCollider box = go.GetComponent<BoxCollider>();
+            if (box == null || !box.isTrigger || box.size.y > .1f) continue;
+            UnityEngine.Object.DestroyImmediate(box);
+            return true;
+        }
+        return false;
+    }
+
+    static bool RetireLegacyStarterCube(GameObject platform)
+    {
+        var box = platform.GetComponent<BoxCollider>();
+        var renderer = platform.GetComponent<MeshRenderer>();
+        var filter = platform.GetComponent<MeshFilter>();
+        if (box == null || renderer == null || filter == null ||
+            filter.sharedMesh == null || filter.sharedMesh.name != "Cube" ||
+            Mathf.Abs(platform.transform.localScale.x - 24f) > .1f ||
+            Mathf.Abs(platform.transform.localScale.z - 24f) > .1f)
+            return false; // Artist-owned replacement: leave it intact.
+        UnityEngine.Object.DestroyImmediate(box);
+        UnityEngine.Object.DestroyImmediate(renderer);
+        UnityEngine.Object.DestroyImmediate(filter);
+        return true;
+    }
+
+    /// <summary>
+    /// One-time edit to the OFFSHORE tile only. The outer 290-m-deep ocean
+    /// bed, its heightmap resolution, and all neighbouring terrains remain
+    /// exactly the same. An exposed ~32 m rocky summit gives players a visual
+    /// landmark from their boat; the shore is roughly 110 m from the centre.
+    /// Max(existing, profile) preserves any locally hand-raised detail.
+    /// </summary>
+    static void RaiseOilRigMound(Terrain terrain, float sea, Vector3 center)
+    {
+        TerrainData data = terrain.terrainData;
+        int resolution = data.heightmapResolution;
+        float[,] heights = data.GetHeights(0, 0, resolution, resolution);
+        Vector3 start = terrain.transform.position;
+        Vector3 size = data.size;
+        bool changed = false;
+        for (int z = 0; z < resolution; z++)
+        for (int x = 0; x < resolution; x++)
+        {
+            float px = start.x + x * size.x / (resolution - 1f);
+            float pz = start.z + z * size.z / (resolution - 1f);
+            float dx = px - center.x, dz = pz - center.z;
+            // Broad asymmetry gives a natural rocky headland rather than a
+            // perfectly circular flat-topped cylinder.
+            float warp = (Mathf.PerlinNoise(px * .017f + 19f, pz * .015f + 37f) - .5f) * 12f;
+            float distance = Mathf.Max(0f, Mathf.Sqrt(dx * dx + dz * dz) + warp);
+            if (distance >= 222f) continue;
+            float before = start.y + heights[z, x] * size.y;
+            float detail = (Mathf.PerlinNoise(px * .038f + 41f, pz * .034f + 17f) - .5f) * 3.4f;
+            float goal;
+            if (distance <= 35f)
+                goal = sea + 32f + detail;
+            else if (distance <= 120f)
+                goal = Mathf.Lerp(sea + 32f, sea - 6f,
+                    Mathf.SmoothStep(0f, 1f, (distance - 35f) / 85f)) + detail;
+            else if (distance <= 193f)
+                goal = Mathf.Lerp(sea - 6f, sea - 205f,
+                    Mathf.SmoothStep(0f, 1f, (distance - 120f) / 73f)) + detail;
+            else
+                goal = Mathf.Lerp(sea - 205f, before,
+                    Mathf.SmoothStep(0f, 1f, (distance - 193f) / 29f));
+            float newHeight = Mathf.Max(before, Mathf.Min(start.y + size.y - 1f, goal));
+            if (newHeight <= before + .0001f) continue;
+            heights[z, x] = Mathf.Clamp01((newHeight - start.y) / size.y);
+            changed = true;
+        }
+        if (changed) data.SetHeights(0, 0, heights);
     }
 
     static TerrainData CreateOilData(TerrainData source)
