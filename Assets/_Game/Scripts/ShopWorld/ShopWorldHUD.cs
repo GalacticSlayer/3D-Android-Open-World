@@ -518,6 +518,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
     {
         foreach(int zoneIndex in ReefCatalog.IslandIndexOrder)
         {
+            if (zoneIndex == OffshoreOilRigZone.BiomeId && !ReefCatalog.OffshoreOilRigDiscovered) continue;
             int selectedBiome=zoneIndex;var entry=ReefCatalog.Zones[zoneIndex];
             var card=ButtonAt(list,entry.name+(entry.Unlocked?"\nUNLOCKED":"\nLOCKED")+" • FISHING AREA\n\n"+entry.description+"\n\nOPEN FISH INDEX →",()=>{if(SelectIndexBiome(selectedBiome))Open("reef-fish");});
             card.gameObject.AddComponent<LayoutElement>().preferredHeight=290;
@@ -557,12 +558,13 @@ public sealed class ShopWorldHUD : MonoBehaviour
             new Vector2(-22,-18),new Vector2(170,54));
         FishingHudTheme.Panel(menuClose.gameObject);
     }
-    private Texture2D bluewaterThumbnail,snapperThumbnail;
+    private Texture2D bluewaterThumbnail,snapperThumbnail,offshoreThumbnail;
     private Texture2D BiomeThumbnail(int biome)
     {
         var artwork = IslandIndexArtwork.Load(biome);
         if (artwork != null) return artwork;
         if(biome==0)return IslandThumbnail();
+        if(biome==OffshoreOilRigZone.BiomeId && offshoreThumbnail!=null)return offshoreThumbnail;
         if(biome==4 && snapperThumbnail!=null)return snapperThumbnail;
         if(biome==3 && bluewaterThumbnail!=null)return bluewaterThumbnail;
         if(biome==1 && rockyThumbnail!=null)return rockyThumbnail;
@@ -575,10 +577,20 @@ public sealed class ShopWorldHUD : MonoBehaviour
             if(biome==4 && q<.83f)c=q>.64f?new Color(.88f,.79f,.56f):Color.Lerp(new Color(.22f,.40f,.22f),new Color(.38f,.53f,.28f),Mathf.PerlinNoise(x*.05f,y*.05f));
             else if(biome==3 && q<.65f)c=q>.43f?new Color(.83f,.77f,.55f):new Color(.23f,.40f,.25f);
             else if(biome==1 && q<1)c=q>.80f?new Color(.65f,.57f,.39f):Color.Lerp(new Color(.22f,.26f,.24f),new Color(.48f,.47f,.4f),Mathf.PerlinNoise(x*.08f,y*.08f));
+            else if(biome==OffshoreOilRigZone.BiomeId)
+            {
+                // Lightweight top-down oil-rig silhouette, without adding artwork assets.
+                bool deck=Mathf.Abs(x-96)<30 && Mathf.Abs(y-80)<22;
+                bool walkway=Mathf.Abs(x-96)<5 && y>100 && y<144;
+                bool tower=Mathf.Abs(x-99)<9 && Mathf.Abs(y-79)<8;
+                c=deck?new Color(.30f,.39f,.45f):new Color(.025f,.24f,.34f);
+                if(walkway)c=new Color(.65f,.60f,.42f);
+                if(tower)c=new Color(.73f,.69f,.47f);
+            }
             else c*=.82f+.18f*Mathf.Sin(y*.30f+x*.05f);
             pixels[y*192+x]=c;
         }
-        texture.SetPixels(pixels);texture.Apply(false,true);if(biome==4)snapperThumbnail=texture;else if(biome==1)rockyThumbnail=texture;else if(biome==3)bluewaterThumbnail=texture;else deepThumbnail=texture;return texture;
+        texture.SetPixels(pixels);texture.Apply(false,true);if(biome==4)snapperThumbnail=texture;else if(biome==1)rockyThumbnail=texture;else if(biome==3)bluewaterThumbnail=texture;else if(biome==OffshoreOilRigZone.BiomeId)offshoreThumbnail=texture;else deepThumbnail=texture;return texture;
     }
     private Texture2D IslandThumbnail()
     {
