@@ -9,6 +9,18 @@ using UnityEngine;
 public sealed class OffshoreOilRigTerrain : MonoBehaviour
 {
     public Terrain terrain;
+    // Only the offshore tile uses this persisted one-time editor migration.
+    // Bumping it never resculpts the original Suncrest/South terrain.
+    [SerializeField, HideInInspector] private int seabedProfileVersion;
+    public int SeabedProfileVersion => seabedProfileVersion;
+
+#if UNITY_EDITOR
+    public void MarkSeabedProfileApplied(int version)
+    {
+        seabedProfileVersion = version;
+    }
+#endif
+
     [SerializeField] private float renderDistance = 900f;
     private Transform player;
     private float nextCheck;
