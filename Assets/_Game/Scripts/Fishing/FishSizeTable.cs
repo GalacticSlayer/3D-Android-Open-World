@@ -47,7 +47,9 @@ public static class FishSizeTable
         NapoleonWrasseCurve(), // Cheilinus undulatus
         GameplayCurve(10f,14), // White Skate: exactly the Leopard Stingray curve
         BlueTangCurve(), // Paracanthurus hepatus
-        DussumieriTangCurve() // Acanthurus dussumieri
+        DussumieriTangCurve(), // Acanthurus dussumieri
+        GameplayCurve(8f,70), // ID 43 Abyssal Leviathan uses its dedicated override
+        GameplayCurve(7.46f,93) // ID 44 Black marlin: ~60 kg at 2 m, ~750 kg at 4.65 m
     };
 
     // Edwards et al. (2011), Rodrigues lagoon measurements, n=17 (14-27 cm TL).
