@@ -302,6 +302,83 @@ test('saved Home directory alone synchronizes aquarium and fish revisions withou
   }finally{rmSync(dir,{recursive:true,force:true})}
 });
 
+test('owner Home heartbeat accepts Unity null move/placed and shows two visitors',()=>{
+  const dir=temp();let now=1000;
+  try{
+    const api=createHomes({directory:dir,clock:()=>now});
+    const home=api.dispatch('/v1/homes/register',{name:'Home Owner'});
+    const saved=api.dispatch('/v1/homes/update',{code:home.code,
+      ownerKey:home.ownerKey,name:'Home Owner',visibility:'public',
+      tanks:[tank()],pond:null});
+    const pose={world:2,x:1,y:2,z:3,yaw:90,swimming:false,
+      sprinting:false,rodEquipped:false,heldFishSpecies:-1,
+      heldFishWeight:0,fishPosing:false,hasFish:false,
+      lureInWater:false,reeling:false,castSequence:0};
+    const a='a'.repeat(32),b='b'.repeat(32),c='c'.repeat(32);
+    // Known-good path: visitors see each other.
+    api.dispatch('/v1/homes/presence',{code:home.code,session:a,
+      name:'Visitor A',pose:{...pose,x:4}});
+    const second=api.dispatch('/v1/homes/presence',{code:home.code,
+      session:b,name:'Visitor B',pose:{...pose,x:5,sprinting:true}});
+    assert.equal(second.otherCount,1);
+    assert.equal(second.players[0].name,'Visitor A');
+    // A null class in Unity JsonUtility may serialize as its default fields
+    // instead of null. Previously either move or placed rejected the owner.
+    const empty={key:'',x:0,y:0,z:0,yaw:0};
+    const owner=api.dispatch('/v1/homes/presence',{
+      code:home.code,session:c,ownerKey:home.ownerKey,
+      name:'Home Owner',pose,move:empty,placed:{}});
+    assert.equal(owner.ok,true);
+    assert.equal(owner.owner,true);
+    assert.equal(owner.otherCount,2);
+    assert.equal(owner.players.some(p=>p.name==='Visitor A'),true);
+    assert.equal(owner.players.some(p=>p.name==='Visitor B'),true);
+    assert.equal(owner.players.find(p=>p.name==='Visitor B').sprinting,true);
+    assert.equal(owner.moving,null);
+    assert.equal(owner.placed,null);
+
+    // Visitors must now discover the owner as a complete animation pose.
+    const visitors=api.dispatch('/v1/homes/presence',{
+      code:home.code,session:a,name:'Visitor A',pose:{...pose,x:4},
+      move:empty,placed:empty,wantSnapshot:true,knownVersion:-1});
+    assert.equal(visitors.otherCount,2);
+    assert.equal(visitors.players.some(p=>p.name==='Home Owner'),true);
+    assert.equal(visitors.players.find(p=>p.name==='Home Owner').world,2);
+    assert.equal(visitors.snapshot.version,saved.version);
+    assert.equal(visitors.snapshot.tanks[0].x,12);
+
+    // The owner can continue sending unchanged empty placeholders on each
+    // heartbeat and can then send real move/placement events normally.
+    now+=100;
+    const idle=api.dispatch('/v1/homes/presence',{
+      code:home.code,session:c,name:'Home Owner',pose,
+      move:{},placed:empty});
+    assert.equal(idle.owner,true);
+    assert.equal(idle.otherCount,2);
+    const moved={key:'aq1',x:19,y:0,z:26,yaw:180};
+    api.dispatch('/v1/homes/presence',{
+      code:home.code,session:c,name:'Home Owner',pose:{...pose,x:2},
+      move:moved,placed:empty});
+    const preview=api.dispatch('/v1/homes/presence',{
+      code:home.code,session:b,name:'Visitor B',pose:{...pose,x:5}});
+    assert.deepEqual(preview.moving,moved);
+    const done=api.dispatch('/v1/homes/presence',{
+      code:home.code,session:c,name:'Home Owner',pose,
+      move:empty,placed:moved});
+    assert.equal(done.moving,null);
+    assert.deepEqual(done.placed,moved);
+    // Invalid nonempty moves must still be rejected.
+    assert.throws(()=>api.dispatch('/v1/homes/presence',{
+      code:home.code,session:c,name:'Home Owner',pose,
+      move:{key:'',x:12,y:0,z:0,yaw:0}}),e=>e.status===400);
+    assert.throws(()=>api.dispatch('/v1/homes/presence',{
+      code:home.code,session:c,name:'Home Owner',pose,
+      placed:{key:'aq1',x:1000,y:0,z:0,yaw:0}}),e=>e.status===400);
+    // Presence-only updates must never mutate the persisted layout/fish.
+    assert.equal(api.dispatch('/v1/homes/get',{code:home.code}).version,saved.version);
+  }finally{rmSync(dir,{recursive:true,force:true})}
+});
+
 test('same-Home idle avatars remain visible; fish revision and owner tank moves stay separate',()=>{
   const dir=temp();let now=1000;
   try{
