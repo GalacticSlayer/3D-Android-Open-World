@@ -5,12 +5,12 @@ using UnityEngine.UI;
 // Shared by the island cards and fish-index banner. Decode each supplied image once.
 public static class IslandIndexArtwork
 {
-    private static readonly Texture2D[] Cache = new Texture2D[5];
-    private static readonly bool[] Attempted = new bool[5];
+    private static readonly Texture2D[] Cache = new Texture2D[6];
+    private static readonly bool[] Attempted = new bool[6];
 
     public static Texture2D Load(int biome)
     {
-        if (biome < 0 || biome >= Cache.Length || biome == 2) return null;
+        if (biome < 0 || biome >= Cache.Length || biome == 2 || biome == OffshoreOilRigZone.BiomeId) return null;
         if (Attempted[biome]) return Cache[biome];
         Attempted[biome] = true;
         string name = biome == 0 ? "SuncrestBeach" : biome == 1 ? "BrinebreakIsle" :
