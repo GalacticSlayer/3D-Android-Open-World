@@ -99,6 +99,7 @@ public static class BlackMarlinImporter
         GameObject root = PrefabUtility.LoadPrefabContents(CandidatePath);
         try
         {
+            PlaceMouthBehindBill(root);
             if (PrefabUtility.SaveAsPrefabAsset(root, PrefabPath) == null)
                 throw new InvalidOperationException("Could not save the Black Marlin prefab.");
         }
@@ -112,6 +113,23 @@ public static class BlackMarlinImporter
         Selection.activeObject = prefab;
         EditorGUIUtility.PingObject(prefab);
         Debug.Log("[BLACK MARLIN] Verified skinned rig, moving swim curves, matching atlas and head-bone mouth. Saved " + PrefabPath);
+    }
+
+    // Marlin have a long rigid bill in front of the actual mouth. The shared
+    // importer initially finds the furthest-forward lip vertex, which is the
+    // bill tip for this species. Move the pinned head-bone anchor to the mouth
+    // opening at the bill base, leaving all other fish importers unchanged.
+    static void PlaceMouthBehindBill(GameObject prefab)
+    {
+        Transform mouth = prefab.GetComponentsInChildren<Transform>(true)
+            .FirstOrDefault(t => t.name == "AuthoredMouthAnchor");
+        if (mouth == null) throw new InvalidDataException("Black Marlin mouth anchor missing.");
+        Vector3 local = prefab.transform.InverseTransformPoint(mouth.position);
+        // SeaBassImporter normalizes the complete FBX to roughly 0.92 m;
+        // the bill is ~16-18% of the reference side-view length.
+        local.z -= .15f;
+        local.y -= .012f;
+        mouth.position = prefab.transform.TransformPoint(local);
     }
 
     static void Verify(GameObject prefab)
