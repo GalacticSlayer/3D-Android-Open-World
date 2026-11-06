@@ -305,6 +305,9 @@ public sealed class IslandExpansionWorld : MonoBehaviour
     }
     public int BiomeAt(Vector3 p)
     {
+        // Offshore Oil Rig overrides the default deep-ocean biome only inside
+        // its own 350 m circle. Existing island classifications stay identical.
+        if (OffshoreOilRigZone.Contains(p)) return OffshoreOilRigZone.BiomeId;
         if(SnapperIslandRuntime.Ready && SnapperCavesRockRegion.ContainsBiome(p))
             return ReefCatalog.SnapperBiomeId;
         // The relocated Brinebreak is ONLY the union of 200m circles around its stalagmite meshes.
