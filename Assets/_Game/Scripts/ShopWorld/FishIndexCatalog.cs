@@ -11,7 +11,8 @@ public static class FishIndexCatalog
         new[] { 27,10,12,2,11,14,40,29,28 },
         new[] { 0,9,10,3,13,8,5,15,19 },
         new[] { 0,9,3,13,25,24,8,5,26,15,19 },
-        new[] { 16,30,1,17,21,38,22,23,18 }
+        new[] { 16,30,1,17,21,38,22,23,18 },
+        new[] { FishCatalog.BlackMarlinId }
     };
 
     private static readonly int[][] VariantFamilies = {
