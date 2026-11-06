@@ -30,6 +30,7 @@ using System.Collections.Generic;
     public bool brinebreakDiscovered;
     public bool bluewaterDiscovered;
     public bool snapperDiscovered;
+    public bool offshoreOilRigDiscovered;
     public List<string> boats = new List<string>();
     public string boatEquipped;
     public bool OwnsBoat(string id) => !string.IsNullOrEmpty(id) && boats!=null && boats.Contains(id);
