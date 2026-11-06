@@ -53,7 +53,7 @@ public static class FishingTuning
     // cannot silently leave the editable tuning system one fish behind.
     // Event-only bosses never enter ordinary biome probability tables.
     private static readonly int[] ActiveSpecies=Array.FindAll(FishCatalog.ActiveIds,id=>id!=FishCatalog.AbyssalLeviathanId);
-    private static readonly string[] Biomes={"suncrest-reef","brinebreak-isle","deep-ocean","bluewater-cay","snapper-island"};
+    private static readonly string[] Biomes={"suncrest-reef","brinebreak-isle","deep-ocean","bluewater-cay","snapper-island","offshore-oil-rig"};
     private static readonly string[] RequiredBaits={
         "worms","worms-legacy","shrimp","squid",
         "lure:0","lure:1","lure:2","lure:3","lure:4"
