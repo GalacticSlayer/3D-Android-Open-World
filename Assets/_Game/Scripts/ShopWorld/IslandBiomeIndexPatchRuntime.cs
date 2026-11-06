@@ -98,7 +98,10 @@ public sealed class IslandBiomeIndexPatchRuntime : MonoBehaviour
         int currentBiome = player != null ? IslandExpansionWorld.FishingBiome(player.transform.position) : 0;
 
         foreach (int biome in ReefCatalog.IslandIndexOrder)
+        {
+            if (biome == OffshoreOilRigZone.BiomeId && !ReefCatalog.OffshoreOilRigDiscovered) continue;
             CreateIslandCard(list, biome, currentBiome);
+        }
 
         GameObject marker = new GameObject(MarkerName, typeof(RectTransform), typeof(LayoutElement));
         marker.transform.SetParent(list, false);
@@ -111,9 +114,10 @@ public sealed class IslandBiomeIndexPatchRuntime : MonoBehaviour
     {
         ReefCatalog.Zone entry = ReefCatalog.Zones[biome];
         bool unlocked = entry.Unlocked;
-        bool island = biome == 0 || biome == 1 || biome == 3 || biome == 4;
+        bool island = biome == 0 || biome == 1 || biome == 3 || biome == 4 || biome == OffshoreOilRigZone.BiomeId;
         bool here = travel != null && travel.Destination == 0 && currentBiome == biome;
-        bool worldReady = biome == 4 ? SnapperIslandRuntime.Ready : biome == 0 || biome == 2 || (IslandExpansionWorld.Active != null && IslandExpansionWorld.Active.Ready);
+        bool worldReady = biome == OffshoreOilRigZone.BiomeId ? OffshoreOilRigZone.TryGetArrival(out _) :
+            biome == 4 ? SnapperIslandRuntime.Ready : biome == 0 || biome == 2 || (IslandExpansionWorld.Active != null && IslandExpansionWorld.Active.Ready);
         bool fishingBusy = IsFishingBusy();
 
         Color cardColor = biome == 0
@@ -189,7 +193,7 @@ public sealed class IslandBiomeIndexPatchRuntime : MonoBehaviour
     {
         if (IsFishingBusy() || travel == null || travel.Traveling || !travel.TournamentAllowsIsland(biome)) return;
         if (biome < 0 || biome >= ReefCatalog.Zones.Length || !ReefCatalog.Zones[biome].Unlocked) return;
-        if (biome != 0 && biome != 1 && biome != 3 && biome != 4) return; // Deep Ocean intentionally has no teleport.
+        if (biome != 0 && biome != 1 && biome != 3 && biome != 4 && biome != OffshoreOilRigZone.BiomeId) return; // Deep Ocean has no teleport.
         if ((biome == 1 || biome == 3) && (IslandExpansionWorld.Active == null || !IslandExpansionWorld.Active.Ready)) return;
 
         if (menuSafety != null && SafeCloseIndexMethod != null)
