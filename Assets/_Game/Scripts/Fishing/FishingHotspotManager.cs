@@ -15,7 +15,6 @@ public sealed class FishingHotspotManager : MonoBehaviour
     private readonly FishingHotspotEffect[] pool = new FishingHotspotEffect[MaximumHotspots];
     private readonly Collider[] obstacles = new Collider[64];
     private OceanWater ocean;
-    private Terrain terrain;
     private GameObject prefab;
     private Material rippleMaterial, bubbleMaterial;
     private Mesh rippleMesh;
@@ -32,7 +31,6 @@ public sealed class FishingHotspotManager : MonoBehaviour
     private void Start()
     {
         ocean = FindFirstObjectByType<OceanWater>();
-        terrain = Terrain.activeTerrain;
         prefab = Resources.Load<GameObject>("Fishing/Hotspots/FishingHotspot");
         Shader shader = Resources.Load<Shader>("Fishing/Hotspots/HotspotParticles");
         Texture2D ripple = Resources.Load<Texture2D>("Fishing/Hotspots/Ripple");
@@ -74,7 +72,6 @@ public sealed class FishingHotspotManager : MonoBehaviour
         }
         if (away || Time.time < nextPlacement) return;
         nextPlacement = Time.time + 1f;
-        if (terrain == null) terrain = Terrain.activeTerrain;
         // At most eight placement probes and one new hotspot per second on Android.
         for (int i = 0; i < pool.Length; i++)
         {
@@ -113,8 +110,22 @@ public sealed class FishingHotspotManager : MonoBehaviour
 
     private bool ValidPosition(Vector3 p)
     {
-        if (terrain == null || ocean == null ||
+        if (ocean == null ||
             (PondWater.Active != null && PondWater.Active.Contains(p))) return false;
+        // Select only the tile actually beneath this point. Terrain.activeTerrain
+        // may be Suncrest even when the player is 3 km south at the oil rig.
+        Terrain terrain = null;
+        foreach (Terrain candidate in WorldTerrain.Tiles)
+        {
+            if (candidate == null || !candidate.isActiveAndEnabled || candidate.terrainData == null) continue;
+            Vector3 localPoint = p - candidate.transform.position;
+            Vector3 bounds = candidate.terrainData.size;
+            if (localPoint.x < 0f || localPoint.z < 0f ||
+                localPoint.x > bounds.x || localPoint.z > bounds.z) continue;
+            terrain = candidate;
+            break;
+        }
+        if (terrain == null) return false;
         foreach (var spot in pool)
             if (spot != null && spot.gameObject.activeSelf && HorizontalDistance(p, spot.transform.position) < 12f) return false;
 
