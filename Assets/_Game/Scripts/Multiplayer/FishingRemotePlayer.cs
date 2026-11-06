@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
 
@@ -91,6 +92,42 @@ public sealed class FishingRemotePlayer : MonoBehaviour
     private float castClock, castDuration = .72f, castBlend;
     private bool reeling, hasFish, lureInWater;
     private float reelClock, pullClock, reelBlend, pullBlend, lastAuthorReelTime = -1f;
+
+    // The third-person camera applies its real viewing rotation only when
+    // rendering begins, then restores its gameplay pose afterward. Updating
+    // the TextMesh in Update() therefore uses the wrong camera angle when
+    // the observer orbits to the other player's front. Match the exact
+    // rendering camera, with the same SRP/built-in hooks as that camera rig.
+    private void OnEnable()
+    {
+        RenderPipelineManager.beginCameraRendering += FaceNameTagSRP;
+        Camera.onPreCull += FaceNameTagBuiltin;
+    }
+
+    private void OnDisable()
+    {
+        RenderPipelineManager.beginCameraRendering -= FaceNameTagSRP;
+        Camera.onPreCull -= FaceNameTagBuiltin;
+    }
+
+    private void FaceNameTagSRP(ScriptableRenderContext context, Camera renderingCamera)
+    {
+        FaceNameTag(renderingCamera);
+    }
+
+    private void FaceNameTagBuiltin(Camera renderingCamera)
+    {
+        if (GraphicsSettings.currentRenderPipeline == null)
+            FaceNameTag(renderingCamera);
+    }
+
+    private void FaceNameTag(Camera renderingCamera)
+    {
+        if (label == null || renderingCamera == null) return;
+        // World-space text stays legible from the front, back and sides of
+        // the player, including first person and orbiting third person.
+        label.rotation = renderingCamera.transform.rotation;
+    }
 
     public void Initialize(string displayName, string identity, bool showName = true)
     {
@@ -536,8 +573,6 @@ public sealed class FishingRemotePlayer : MonoBehaviour
             }
         }
 
-        if (label != null && Camera.main != null)
-            label.rotation = Camera.main.transform.rotation;
     }
 
     private void UpdateHeldRod(bool equipped, int tier, int equippedReelTier)
