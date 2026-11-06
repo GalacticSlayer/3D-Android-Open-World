@@ -54,6 +54,7 @@ public sealed class ShopProgress : MonoBehaviour
         ReefCatalog.BrinebreakDiscovered=Data!=null && Data.brinebreakDiscovered;
         ReefCatalog.BluewaterDiscovered=Data!=null && Data.bluewaterDiscovered;
         ReefCatalog.SnapperDiscovered=Data!=null && Data.snapperDiscovered;
+        ReefCatalog.OffshoreOilRigDiscovered=Data!=null && Data.offshoreOilRigDiscovered;
         // Ignore migrations/refunds during Awake; track real purchases only.
         lastSavedCoins=Data!=null?Data.coins:0;
         savedCoinBalanceReady=true;
@@ -63,6 +64,8 @@ public sealed class ShopProgress : MonoBehaviour
         // The popup is attached automatically to existing scenes and saves.
         if(GetComponent<FishingExperienceToast>()==null)
             gameObject.AddComponent<FishingExperienceToast>();
+        if(GetComponent<OffshoreOilRigDiscovery>()==null)
+            gameObject.AddComponent<OffshoreOilRigDiscovery>();
     }
     private static ShopLedger Read(string json)
     {
