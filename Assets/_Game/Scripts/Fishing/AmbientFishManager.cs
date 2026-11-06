@@ -74,6 +74,17 @@ public class AmbientFishManager : MonoBehaviour
         poolBiome=biome;replacing=false;
     }
     public void Configure(OceanWater water,Transform target){oceanWater=water;player=target;fishCount=12;}
+    // The 350 m oil-rig circle intentionally exceeds the 512 m seabed tile.
+    // Outside its bounds there is open ocean, not a shallow invisible wall.
+    // Only ambient fish at the rig get this virtual deep-water safety floor.
+    private bool TryFloor(Vector3 point,out float floor)
+    {
+        if(WorldTerrain.TryGetHeight(point,out floor))return true;
+        if(oceanWater!=null && OffshoreOilRigZone.Contains(point))
+        {floor=oceanWater.BaseWaterLevel-250f;return true;}
+        return false;
+    }
+
     public bool Visible(Vector3 position)
     {
         if(!InReef||view==null)return false;
@@ -100,12 +111,12 @@ public class AmbientFishManager : MonoBehaviour
         if(PondWater.Active!=null && PondWater.Active.Contains(position))return false;
         if(ReefZone.Active!=null&&!ReefZone.Active.Contains(position))return false;
         // Check each footprint sample against its own tile, including seams.
-        if(!WorldTerrain.TryGetHeight(position,out float floor))return false;
+        if(!TryFloor(position,out float floor))return false;
         for(int i=0;i<8;i++)
         {
             float angle=i*Mathf.PI*.25f;
             Vector3 sample=position+new Vector3(Mathf.Cos(angle),0f,Mathf.Sin(angle))*clearance;
-            if(!WorldTerrain.TryGetHeight(sample,out float sampleFloor))return false;
+            if(!TryFloor(sample,out float sampleFloor))return false;
             floor=Mathf.Max(floor,sampleFloor);
         }
         return position.y>floor+clearance && position.y<oceanWater.GetSurfaceHeight(position)-clearance;
@@ -126,7 +137,7 @@ public class AmbientFishManager : MonoBehaviour
         {
             Vector2 d=Random.insideUnitCircle.normalized*Random.Range(minRadius,maxRadius);
             var p=player.position+new Vector3(d.x,0,d.y);
-            if(!WorldTerrain.TryGetHeight(p,out float floor))continue;
+            if(!TryFloor(p,out float floor))continue;
             float surface=oceanWater.GetSurfaceHeight(p);
             if(surface-floor<clearance*2+0.25f)continue;
             p.y=Random.Range(Mathf.Max(floor+clearance+0.12f,surface-6f),surface-clearance-0.12f);
