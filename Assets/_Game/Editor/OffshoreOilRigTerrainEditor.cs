@@ -160,6 +160,37 @@ public sealed class OffshoreOilRigTerrainEditor : IProcessSceneWithReport
             visibility.terrain = tile;
             created = true;
         }
+        // The final oil-rig structure can replace this small temporary deck.
+        // A real collider/arrival prevents unlocked fast travel from dropping
+        // the player into 220-m-deep water. No existing terrain is touched.
+        GameObject platform = FindChild(root, "Offshore Oil Rig Starter Platform");
+        Vector3 rigCenter = expansion.PelagicCenter + Vector3.back * SouthDistance;
+        float platformHeight = ocean.BaseWaterLevel + 1f;
+        if (platform == null)
+        {
+            platform = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            platform.name = "Offshore Oil Rig Starter Platform";
+            SceneManager.MoveGameObjectToScene(platform, scene);
+            platform.transform.SetParent(root.transform, false);
+            platform.transform.position = new Vector3(rigCenter.x, platformHeight, rigCenter.z);
+            platform.transform.localScale = new Vector3(24f, 1f, 24f);
+            platform.layer = original.gameObject.layer;
+            var renderer = platform.GetComponent<MeshRenderer>();
+            renderer.sharedMaterial = LoadOrCreateMaterial(persist);
+            renderer.shadowCastingMode = ShadowCastingMode.Off;
+            // The user may replace/delete this placeholder once the full rig
+            // prefab is supplied. The island discovery and fish habitat are not
+            // dependent on this temporary mesh.
+            created = true;
+        }
+        if (FindChild(platform, OffshoreOilRigZone.ArrivalName) == null)
+        {
+            GameObject marker = new GameObject(OffshoreOilRigZone.ArrivalName);
+            marker.transform.SetParent(platform.transform, false);
+            marker.transform.position = new Vector3(rigCenter.x, ocean.BaseWaterLevel + 2.2f, rigCenter.z);
+            marker.transform.rotation = Quaternion.LookRotation(Vector3.forward, Vector3.up);
+            created = true;
+        }
         return created;
     }
 
