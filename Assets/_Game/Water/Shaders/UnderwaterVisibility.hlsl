@@ -5,13 +5,18 @@
 float4 _UnderwaterVisibilityColor;
 float4 _UnderwaterVisibilityRange;
 float4 _UnderwaterWaterlinePlane;
+float _UnderwaterWaterlineOverlap;
 
 half UnderwaterVisibilityFog(float3 positionWS)
 {
     float3 ray = positionWS - _WorldSpaceCameraPos;
     float eyeDepth = max(-TransformWorldToView(positionWS).z, _ProjectionParams.y);
     float3 nearWorld = _WorldSpaceCameraPos + ray * (_ProjectionParams.y / eyeDepth);
-    float nearHeight = dot(_UnderwaterWaterlinePlane, float4(nearWorld, 1.0));
+    float waveHeight = dot(_UnderwaterWaterlinePlane, float4(nearWorld, 1.0));
+    float baseHeight = nearWorld.y - _UnderwaterVisibilityRange.z;
+    // The water volume includes the band between a trough and the base plane.
+    // A small shared overlap covers numerical/near-plane gaps on downward entry.
+    float nearHeight = min(waveHeight, baseHeight) - _UnderwaterWaterlineOverlap;
     // About one pixel of edge smoothing. No full-screen crossfade when the
     // camera origin crosses the surface; each near-plane pixel crosses separately.
     float edgeWidth = max(fwidth(nearHeight), 0.0005);
