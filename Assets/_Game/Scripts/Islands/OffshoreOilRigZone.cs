@@ -9,7 +9,7 @@ public static class OffshoreOilRigZone
 {
     public const int BiomeId = 5;
     public const string Id = "offshore-oil-rig";
-    public const string Name = "Offshore Oil Rig";
+    public const string Name = "The Windgrove Shoal";
     public const float Radius = 350f;
     public const float SouthOfBluewater = 3000f;
     public const string ArrivalName = "Offshore Oil Rig Arrival";

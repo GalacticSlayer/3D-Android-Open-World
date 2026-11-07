@@ -30,7 +30,7 @@ public sealed class OffshoreOilRigDiscovery : MonoBehaviour
 
     private static void ShowDiscovery()
     {
-        var go = new GameObject("Offshore Oil Rig Discovered",
+        var go = new GameObject("The Windgrove Shoal Discovered",
             typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
         var canvas = go.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -53,7 +53,7 @@ public sealed class OffshoreOilRigDiscovery : MonoBehaviour
         label.alignment = TextAnchor.MiddleCenter;
         label.color = new Color(1f, .89f, .59f);
         label.raycastTarget = false;
-        label.text = "OFFSHORE OIL RIG DISCOVERED\nNew fishing area unlocked in ISLAND / FISH INDEX";
+        label.text = "THE WINDGROVE SHOAL DISCOVERED\nNew fishing area unlocked in ISLAND / FISH INDEX";
         label.rectTransform.sizeDelta = rect.sizeDelta;
         Destroy(go, 6f);
     }

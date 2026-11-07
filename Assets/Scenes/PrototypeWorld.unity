@@ -68872,6 +68872,1477 @@ Terrain:
   m_EnableTreesAndDetailsRayTracing: 0
   m_EnableHeightmapLODFrustumCulling: 1
   m_TreeMotionVectorModeOverride: 3
+--- !u!1 &9200000000
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9200000001}
+  m_Layer: 0
+  m_Name: The Windgrove Shoal - Wind Turbines
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9200000001
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000000}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 459.115840, y: -277.500000, z: -3230.798750}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children:
+  - {fileID: 9200000011}
+  - {fileID: 9200000021}
+  - {fileID: 9200000031}
+  - {fileID: 9200000041}
+  - {fileID: 9200000051}
+  - {fileID: 9200000061}
+  - {fileID: 9200000071}
+  - {fileID: 9200000081}
+  - {fileID: 9200000091}
+  - {fileID: 9200000101}
+  - {fileID: 9200000111}
+  - {fileID: 9200000121}
+  - {fileID: 9200000131}
+  - {fileID: 9200000141}
+  - {fileID: 9200000151}
+  - {fileID: 9200000161}
+  - {fileID: 9200000171}
+  - {fileID: 9200000181}
+  - {fileID: 9200000191}
+  - {fileID: 9200000201}
+  - {fileID: 9200000211}
+  - {fileID: 9200000221}
+  - {fileID: 9200000231}
+  - {fileID: 9200000241}
+  - {fileID: 9200000251}
+  - {fileID: 9200000261}
+  - {fileID: 9200000271}
+  - {fileID: 9200000281}
+  - {fileID: 9200000291}
+  - {fileID: 9200000301}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &9200000010
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9200000011}
+  - component: {fileID: 9200000012}
+  m_Layer: 0
+  m_Name: Wind Turbine 01
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9200000011
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000010}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: -0.12569478638053191, z: 0, w: 0.9920689596377625}
+  m_LocalPosition: {x: -45.970302, y: 0.000000, z: 98.908080}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 9200000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9200000012
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000010}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef1252d902cd4f45eb5722e0c925c4a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::WindgroveTurbine
+  phase: 0.01828535
+  animatedModel: {fileID: 0}
+  rotationClip: {fileID: 0}
+--- !u!1 &9200000020
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9200000021}
+  - component: {fileID: 9200000022}
+  m_Layer: 0
+  m_Name: Wind Turbine 02
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9200000021
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000020}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: -0.180177726904562, z: 0, w: 0.9836340715568493}
+  m_LocalPosition: {x: -47.181721, y: 0.000000, z: -150.086487}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 9200000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9200000022
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000020}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef1252d902cd4f45eb5722e0c925c4a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::WindgroveTurbine
+  phase: 0.16498604
+  animatedModel: {fileID: 0}
+  rotationClip: {fileID: 0}
+--- !u!1 &9200000030
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9200000031}
+  - component: {fileID: 9200000032}
+  m_Layer: 0
+  m_Name: Wind Turbine 03
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9200000031
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000030}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.12962110263451895, z: 0, w: 0.9915635984402672}
+  m_LocalPosition: {x: 83.541035, y: 0.000000, z: 246.800841}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 9200000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9200000032
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000030}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef1252d902cd4f45eb5722e0c925c4a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::WindgroveTurbine
+  phase: 0.21871939
+  animatedModel: {fileID: 0}
+  rotationClip: {fileID: 0}
+--- !u!1 &9200000040
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9200000041}
+  - component: {fileID: 9200000042}
+  m_Layer: 0
+  m_Name: Wind Turbine 04
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9200000041
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000040}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.157667736350689, z: 0, w: 0.9874922201789995}
+  m_LocalPosition: {x: 157.226245, y: 0.000000, z: -84.936008}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 9200000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9200000042
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000040}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef1252d902cd4f45eb5722e0c925c4a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::WindgroveTurbine
+  phase: 0.70902879
+  animatedModel: {fileID: 0}
+  rotationClip: {fileID: 0}
+--- !u!1 &9200000050
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9200000051}
+  - component: {fileID: 9200000052}
+  m_Layer: 0
+  m_Name: Wind Turbine 05
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9200000051
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000050}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.005745867086772239, z: 0, w: 0.9999834923694596}
+  m_LocalPosition: {x: -104.786070, y: 0.000000, z: 3.687857}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 9200000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9200000052
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000050}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef1252d902cd4f45eb5722e0c925c4a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::WindgroveTurbine
+  phase: 0.24964792
+  animatedModel: {fileID: 0}
+  rotationClip: {fileID: 0}
+--- !u!1 &9200000060
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9200000061}
+  - component: {fileID: 9200000062}
+  m_Layer: 0
+  m_Name: Wind Turbine 06
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9200000061
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000060}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.016518944580343666, z: 0, w: 0.9998635529260738}
+  m_LocalPosition: {x: 243.511388, y: 0.000000, z: 95.797008}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 9200000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9200000062
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000060}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef1252d902cd4f45eb5722e0c925c4a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::WindgroveTurbine
+  phase: 0.68359907
+  animatedModel: {fileID: 0}
+  rotationClip: {fileID: 0}
+--- !u!1 &9200000070
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9200000071}
+  - component: {fileID: 9200000072}
+  m_Layer: 0
+  m_Name: Wind Turbine 07
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9200000071
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000070}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: -0.1605725611765418, z: 0, w: 0.987024038510312}
+  m_LocalPosition: {x: 247.911192, y: 0.000000, z: -110.259496}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 9200000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9200000072
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000070}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef1252d902cd4f45eb5722e0c925c4a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::WindgroveTurbine
+  phase: 0.02703688
+  animatedModel: {fileID: 0}
+  rotationClip: {fileID: 0}
+--- !u!1 &9200000080
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9200000081}
+  - component: {fileID: 9200000082}
+  m_Layer: 0
+  m_Name: Wind Turbine 08
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9200000081
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000080}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: -0.16381353754219885, z: 0, w: 0.9864913202445882}
+  m_LocalPosition: {x: -191.269831, y: 0.000000, z: 125.325442}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 9200000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9200000082
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000080}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef1252d902cd4f45eb5722e0c925c4a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::WindgroveTurbine
+  phase: 0.48428188
+  animatedModel: {fileID: 0}
+  rotationClip: {fileID: 0}
+--- !u!1 &9200000090
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9200000091}
+  - component: {fileID: 9200000092}
+  m_Layer: 0
+  m_Name: Wind Turbine 09
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9200000091
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000090}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.04333882452185588, z: 0, w: 0.9990604317502839}
+  m_LocalPosition: {x: -294.514204, y: 0.000000, z: 58.718434}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 9200000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9200000092
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000090}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef1252d902cd4f45eb5722e0c925c4a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::WindgroveTurbine
+  phase: 0.78621920
+  animatedModel: {fileID: 0}
+  rotationClip: {fileID: 0}
+--- !u!1 &9200000100
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9200000101}
+  - component: {fileID: 9200000102}
+  m_Layer: 0
+  m_Name: Wind Turbine 10
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9200000101
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000100}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.19251138116361866, z: 0, w: 0.9812947406984692}
+  m_LocalPosition: {x: -154.646077, y: 0.000000, z: 234.195541}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 9200000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9200000102
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000100}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef1252d902cd4f45eb5722e0c925c4a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::WindgroveTurbine
+  phase: 0.08156203
+  animatedModel: {fileID: 0}
+  rotationClip: {fileID: 0}
+--- !u!1 &9200000110
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9200000111}
+  - component: {fileID: 9200000112}
+  m_Layer: 0
+  m_Name: Wind Turbine 11
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9200000111
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000110}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: -0.24327466349646956, z: 0, w: 0.9699574413863112}
+  m_LocalPosition: {x: 21.609050, y: 0.000000, z: -234.417643}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 9200000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9200000112
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000110}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef1252d902cd4f45eb5722e0c925c4a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::WindgroveTurbine
+  phase: 0.44369319
+  animatedModel: {fileID: 0}
+  rotationClip: {fileID: 0}
+--- !u!1 &9200000120
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9200000121}
+  - component: {fileID: 9200000122}
+  m_Layer: 0
+  m_Name: Wind Turbine 12
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9200000121
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000120}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.1453414183400858, z: 0, w: 0.9893815604279736}
+  m_LocalPosition: {x: -187.536875, y: 0.000000, z: -229.700713}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 9200000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9200000122
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000120}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef1252d902cd4f45eb5722e0c925c4a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::WindgroveTurbine
+  phase: 0.33591819
+  animatedModel: {fileID: 0}
+  rotationClip: {fileID: 0}
+--- !u!1 &9200000130
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9200000131}
+  - component: {fileID: 9200000132}
+  m_Layer: 0
+  m_Name: Wind Turbine 13
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9200000131
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000130}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: -0.06786068001278406, z: 0, w: 0.9976948070969411}
+  m_LocalPosition: {x: -170.906953, y: 0.000000, z: -95.092940}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 9200000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9200000132
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000130}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef1252d902cd4f45eb5722e0c925c4a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::WindgroveTurbine
+  phase: 0.63303878
+  animatedModel: {fileID: 0}
+  rotationClip: {fileID: 0}
+--- !u!1 &9200000140
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9200000141}
+  - component: {fileID: 9200000142}
+  m_Layer: 0
+  m_Name: Wind Turbine 14
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9200000141
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000140}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: -0.16512320222982763, z: 0, w: 0.9862729480652744}
+  m_LocalPosition: {x: -67.276890, y: 0.000000, z: -242.299677}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 9200000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9200000142
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000140}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef1252d902cd4f45eb5722e0c925c4a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::WindgroveTurbine
+  phase: 0.11676994
+  animatedModel: {fileID: 0}
+  rotationClip: {fileID: 0}
+--- !u!1 &9200000150
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9200000151}
+  - component: {fileID: 9200000152}
+  m_Layer: 0
+  m_Name: Wind Turbine 15
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9200000151
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000150}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.23982056780764574, z: 0, w: 0.9708172306136816}
+  m_LocalPosition: {x: -304.111584, y: 0.000000, z: -50.649419}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 9200000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9200000152
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000150}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef1252d902cd4f45eb5722e0c925c4a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::WindgroveTurbine
+  phase: 0.46082620
+  animatedModel: {fileID: 0}
+  rotationClip: {fileID: 0}
+--- !u!1 &9200000160
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9200000161}
+  - component: {fileID: 9200000162}
+  m_Layer: 0
+  m_Name: Wind Turbine 16
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9200000161
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000160}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.14615792022439428, z: 0, w: 0.9892612710278714}
+  m_LocalPosition: {x: 76.273536, y: 0.000000, z: 161.260789}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 9200000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9200000162
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000160}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef1252d902cd4f45eb5722e0c925c4a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::WindgroveTurbine
+  phase: 0.07612614
+  animatedModel: {fileID: 0}
+  rotationClip: {fileID: 0}
+--- !u!1 &9200000170
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9200000171}
+  - component: {fileID: 9200000172}
+  m_Layer: 0
+  m_Name: Wind Turbine 17
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9200000171
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000170}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: -0.09741467495694063, z: 0, w: 0.9952438802138065}
+  m_LocalPosition: {x: 170.412461, y: 0.000000, z: 5.623374}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 9200000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9200000172
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000170}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef1252d902cd4f45eb5722e0c925c4a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::WindgroveTurbine
+  phase: 0.70062172
+  animatedModel: {fileID: 0}
+  rotationClip: {fileID: 0}
+--- !u!1 &9200000180
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9200000181}
+  - component: {fileID: 9200000182}
+  m_Layer: 0
+  m_Name: Wind Turbine 18
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9200000181
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000180}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: -0.007832513452552219, z: 0, w: 0.9999693253960421}
+  m_LocalPosition: {x: 94.892347, y: 0.000000, z: -143.737493}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 9200000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9200000182
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000180}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef1252d902cd4f45eb5722e0c925c4a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::WindgroveTurbine
+  phase: 0.78128035
+  animatedModel: {fileID: 0}
+  rotationClip: {fileID: 0}
+--- !u!1 &9200000190
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9200000191}
+  - component: {fileID: 9200000192}
+  m_Layer: 0
+  m_Name: Wind Turbine 19
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9200000191
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000190}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: -0.01985493852638301, z: 0, w: 0.9998028712781903}
+  m_LocalPosition: {x: 266.157699, y: 0.000000, z: 188.027538}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 9200000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9200000192
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000190}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef1252d902cd4f45eb5722e0c925c4a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::WindgroveTurbine
+  phase: 0.34678414
+  animatedModel: {fileID: 0}
+  rotationClip: {fileID: 0}
+--- !u!1 &9200000200
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9200000201}
+  - component: {fileID: 9200000202}
+  m_Layer: 0
+  m_Name: Wind Turbine 20
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9200000201
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000200}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: -0.0876487737671695, z: 0, w: 0.9961514405235338}
+  m_LocalPosition: {x: -0.585652, y: 0.000000, z: 260.514092}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 9200000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9200000202
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000200}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef1252d902cd4f45eb5722e0c925c4a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::WindgroveTurbine
+  phase: 0.04269141
+  animatedModel: {fileID: 0}
+  rotationClip: {fileID: 0}
+--- !u!1 &9200000210
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9200000211}
+  - component: {fileID: 9200000212}
+  m_Layer: 0
+  m_Name: Wind Turbine 21
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9200000211
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000210}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.01831141244854343, z: 0, w: 0.9998323320307957}
+  m_LocalPosition: {x: -73.440196, y: 0.000000, z: 208.881111}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 9200000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9200000212
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000210}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef1252d902cd4f45eb5722e0c925c4a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::WindgroveTurbine
+  phase: 0.56016557
+  animatedModel: {fileID: 0}
+  rotationClip: {fileID: 0}
+--- !u!1 &9200000220
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9200000221}
+  - component: {fileID: 9200000222}
+  m_Layer: 0
+  m_Name: Wind Turbine 22
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9200000221
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000220}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.2565952419285844, z: 0, w: 0.9665189505744889}
+  m_LocalPosition: {x: 102.623214, y: 0.000000, z: -301.823198}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 9200000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9200000222
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000220}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef1252d902cd4f45eb5722e0c925c4a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::WindgroveTurbine
+  phase: 0.00159158
+  animatedModel: {fileID: 0}
+  rotationClip: {fileID: 0}
+--- !u!1 &9200000230
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9200000231}
+  - component: {fileID: 9200000232}
+  m_Layer: 0
+  m_Name: Wind Turbine 23
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9200000231
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000230}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.1816732455092601, z: 0, w: 0.9833589537224604}
+  m_LocalPosition: {x: 142.280013, y: 0.000000, z: 99.307129}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 9200000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9200000232
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000230}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef1252d902cd4f45eb5722e0c925c4a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::WindgroveTurbine
+  phase: 0.86919183
+  animatedModel: {fileID: 0}
+  rotationClip: {fileID: 0}
+--- !u!1 &9200000240
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9200000241}
+  - component: {fileID: 9200000242}
+  m_Layer: 0
+  m_Name: Wind Turbine 24
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9200000241
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000240}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.14181561848464286, z: 0, w: 0.9898930903657315}
+  m_LocalPosition: {x: 181.394980, y: 0.000000, z: 221.740621}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 9200000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9200000242
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000240}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef1252d902cd4f45eb5722e0c925c4a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::WindgroveTurbine
+  phase: 0.60978817
+  animatedModel: {fileID: 0}
+  rotationClip: {fileID: 0}
+--- !u!1 &9200000250
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9200000251}
+  - component: {fileID: 9200000252}
+  m_Layer: 0
+  m_Name: Wind Turbine 25
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9200000251
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000250}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.23452726472365512, z: 0, w: 0.9721095422334052}
+  m_LocalPosition: {x: -239.504644, y: 0.000000, z: -146.682616}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 9200000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9200000252
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000250}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef1252d902cd4f45eb5722e0c925c4a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::WindgroveTurbine
+  phase: 0.15160625
+  animatedModel: {fileID: 0}
+  rotationClip: {fileID: 0}
+--- !u!1 &9200000260
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9200000261}
+  - component: {fileID: 9200000262}
+  m_Layer: 0
+  m_Name: Wind Turbine 26
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9200000261
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000260}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: -0.2010047571609359, z: 0, w: 0.9795902651612424}
+  m_LocalPosition: {x: 210.544722, y: 0.000000, z: -202.236662}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 9200000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9200000262
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000260}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef1252d902cd4f45eb5722e0c925c4a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::WindgroveTurbine
+  phase: 0.28152664
+  animatedModel: {fileID: 0}
+  rotationClip: {fileID: 0}
+--- !u!1 &9200000270
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9200000271}
+  - component: {fileID: 9200000272}
+  m_Layer: 0
+  m_Name: Wind Turbine 27
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9200000271
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000270}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: -0.13654087120615835, z: 0, w: 0.9906344383728355}
+  m_LocalPosition: {x: 292.336525, y: 0.000000, z: 7.348845}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 9200000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9200000272
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000270}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef1252d902cd4f45eb5722e0c925c4a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::WindgroveTurbine
+  phase: 0.51639995
+  animatedModel: {fileID: 0}
+  rotationClip: {fileID: 0}
+--- !u!1 &9200000280
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9200000281}
+  - component: {fileID: 9200000282}
+  m_Layer: 0
+  m_Name: Wind Turbine 28
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9200000281
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000280}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0.22382715400857636, z: 0, w: 0.9746288550665946}
+  m_LocalPosition: {x: 52.293408, y: 0.000000, z: 68.882112}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 9200000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9200000282
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000280}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef1252d902cd4f45eb5722e0c925c4a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::WindgroveTurbine
+  phase: 0.06254354
+  animatedModel: {fileID: 0}
+  rotationClip: {fileID: 0}
+--- !u!1 &9200000290
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9200000291}
+  - component: {fileID: 9200000292}
+  m_Layer: 0
+  m_Name: Wind Turbine 29
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9200000291
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000290}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: -0.13572980509221788, z: 0, w: 0.9907458907356762}
+  m_LocalPosition: {x: -215.862935, y: 0.000000, z: -22.990533}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 9200000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9200000292
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000290}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef1252d902cd4f45eb5722e0c925c4a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::WindgroveTurbine
+  phase: 0.40244910
+  animatedModel: {fileID: 0}
+  rotationClip: {fileID: 0}
+--- !u!1 &9200000300
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9200000301}
+  - component: {fileID: 9200000302}
+  m_Layer: 0
+  m_Name: Wind Turbine 30
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9200000301
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000300}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: -0.1661946755607949, z: 0, w: 0.9860929620554252}
+  m_LocalPosition: {x: -276.746143, y: 0.000000, z: 146.831826}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 9200000001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9200000302
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9200000300}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef1252d902cd4f45eb5722e0c925c4a9, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::WindgroveTurbine
+  phase: 0.70955131
+  animatedModel: {fileID: 0}
+  rotationClip: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -68911,3 +70382,4 @@ SceneRoots:
   - {fileID: 372944328}
   - {fileID: 9026102402}
   - {fileID: 1578604020}
+  - {fileID: 9200000001}
