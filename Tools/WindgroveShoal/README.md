@@ -24,7 +24,11 @@ wrapper component and would instantiate another model child.
 After the authored scene is supplied, animation playback will be configured
 without changing the user's transforms or model-part proportions.
 
-The importer remains for the existing model asset. Its orientation/appearance
-has not been corrected or validated by this removal change.
+The imported FBX is now a byte-for-byte copy of the original supplied FBX.
+No Blender re-export, part-transform corrections, or custom scaling are applied.
+The material importer retains the existing approved URP colors.
+Unity gameplay/visual validation must be performed in the Unity Editor.
 The old placement/export/verification scripts are historical tooling only;
-do not rerun place_turbines.py to repopulate the scene.
+do not rerun place_turbines.py to repopulate the scene or prepare_turbine.py
+to rewrite the supplied model. verify_turbine.py validates the retired modified
+export and does not apply to the restored original FBX.
