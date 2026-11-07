@@ -120,21 +120,27 @@ public sealed class ShopDimensionManager : MonoBehaviour
     public void TravelIsland(bool brinebreak)=>TravelIsland(brinebreak?1:0);
     public void TravelIsland(int biome)
     {
-        if(Traveling || !TournamentAllowsIsland(biome) || (biome!=0 && biome!=1 && biome!=3 && biome!=4 && biome!=OffshoreOilRigZone.BiomeId))return;
+        if(Traveling || !TournamentAllowsIsland(biome) || (biome!=0 && biome!=1 && biome!=3 && biome!=4 && biome!=OffshoreOilRigZone.BiomeId && biome!=WindgroveShoalZone.BiomeId))return;
         if(!ReefCatalog.Zones[biome].Unlocked)return;
         var expansion=IslandExpansionWorld.Active;
         if(biome!=0 && (expansion==null || !expansion.Ready))return;
         if(biome==4 && !SnapperIslandRuntime.Ready)return;
         Transform offshoreArrival=null;
         if(biome==OffshoreOilRigZone.BiomeId && !OffshoreOilRigZone.TryGetArrival(out offshoreArrival))return;
+        Vector3 windArrival=Vector3.zero;
+        Quaternion windRotation=Quaternion.identity;
+        bool toWindgrove=biome==WindgroveShoalZone.BiomeId;
+        if(toWindgrove && !WindgroveShoalZone.TryGetArrival(out windArrival,out windRotation))return;
         Transform point=biome==OffshoreOilRigZone.BiomeId?offshoreArrival:
             biome==4?SnapperIslandRuntime.Arrival:biome==3?expansion.PelagicArrival:
             biome==1?expansion.Arrival:GetComponent<BoatSystem>()?.IslandDock;
         if(point==null && biome==0)point=islandArrival;
-        if(point==null)return;
+        if(point==null && !toWindgrove)return;
         travelIslandBiome=biome;
         if(Destination!=0){StartCoroutine(TravelRoutine(0));return;}
-        fishing.PrepareForWorldTravel();Teleport(point.position,point.rotation,biome==4,biome==3,biome==1);
+        fishing.PrepareForWorldTravel();
+        Teleport(toWindgrove?windArrival:point.position,toWindgrove?windRotation:point.rotation,
+            biome==4,biome==3,biome==1);
         var ui=FindFirstObjectByType<ShopWorldHUD>();if(ui!=null)ui.Close();
         travelIslandBiome=0;
     }
@@ -205,6 +211,10 @@ public sealed class ShopDimensionManager : MonoBehaviour
                 if(travelIslandBiome==3 && ReefCatalog.BluewaterDiscovered)dock=expansion.PelagicArrival;
                 if(travelIslandBiome==OffshoreOilRigZone.BiomeId && ReefCatalog.OffshoreOilRigDiscovered && OffshoreOilRigZone.TryGetArrival(out Transform rigArrival))dock=rigArrival;
             }
+            Vector3 windReturnPosition=Vector3.zero;
+            Quaternion windReturnRotation=Quaternion.identity;
+            bool returningToWindgrove=travelIslandBiome==WindgroveShoalZone.BiomeId &&
+                ReefCatalog.WindgroveDiscovered && WindgroveShoalZone.TryGetArrival(out windReturnPosition,out windReturnRotation);
             bool returningToSnapper=travelIslandBiome==4 && dock==SnapperIslandRuntime.Arrival &&
                 SnapperIslandRuntime.Ready;
             bool returningToBluewater=travelIslandBiome==3 && expansion!=null &&
@@ -212,8 +222,8 @@ public sealed class ShopDimensionManager : MonoBehaviour
             bool returningToBrinebreak=travelIslandBiome==1 && expansion!=null &&
                 dock==expansion.Arrival;
             travelIslandBiome=0;
-            Teleport(dock!=null?dock.position:hasReturn?returnPosition:islandArrival.position,
-                dock!=null?dock.rotation:hasReturn?returnRotation:islandArrival.rotation,
+            Teleport(returningToWindgrove?windReturnPosition:dock!=null?dock.position:hasReturn?returnPosition:islandArrival.position,
+                returningToWindgrove?windReturnRotation:dock!=null?dock.rotation:hasReturn?returnRotation:islandArrival.rotation,
                 returningToSnapper,returningToBluewater,returningToBrinebreak);
             RenderSettings.fog=oldFog; RenderSettings.fogColor=oldFogColor; RenderSettings.fogDensity=oldFogDensity;
         }

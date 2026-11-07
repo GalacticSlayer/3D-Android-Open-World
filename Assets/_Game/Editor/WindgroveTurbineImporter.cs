@@ -6,6 +6,36 @@ public sealed class WindgroveTurbineImporter : AssetPostprocessor
 {
     private const string ModelPath = "Assets/Resources/Environment/Windgrove/WindTurbine.fbx";
 
+    // Changing the postprocessor version causes Unity to reimport the source
+    // FBX and update every scene instance without editing its root transform.
+    public override uint GetVersion() => 2;
+
+    private static Transform Part(Transform root, string name)
+    {
+        foreach (Transform part in root.GetComponentsInChildren<Transform>(true))
+            if (string.Equals(part.name, name, System.StringComparison.OrdinalIgnoreCase))
+                return part;
+        return null;
+    }
+
+    private void OnPostprocessModel(GameObject importedModel)
+    {
+        if (assetPath != ModelPath) return;
+        // The original FBX has independent Anemometer mast and Top service cap
+        // mesh objects. Seat the mast's visible base on the cap's visible top.
+        // Bounds are already evaluated in imported model coordinates, so the
+        // correction automatically inherits each scene instance's manual scale.
+        Transform mast = Part(importedModel.transform, "Anemometer mast");
+        Transform cap = Part(importedModel.transform, "Top service cap");
+        if (mast == null || cap == null) return;
+        Renderer mastMesh = mast.GetComponentInChildren<Renderer>(true);
+        Renderer capMesh = cap.GetComponentInChildren<Renderer>(true);
+        if (mastMesh == null || capMesh == null) return;
+        float elevation = capMesh.bounds.max.y - mastMesh.bounds.min.y;
+        if (Mathf.Abs(elevation) > .0001f)
+            mast.position += Vector3.up * elevation;
+    }
+
     private void OnPreprocessModel()
     {
         if (assetPath != ModelPath) return;

@@ -10,9 +10,11 @@ public static class FishIndexCatalog
         new[] { 6,7,41,33,31,32,42,35,37,36,39 },
         new[] { 27,10,12,2,11,14,40,29,28 },
         new[] { 0,9,10,3,13,8,5,15,19 },
-        new[] { 0,9,3,13,25,24,8,5,26,15,19 },
+        new[] { 0,9,3,13,8,5 },
         new[] { 16,30,1,17,21,38,22,23,18 },
-        new[] { FishCatalog.BlackMarlinId }
+        new[] { FishCatalog.BlackMarlinId },
+        // Existing Bluewater fauna is a temporary baseline for Windgrove.
+        new[] { 0,9,3,13,25,24,8,5,26,15,19 }
     };
 
     private static readonly int[][] VariantFamilies = {

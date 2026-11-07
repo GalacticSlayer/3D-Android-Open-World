@@ -55,3 +55,10 @@ snapper-island,22,Blackfin Barracuda,1200,9000,675,6750
 snapper-island,23,Great Barracuda,1800,12000,1080,10800
 snapper-island,18,Blacktip Reef Shark,9000,21000,1800,12000
 offshore-oil-rig,44,Black Marlin,21500,36000,2600,28000
+# Windgrove uses Bluewater fish until dedicated species are provided.
+windgrove-shoal,0,Blue Mackerel,260,780,117,325
+windgrove-shoal,9,Bonito,520,1950,234,650
+windgrove-shoal,3,Yellowtail,728,2600,390,1950
+windgrove-shoal,13,Albacore,728,5850,260,5200
+windgrove-shoal,8,Bigeye Tuna,2210,23400,442,11700
+windgrove-shoal,5,Yellowfin Tuna,1950,23400,520,13000

@@ -9,7 +9,7 @@ public static class OffshoreOilRigZone
 {
     public const int BiomeId = 5;
     public const string Id = "offshore-oil-rig";
-    public const string Name = "The Windgrove Shoal";
+    public const string Name = "Offshore Oil Rig";
     public const float Radius = 350f;
     public const float SouthOfBluewater = 3000f;
     public const string ArrivalName = "Offshore Oil Rig Arrival";
@@ -28,6 +28,7 @@ public static class OffshoreOilRigZone
 
     public static bool Contains(Vector3 point, float inset = 0f)
     {
+        if (WindgroveShoalZone.Contains(point)) return false;
         if (!TryGetCenter(out Vector3 center)) return false;
         float dx = point.x - center.x, dz = point.z - center.z;
         float radius = Mathf.Max(0f, Radius - inset);

@@ -32,3 +32,16 @@ The old placement/export/verification scripts are historical tooling only;
 do not rerun place_turbines.py to repopulate the scene or prepare_turbine.py
 to rewrite the supplied model. verify_turbine.py validates the retired modified
 export and does not apply to the restored original FBX.
+
+## Nine manually placed Windgrove turbines (from scene c6f309a2)
+The nine user-authored FBX instances each define a 150m horizontal biome
+radius, discovery trigger and fish-catching zone. These are biome 6 with
+the stable ID windgrove-shoal. Existing biome 5 (offshore-oil-rig) keeps
+the Black Marlin and oil-rig terrain, arrival and player unlock.
+Windgrove is invisible in Island / Fish Index until entering any turbine
+radius by boat, swimming or walking. Travel arrives 9m north of the
+northernmost turbine at water level +3m. Root transforms and geometry stay
+as saved by the user. The imported rotor clip plays continuously while
+static parts are held in place, including the nacelle anemometer mast.
+Until dedicated shoal species are provided, the editable Windgrove fishing
+probabilities, weights, HP and coin ranges are seeded with non-exclusive offshore fish.

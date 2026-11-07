@@ -1,71 +1,129 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// Plays the original FBX animation on an artist-placed WindTurbine instance.
-/// It never creates or replaces geometry, rescales the model, or changes the
-/// scene-authored turbine transform.
+/// Plays the imported FBX rotor continuously, independent of framerate culling.
+/// All stationary parts keep their authored FBX pose, and each placed turbine's
+/// position, rotation and scale are restored after sampling the animation.
 /// </summary>
 [DisallowMultipleComponent]
 [DefaultExecutionOrder(10000)]
 public sealed class WindgrovePlacedTurbineAnimation : MonoBehaviour
 {
-    private static AnimationClip sharedClip;
-    private static bool clipSearched;
-
-    private Vector3 authoredLocalPosition;
-    private Quaternion authoredLocalRotation;
-    private Vector3 authoredLocalScale;
-    private AnimationClip clip;
-
-    private static AnimationClip FindImportedClip()
+    private struct RestPose
     {
-        if (clipSearched) return sharedClip;
-        clipSearched = true;
+        public Transform Target;
+        public Vector3 Position, Scale;
+        public Quaternion Rotation;
+    }
 
-        // Use the animation supplied inside the original FBX; do not synthesize
-        // a blade mesh or alter the asset's transform hierarchy.
+    private static AnimationClip sharedClip;
+    private static bool searched;
+    private AnimationClip clip;
+    private RestPose[] stationaryParts;
+    private Vector3 rootPosition, rootScale;
+    private Quaternion rootRotation;
+
+    private static AnimationClip ImportedClip()
+    {
+        if (searched) return sharedClip;
+        searched = true;
         foreach (AnimationClip candidate in Resources.LoadAll<AnimationClip>(WindgroveTurbine.ModelResource))
         {
             if (candidate == null || candidate.length <= 0f ||
                 candidate.name.StartsWith("__preview__", StringComparison.OrdinalIgnoreCase))
                 continue;
-
             if (sharedClip == null || candidate.length > sharedClip.length)
                 sharedClip = candidate;
         }
 
         if (sharedClip == null)
+            Debug.LogError("Windgrove: original WindTurbine FBX rotation clip missing.");
+        return sharedClip;
+    }
+
+    private static Transform NamedPart(Transform parent, params string[] patterns)
+    {
+        foreach (Transform t in parent.GetComponentsInChildren<Transform>(true))
+            foreach (string pattern in patterns)
+                if (t.name.IndexOf(pattern, StringComparison.OrdinalIgnoreCase) >= 0 &&
+                    t.GetComponentInChildren<Renderer>(true) != null)
+                    return t;
+        return null;
+    }
+
+    private void FixAnemometerMast()
+    {
+        // Correct the original FBX's floating mast *in world units* before
+        // caching its rest pose. This works for the user's 0.058... scale and
+        // any future user-authored uniform FBX scale.
+        Transform mast = NamedPart(transform, "Anemometer mast", "Anemometer");
+        Transform housing = NamedPart(transform, "Top service cap", "Nacelle roof panel",
+            "Nacelle housing", "Housing", "Generator housing");
+        if (mast == null || housing == null || housing == mast ||
+            housing.IsChildOf(mast)) return;
+        Renderer mastRenderer = mast.GetComponentInChildren<Renderer>(true);
+        Renderer housingRenderer = housing.GetComponentInChildren<Renderer>(true);
+        if (mastRenderer == null || housingRenderer == null) return;
+
+        Bounds mastBounds = mastRenderer.bounds;
+        Bounds housingBounds = housingRenderer.bounds;
+        if (housingBounds.size.y < .01f || mastBounds.size.y < .01f) return;
+
+        // A mast's foot belongs on the nacelle roof, not hanging above it.
+        // Retain its horizontal FBX placement when it sits over the housing.
+        Vector3 mastCenter = mastBounds.center, housingCenter = housingBounds.center;
+        float maxPlanarOffset = Mathf.Max(housingBounds.size.x, housingBounds.size.z) * .7f;
+        float planarOffset = Vector2.Distance(new Vector2(mastCenter.x, mastCenter.z),
+            new Vector2(housingCenter.x, housingCenter.z));
+        Vector3 correction = Vector3.up * (housingBounds.max.y - mastBounds.min.y);
+        if (planarOffset > maxPlanarOffset)
         {
-            GameObject model = Resources.Load<GameObject>(WindgroveTurbine.ModelResource);
-            Animation importedAnimation = model != null ? model.GetComponent<Animation>() : null;
-            if (importedAnimation != null && importedAnimation.clip != null &&
-                importedAnimation.clip.length > 0f)
-                sharedClip = importedAnimation.clip;
+            correction.x = housingCenter.x - mastCenter.x;
+            correction.z = housingCenter.z - mastCenter.z;
         }
 
-        if (sharedClip == null)
-            Debug.LogError("Windgrove: The WindTurbine FBX has no imported animation. Check its Animation import settings.");
-        return sharedClip;
+        if (correction.sqrMagnitude > .000001f)
+            mast.position += correction;
     }
 
     private void Awake()
     {
-        // These are the exact local values saved by the user in PrototypeWorld.
-        authoredLocalPosition = transform.localPosition;
-        authoredLocalRotation = transform.localRotation;
-        authoredLocalScale = transform.localScale;
+        rootPosition = transform.localPosition;
+        rootRotation = transform.localRotation;
+        rootScale = transform.localScale;
 
-        clip = FindImportedClip();
-        if (clip == null)
+        clip = ImportedClip();
+        if (clip == null) { enabled = false; return; }
+
+        // The source FBX exports the rotor take onto static parts too.
+        // Hold all parts except 'Rotor blade 2' fixed to avoid swaying towers
+        // and a floating or drifting anemometer during continuous playback.
+        FixAnemometerMast();
+        Transform rotor = NamedPart(transform, "Rotor blade 2");
+        if (rotor == null)
         {
+            Debug.LogError("Windgrove: FBX rotor 'Rotor blade 2' not found.", this);
             enabled = false;
             return;
         }
 
-        // No competing animation component may overwrite our explicitly
-        // sampled FBX pose. This only affects this already-placed turbine.
+        var fixedParts = new List<RestPose>();
+        foreach (Transform part in GetComponentsInChildren<Transform>(true))
+        {
+            if (part == transform || part == rotor || part.IsChildOf(rotor)) continue;
+            fixedParts.Add(new RestPose
+            {
+                Target = part,
+                Position = part.localPosition,
+                Rotation = part.localRotation,
+                Scale = part.localScale
+            });
+        }
+        stationaryParts = fixedParts.ToArray();
+
         foreach (Animation animation in GetComponentsInChildren<Animation>(true))
             animation.enabled = false;
         foreach (Animator animator in GetComponentsInChildren<Animator>(true))
@@ -74,23 +132,30 @@ public sealed class WindgrovePlacedTurbineAnimation : MonoBehaviour
 
     private void LateUpdate()
     {
-        // LateUpdate makes the imported rotor motion visible without relying
-        // on culling-sensitive Animation/Animator playback.
-        float playbackTime = Mathf.Repeat(Time.unscaledTime, clip.length);
-        clip.SampleAnimation(gameObject, playbackTime);
+        if (clip == null) return;
 
-        // Some FBX takes contain a root transform track. Restore the artist's
-        // placement even in that case; only the imported child parts may move.
-        transform.localPosition = authoredLocalPosition;
-        transform.localRotation = authoredLocalRotation;
-        transform.localScale = authoredLocalScale;
+        // Never pauses when off camera, independent of timeScale or Animator culling.
+        float elapsed = Mathf.Repeat(Time.unscaledTime, clip.length);
+        clip.SampleAnimation(gameObject, elapsed);
+
+        transform.localPosition = rootPosition;
+        transform.localRotation = rootRotation;
+        transform.localScale = rootScale;
+
+        // Restore FBX static parts. Rotor remains exactly as animated by the FBX.
+        foreach (RestPose rest in stationaryParts)
+        {
+            if (rest.Target == null) continue;
+            rest.Target.localPosition = rest.Position;
+            rest.Target.localRotation = rest.Rotation;
+            rest.Target.localScale = rest.Scale;
+        }
     }
 }
 
 /// <summary>
-/// Installs animation at runtime on directly dragged WindTurbine FBX prefabs.
-/// Nothing is serialized back into the scene, so manual placement is untouched.
-/// Also handles a later scene load, without searching or changing unrelated assets.
+/// Attach animation only to direct FBX instances, not generated scenery.
+/// No scene edits or replacement geometry; installer also covers additive loads.
 /// </summary>
 internal static class WindgrovePlacedTurbineInstaller
 {
@@ -99,9 +164,8 @@ internal static class WindgrovePlacedTurbineInstaller
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
         SceneManager.sceneLoaded += OnSceneLoaded;
-
-        for (int index = 0; index < SceneManager.sceneCount; index++)
-            InstallInScene(SceneManager.GetSceneAt(index));
+        for (int i = 0; i < SceneManager.sceneCount; i++)
+            InstallInScene(SceneManager.GetSceneAt(i));
     }
 
     private static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -111,26 +175,15 @@ internal static class WindgrovePlacedTurbineInstaller
 
     private static void InstallInScene(Scene scene)
     {
-        if (!scene.isLoaded) return;
-
-        int installed = 0;
+        if (!scene.isLoaded || scene.name != "PrototypeWorld") return;
         foreach (GameObject root in scene.GetRootGameObjects())
         {
-            // These are the nine directly placed instances in PrototypeWorld.
-            // The old procedurally-generated wrappers use different names.
             if (root.name != "WindTurbine" &&
-                !root.name.StartsWith("WindTurbine (", StringComparison.Ordinal))
-                continue;
+                !(root.name.StartsWith("WindTurbine (", StringComparison.Ordinal) &&
+                  root.name.EndsWith(")", StringComparison.Ordinal))) continue;
             if (root.GetComponent<WindgroveTurbine>() != null ||
-                root.GetComponent<WindgrovePlacedTurbineAnimation>() != null)
-                continue;
-
+                root.GetComponent<WindgrovePlacedTurbineAnimation>() != null) continue;
             root.AddComponent<WindgrovePlacedTurbineAnimation>();
-            installed++;
         }
-
-        if (installed > 0)
-            Debug.Log("Windgrove: attached original FBX animation to " +
-                      installed + " manually placed wind turbines in " + scene.name + ".");
     }
 }

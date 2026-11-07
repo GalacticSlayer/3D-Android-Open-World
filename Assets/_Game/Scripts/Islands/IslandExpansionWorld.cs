@@ -305,8 +305,8 @@ public sealed class IslandExpansionWorld : MonoBehaviour
     }
     public int BiomeAt(Vector3 p)
     {
-        // Offshore Oil Rig overrides the default deep-ocean biome only inside
-        // its own 350 m circle. Existing island classifications stay identical.
+        // Nine 150m turbine circles take priority over the offshore oil-rig area.
+        if (WindgroveShoalZone.Contains(p)) return WindgroveShoalZone.BiomeId;
         if (OffshoreOilRigZone.Contains(p)) return OffshoreOilRigZone.BiomeId;
         if(SnapperIslandRuntime.Ready && SnapperCavesRockRegion.ContainsBiome(p))
             return ReefCatalog.SnapperBiomeId;
