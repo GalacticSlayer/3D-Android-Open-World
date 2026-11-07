@@ -14,6 +14,7 @@ Shader "OpenWorld/ShopGlass"
             #pragma vertex Vert
             #pragma fragment Frag
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Assets/_Game/Water/Shaders/UnderwaterVisibility.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
             CBUFFER_START(UnityPerMaterial)
                 half4 _BaseColor;
@@ -30,7 +31,7 @@ Shader "OpenWorld/ShopGlass"
                 float edge=pow(1-saturate(abs(dot(n,view))),4);
                 Light light=GetMainLight();
                 float glint=pow(saturate(abs(dot(n,SafeNormalize(view+light.direction)))),80)*_Water;
-                return half4(_BaseColor.rgb+edge*0.18+glint*0.35,saturate(_BaseColor.a+edge*0.22));
+                return half4(ApplyUnderwaterVisibility(_BaseColor.rgb+edge*0.18+glint*0.35, i.world),saturate(_BaseColor.a+edge*0.22));
             }
             ENDHLSL
         }

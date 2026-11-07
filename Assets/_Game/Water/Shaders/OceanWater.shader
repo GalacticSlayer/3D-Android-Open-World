@@ -79,6 +79,7 @@ Shader "OpenWorld/OceanWater"
             #pragma multi_compile_local _ _WATER_REFERENCE_LOOK
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Assets/_Game/Water/Shaders/UnderwaterVisibility.hlsl"
             #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Packing.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
@@ -400,7 +401,8 @@ Shader "OpenWorld/OceanWater"
                                       + fresnel * 0.25 + foam * 0.10);
                 alpha = lerp(alpha, 1.0, waterFog);
                 alpha = lerp(alpha, 1.0, contactFoam * .85h);
-                return half4(color, alpha);
+                return half4(ApplyUnderwaterVisibility(color, input.positionWS),
+                    lerp(alpha, 1.0, UnderwaterVisibilityFog(input.positionWS)));
             }
             #else
             // Legacy water look also receives the live contact effect.
@@ -526,7 +528,8 @@ Shader "OpenWorld/OceanWater"
                 half contactFoam = ContactFoam(input.positionWS, column, length(GetCameraPositionWS()-input.positionWS));
                 color = lerp(color, _FoamColor.rgb, contactFoam);
                 alpha = lerp(alpha, 1.0, contactFoam * .85h);
-                return half4(color, alpha);
+                return half4(ApplyUnderwaterVisibility(color, input.positionWS),
+                    lerp(alpha, 1.0, UnderwaterVisibilityFog(input.positionWS)));
             }
             #endif
 

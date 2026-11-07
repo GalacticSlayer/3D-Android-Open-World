@@ -26,6 +26,7 @@ Shader "OpenWorld/FishingLit"
             #pragma fragment Frag
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Assets/_Game/Water/Shaders/UnderwaterVisibility.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
             CBUFFER_START(UnityPerMaterial)
@@ -137,7 +138,7 @@ Shader "OpenWorld/FishingLit"
                     0.45;
 
                 return half4(
-                    color,
+                    ApplyUnderwaterVisibility(color, input.positionWS),
                     _BaseColor.a
                 );
             }

@@ -27,6 +27,7 @@ Shader "OpenWorld/HeroFishFin"
             #pragma fragment Frag
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Assets/_Game/Water/Shaders/UnderwaterVisibility.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
             CBUFFER_START(UnityPerMaterial)
@@ -131,7 +132,7 @@ Shader "OpenWorld/HeroFishFin"
                     );
 
                 return half4(
-                    color,
+                    ApplyUnderwaterVisibility(color, input.positionWS),
                     _BaseColor.a
                 );
             }

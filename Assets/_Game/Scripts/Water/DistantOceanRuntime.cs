@@ -16,6 +16,9 @@ public sealed class DistantOceanRuntime : MonoBehaviour
     private MaterialPropertyBlock properties;
     private bool failed;
 
+    // UnderwaterVisuals suppresses only this camera's unused horizon draw.
+    public MeshRenderer OuterRenderer => outer;
+
     private void LateUpdate()
     {
         if (outer == null && !failed) Initialize();
