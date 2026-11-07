@@ -8,7 +8,7 @@ public sealed class WindgroveTurbineImporter : AssetPostprocessor
 
     // Changing the postprocessor version causes Unity to reimport the source
     // FBX and update every scene instance without editing its root transform.
-    public override uint GetVersion() => 2;
+    public override uint GetVersion() => 3;
 
     private static Transform Part(Transform root, string name)
     {
@@ -16,6 +16,66 @@ public sealed class WindgroveTurbineImporter : AssetPostprocessor
             if (string.Equals(part.name, name, System.StringComparison.OrdinalIgnoreCase))
                 return part;
         return null;
+    }
+
+    // The source FBX has thirteen separate meshes. Only three STATIONARY
+    // structural parts need collision. Use primitives, not MeshColliders:
+    // they are inexpensive on Android and never need physics updates while
+    // the visible three-blade rotor continuously spins.
+    private static Bounds MeshBounds(Transform part)
+    {
+        MeshFilter mesh = part.GetComponent<MeshFilter>();
+        if (mesh != null && mesh.sharedMesh != null) return mesh.sharedMesh.bounds;
+        Renderer renderer = part.GetComponent<Renderer>();
+        return renderer != null ? renderer.localBounds : new Bounds(Vector3.zero, Vector3.zero);
+    }
+
+    private static void AddStructuralCapsule(Transform root, string partName)
+    {
+        Transform part = Part(root, partName);
+        if (part == null)
+        {
+            Debug.LogWarning("Windgrove FBX is missing stationary collider part: " + partName);
+            return;
+        }
+
+        Bounds bounds = MeshBounds(part);
+        Vector3 size = bounds.size;
+        if (size.sqrMagnitude < 0.000001f) return;
+        CapsuleCollider capsule = part.GetComponent<CapsuleCollider>();
+        if (capsule == null) capsule = part.gameObject.AddComponent<CapsuleCollider>();
+        capsule.center = bounds.center;
+
+        // Axis is measured in the mesh's own coordinates, so the actual
+        // imported FBX orientation and each scene instance's user scale
+        // are respected without changing any transforms.
+        int axis = size.y >= size.x && size.y >= size.z ? 1 :
+                   size.z >= size.x ? 2 : 0;
+        capsule.direction = axis;
+        float length = axis == 0 ? size.x : axis == 1 ? size.y : size.z;
+        float across = axis == 0 ? Mathf.Max(size.y, size.z) :
+                       axis == 1 ? Mathf.Max(size.x, size.z) : Mathf.Max(size.x, size.y);
+        capsule.radius = across * 0.5f;
+        capsule.height = Mathf.Max(length, capsule.radius * 2f);
+        capsule.isTrigger = false;
+    }
+
+    private static void AddStructuralBox(Transform root, string partName)
+    {
+        Transform part = Part(root, partName);
+        if (part == null)
+        {
+            Debug.LogWarning("Windgrove FBX is missing stationary collider part: " + partName);
+            return;
+        }
+
+        Bounds bounds = MeshBounds(part);
+        if (bounds.size.sqrMagnitude < 0.000001f) return;
+        BoxCollider box = part.GetComponent<BoxCollider>();
+        if (box == null) box = part.gameObject.AddComponent<BoxCollider>();
+        box.center = bounds.center;
+        box.size = bounds.size;
+        box.isTrigger = false;
     }
 
     private void OnPostprocessModel(GameObject importedModel)
@@ -27,13 +87,23 @@ public sealed class WindgroveTurbineImporter : AssetPostprocessor
         // correction automatically inherits each scene instance's manual scale.
         Transform mast = Part(importedModel.transform, "Anemometer mast");
         Transform cap = Part(importedModel.transform, "Top service cap");
-        if (mast == null || cap == null) return;
-        Renderer mastMesh = mast.GetComponentInChildren<Renderer>(true);
-        Renderer capMesh = cap.GetComponentInChildren<Renderer>(true);
-        if (mastMesh == null || capMesh == null) return;
-        float elevation = capMesh.bounds.max.y - mastMesh.bounds.min.y;
-        if (Mathf.Abs(elevation) > .0001f)
-            mast.position += Vector3.up * elevation;
+        if (mast != null && cap != null)
+        {
+            Renderer mastMesh = mast.GetComponentInChildren<Renderer>(true);
+            Renderer capMesh = cap.GetComponentInChildren<Renderer>(true);
+            if (mastMesh != null && capMesh != null)
+            {
+                float elevation = capMesh.bounds.max.y - mastMesh.bounds.min.y;
+                if (Mathf.Abs(elevation) > .0001f)
+                    mast.position += Vector3.up * elevation;
+            }
+        }
+
+        // Three stationary primitives per turbine, 27 total for nine
+        // manually placed instances. No rotor/blade meshes receive colliders.
+        AddStructuralCapsule(importedModel.transform, "Tapered white tower");
+        AddStructuralCapsule(importedModel.transform, "Yellow foundation sleeve");
+        AddStructuralBox(importedModel.transform, "Nacelle housing");
     }
 
     private void OnPreprocessModel()
