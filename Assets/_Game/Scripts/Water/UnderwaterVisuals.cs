@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Rendering;
@@ -11,38 +12,29 @@ public class UnderwaterVisuals : MonoBehaviour
     [SerializeField] private Image underwaterOverlay;
     [Header("Underwater Look")]
     [SerializeField] private Color underwaterFogColor = new Color(0.015f, 0.16f, 0.22f, 1f);
-    [SerializeField] private Color underwaterTint = new Color(0f, 0.24f, 0.34f, 1f);
-    [SerializeField] private float overlayAlpha = 0.15f;
     [SerializeField] private float transitionSpeed = 5f;
 
-    // Visibility is immediate; only the cosmetic tint is eased. No extra render pass.
+    // Opaque scenery is fogged from scene depth; transparent shaders use the same range.
     private const float FogStart = 20f;
     private const float FogEnd = 100f;
-    private const float FarClip = 105f;
     private const float SurfaceMargin = 0.02f;
     private static readonly int FogColorId = Shader.PropertyToID("_UnderwaterVisibilityColor");
+    private static readonly int WaterlinePlaneId = Shader.PropertyToID("_UnderwaterWaterlinePlane");
     private static readonly int FogRangeId = Shader.PropertyToID("_UnderwaterVisibilityRange");
     private static readonly Color DeepFogColor = new Color(0.025f, 0.19f, 0.27f, 1f);
-    private static readonly Color DeepTint = new Color(0.025f, 0.24f, 0.32f, 1f);
 
     private Camera viewCamera;
     private DeepOceanWaterRuntime deepWater;
-    private DistantOceanRuntime distantOcean;
-    private MeshRenderer hiddenHorizon;
-    private bool originalHorizonForceOff;
+    private UnderwaterFogPass fogPass;
+    private Material fogMaterial;
+    private Renderer[] visibilityCandidates;
+    private float nextVisibilityRefresh;
+    private readonly List<Renderer> hiddenRenderers = new List<Renderer>();
     private readonly Vector3[] nearCorners = new Vector3[4];
     private bool waterContact;
-    private float underwaterBlend;
     private float deepVisualBlend;
     private bool renderingUnderwater;
-    private bool originalFogEnabled;
-    private FogMode originalFogMode;
-    private Color originalFogColor;
-    private float originalFogDensity, originalFogStart, originalFogEnd;
-    private float originalFarClip;
-    private CameraClearFlags originalClearFlags;
-    private Color originalBackground;
-    private Vector4 originalShaderColor, originalShaderRange;
+    private Vector4 originalShaderColor, originalShaderRange, originalWaterlinePlane;
 
     private void Awake()
     {
@@ -52,6 +44,12 @@ public class UnderwaterVisuals : MonoBehaviour
         var additional = viewCamera.GetComponent<UniversalAdditionalCameraData>();
         if (additional == null) additional = viewCamera.gameObject.AddComponent<UniversalAdditionalCameraData>();
         additional.requiresDepthTexture = true;
+        Shader shader = Resources.Load<Shader>("UnderwaterDepthFog");
+        if (shader != null)
+        {
+            fogMaterial = CoreUtils.CreateEngineMaterial(shader);
+            fogPass = new UnderwaterFogPass(fogMaterial);
+        }
         ResolveWater();
     }
 
@@ -67,66 +65,87 @@ public class UnderwaterVisuals : MonoBehaviour
         RestoreRendering();
         ResolveWater();
 
-        // Runs after camera movement in LateUpdate, before URP culls/draws this frame.
-        // The near plane can cut through a wave before the camera origin crosses it.
+        // The render pass may run for a partly wet near plane. Its shader decides
+        // wet/dry per pixel; this flag only skips work for a completely dry view.
         float margin = waterContact ? SurfaceMargin + 0.03f : SurfaceMargin;
-        waterContact = TouchesWater(camera.transform.position, margin);
-        if (!waterContact && oceanWater != null)
+        waterContact = false;
+        bool fullySubmerged = true;
+        camera.CalculateFrustumCorners(new Rect(0f, 0f, 1f, 1f), camera.nearClipPlane,
+            Camera.MonoOrStereoscopicEye.Mono, nearCorners);
+        for (int i = 0; i < nearCorners.Length; i++)
         {
-            camera.CalculateFrustumCorners(new Rect(0f, 0f, 1f, 1f), camera.nearClipPlane,
-                Camera.MonoOrStereoscopicEye.Mono, nearCorners);
-            for (int i = 0; i < nearCorners.Length; i++)
-            {
-                Vector3 point = camera.transform.position + camera.transform.TransformDirection(nearCorners[i]);
-                if (TouchesWater(point, margin)) { waterContact = true; break; }
-            }
+            Vector3 point = camera.transform.position + camera.transform.TransformDirection(nearCorners[i]);
+            waterContact |= TouchesWater(point, margin);
+            fullySubmerged &= TouchesWater(point, -SurfaceMargin);
         }
 
         float depthBlend = deepWater != null ? Mathf.Clamp01(deepWater.VisibilityBlend) : 0f;
-        underwaterBlend = Mathf.MoveTowards(underwaterBlend, waterContact ? 1f : 0f,
-            transitionSpeed * Time.deltaTime);
         deepVisualBlend = Mathf.MoveTowards(deepVisualBlend, depthBlend, transitionSpeed * Time.deltaTime);
-        if (underwaterOverlay != null)
-        {
-            Color tint = Color.Lerp(underwaterTint, DeepTint, deepVisualBlend);
-            tint.a = waterContact ? Mathf.Lerp(overlayAlpha, 0.12f, deepVisualBlend) * underwaterBlend : 0f;
-            underwaterOverlay.color = tint;
-        }
-        if (!waterContact) return;
+        // A full-screen UI tint also colors the sky and emerged geometry. The depth
+        // pass now supplies the tint only to submerged pixels instead.
+        if (underwaterOverlay != null) underwaterOverlay.color = Color.clear;
+        if (!waterContact || fogPass == null) return;
 
-        // Save per-render state so preview cameras, travel and dry views retain their own look.
-        originalFogEnabled = RenderSettings.fog;
-        originalFogMode = RenderSettings.fogMode;
-        originalFogColor = RenderSettings.fogColor;
-        originalFogDensity = RenderSettings.fogDensity;
-        originalFogStart = RenderSettings.fogStartDistance;
-        originalFogEnd = RenderSettings.fogEndDistance;
-        originalFarClip = camera.farClipPlane;
-        originalClearFlags = camera.clearFlags;
-        originalBackground = camera.backgroundColor;
         originalShaderColor = Shader.GetGlobalVector(FogColorId);
         originalShaderRange = Shader.GetGlobalVector(FogRangeId);
+        originalWaterlinePlane = Shader.GetGlobalVector(WaterlinePlaneId);
         renderingUnderwater = true;
-
         Color fog = Color.Lerp(underwaterFogColor, DeepFogColor, deepVisualBlend);
-        RenderSettings.fog = true;
-        RenderSettings.fogMode = FogMode.Linear;
-        RenderSettings.fogColor = fog;
-        RenderSettings.fogStartDistance = FogStart;
-        RenderSettings.fogEndDistance = FogEnd;
         Color shaderFog = QualitySettings.activeColorSpace == ColorSpace.Linear ? fog.linear : fog;
-        Shader.SetGlobalVector(FogColorId, new Vector4(shaderFog.r, shaderFog.g, shaderFog.b, 1f));
-        Shader.SetGlobalVector(FogRangeId, new Vector4(FogStart, 1f / (FogEnd - FogStart), 0f, 0f));
-        camera.farClipPlane = Mathf.Min(originalFarClip, FarClip);
-        camera.clearFlags = CameraClearFlags.SolidColor;
-        camera.backgroundColor = fog;
-        // The horizon shader intentionally bypasses far clipping above water.
-        hiddenHorizon = distantOcean != null ? distantOcean.OuterRenderer : null;
-        if (hiddenHorizon != null)
+        // Fit the local wave surface at the near plane. Sampling the same live
+        // surface as swimming/boats also supports flat pond and aquarium water.
+        Vector3 center = camera.transform.position + camera.transform.forward * camera.nearClipPlane;
+        ShopWaterVolume.TrySurface(center, oceanWater, out float surface);
+        const float sampleOffset = 0.25f;
+        float slopeX = SurfaceSlope(center, Vector3.right * sampleOffset, surface);
+        float slopeZ = SurfaceSlope(center, Vector3.forward * sampleOffset, surface);
+        Vector4 plane = new Vector4(-slopeX, 1f, -slopeZ,
+            slopeX * center.x + slopeZ * center.z - surface);
+        Vector4 range = new Vector4(FogStart, 1f / (FogEnd - FogStart), surface, 0.12f);
+        Vector4 color = new Vector4(shaderFog.r, shaderFog.g, shaderFog.b, 1f);
+        Shader.SetGlobalVector(FogColorId, color);
+        Shader.SetGlobalVector(FogRangeId, range);
+        Shader.SetGlobalVector(WaterlinePlaneId, plane);
+        fogMaterial.SetVector(FogColorId, color);
+        fogMaterial.SetVector(FogRangeId, range);
+        fogMaterial.SetVector(WaterlinePlaneId, plane);
+        // Whole-renderer culling must not remove objects from the dry half of a
+        // split view. The pixel mask still enforces the visual limit in that case.
+        if (fullySubmerged) CullSubmergedRenderers(camera.transform.position, surface);
+    }
+
+    private float SurfaceSlope(Vector3 center, Vector3 offset, float fallback)
+    {
+        if (!ShopWaterVolume.TrySurface(center + offset, oceanWater, out float high)) high = fallback;
+        if (!ShopWaterVolume.TrySurface(center - offset, oceanWater, out float low)) low = fallback;
+        return (high - low) / (2f * offset.magnitude);
+    }
+
+    public void EnqueueFog(ScriptableRenderer renderer)
+    {
+        if (renderingUnderwater && fogPass != null) renderer.EnqueuePass(fogPass);
+    }
+
+    private void CullSubmergedRenderers(Vector3 eye, float surface)
+    {
+        // Refresh occasionally to include newly spawned fish/boats. Check live bounds
+        // every frame so moving objects and objects crossing the surface stay correct.
+        if (visibilityCandidates == null || Time.unscaledTime >= nextVisibilityRefresh)
         {
-            originalHorizonForceOff = hiddenHorizon.forceRenderingOff;
-            hiddenHorizon.forceRenderingOff = true;
+            visibilityCandidates = FindObjectsByType<Renderer>(FindObjectsSortMode.None);
+            nextVisibilityRefresh = Time.unscaledTime + 2f;
         }
+        foreach (Renderer candidate in visibilityCandidates)
+        {
+            if (candidate == null || !candidate.enabled || candidate.forceRenderingOff) continue;
+            Bounds bounds = candidate.bounds;
+            // Conservative margin for waves. Straddling objects retain their emerged part.
+            if (bounds.max.y >= surface - 2f || bounds.SqrDistance(eye) <= FogEnd * FogEnd) continue;
+            candidate.forceRenderingOff = true;
+            hiddenRenderers.Add(candidate);
+        }
+        // Terrain tiles can cross the waterline: keep them submitted and mask their
+        // submerged pixels in the depth pass rather than hiding entire islands.
     }
 
     private bool TouchesWater(Vector3 point, float margin)
@@ -142,7 +161,6 @@ public class UnderwaterVisuals : MonoBehaviour
 
     public void Configure(OceanWater water, Image overlay)
     {
-        distantOcean = null;
         oceanWater = water;
         underwaterOverlay = overlay;
         deepWater = oceanWater != null ? oceanWater.GetComponent<DeepOceanWaterRuntime>() : null;
@@ -152,29 +170,23 @@ public class UnderwaterVisuals : MonoBehaviour
     {
         if (oceanWater == null) oceanWater = FindFirstObjectByType<OceanWater>();
         if (deepWater == null && oceanWater != null) deepWater = oceanWater.GetComponent<DeepOceanWaterRuntime>();
-        if (distantOcean == null && oceanWater != null) distantOcean = oceanWater.GetComponent<DistantOceanRuntime>();
     }
 
     private void RestoreRendering()
     {
         if (!renderingUnderwater) return;
         renderingUnderwater = false;
-        if (hiddenHorizon != null) hiddenHorizon.forceRenderingOff = originalHorizonForceOff;
-        hiddenHorizon = null;
-        RenderSettings.fog = originalFogEnabled;
-        RenderSettings.fogMode = originalFogMode;
-        RenderSettings.fogColor = originalFogColor;
-        RenderSettings.fogDensity = originalFogDensity;
-        RenderSettings.fogStartDistance = originalFogStart;
-        RenderSettings.fogEndDistance = originalFogEnd;
+        foreach (Renderer renderer in hiddenRenderers)
+            if (renderer != null) renderer.forceRenderingOff = false;
+        hiddenRenderers.Clear();
         Shader.SetGlobalVector(FogColorId, originalShaderColor);
         Shader.SetGlobalVector(FogRangeId, originalShaderRange);
-        if (viewCamera != null)
-        {
-            viewCamera.farClipPlane = originalFarClip;
-            viewCamera.clearFlags = originalClearFlags;
-            viewCamera.backgroundColor = originalBackground;
-        }
+        Shader.SetGlobalVector(WaterlinePlaneId, originalWaterlinePlane);
+    }
+
+    private void OnDestroy()
+    {
+        CoreUtils.Destroy(fogMaterial);
     }
 
     private void OnDisable()
@@ -183,7 +195,7 @@ public class UnderwaterVisuals : MonoBehaviour
         RenderPipelineManager.endCameraRendering -= EndCameraRendering;
         RestoreRendering();
         waterContact = false;
-        underwaterBlend = deepVisualBlend = 0f;
+        deepVisualBlend = 0f;
         if (underwaterOverlay != null)
         {
             Color color = underwaterOverlay.color;

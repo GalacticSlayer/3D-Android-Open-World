@@ -26,7 +26,6 @@ Shader "OpenWorld/FishingUnlit"
             #pragma fragment Frag
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-            #include "Assets/_Game/Water/Shaders/UnderwaterVisibility.hlsl"
 
             CBUFFER_START(UnityPerMaterial)
                 float4 _BaseColor;
@@ -40,7 +39,6 @@ Shader "OpenWorld/FishingUnlit"
             struct Varyings
             {
                 float4 positionCS : SV_POSITION;
-                float3 positionWS : TEXCOORD0;
             };
 
             Varyings Vert(Attributes input)
@@ -52,13 +50,12 @@ Shader "OpenWorld/FishingUnlit"
                         input.positionOS.xyz
                     );
 
-                output.positionWS = TransformObjectToWorld(input.positionOS.xyz);
                 return output;
             }
 
             half4 Frag(Varyings input) : SV_Target
             {
-                return half4(ApplyUnderwaterVisibility(_BaseColor.rgb, input.positionWS), _BaseColor.a);
+                return half4(_BaseColor);
             }
 
             ENDHLSL
