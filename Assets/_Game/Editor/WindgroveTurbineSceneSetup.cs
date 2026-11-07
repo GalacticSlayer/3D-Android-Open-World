@@ -6,24 +6,25 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// <summary>Fills the 30 saved placements once; never re-scatters or resets them.</summary>
+/// <summary>Retires the original generated placements; never installs turbines.</summary>
 [InitializeOnLoad]
 public sealed class WindgroveTurbineSceneSetup : IProcessSceneWithReport
 {
     private const string ScenePath = "Assets/Scenes/PrototypeWorld.unity";
+    private const string GeneratedRoot = "The Windgrove Shoal - Wind Turbines";
     public int callbackOrder => -800;
 
     static WindgroveTurbineSceneSetup()
     {
-        EditorApplication.delayCall += PrepareLoadedScenes;
-        EditorSceneManager.sceneOpened += (scene, mode) => EditorApplication.delayCall += PrepareLoadedScenes;
+        EditorApplication.delayCall += CleanLoadedScenes;
+        EditorSceneManager.sceneOpened += (scene, mode) => EditorApplication.delayCall += CleanLoadedScenes;
     }
 
-    private static void PrepareLoadedScenes()
+    private static void CleanLoadedScenes()
     {
         if (EditorApplication.isCompiling || EditorApplication.isUpdating)
         {
-            EditorApplication.delayCall += PrepareLoadedScenes;
+            EditorApplication.delayCall += CleanLoadedScenes;
             return;
         }
         if (EditorApplication.isPlayingOrWillChangePlaymode || BuildPipeline.isBuildingPlayer) return;
@@ -32,7 +33,7 @@ public sealed class WindgroveTurbineSceneSetup : IProcessSceneWithReport
             Scene scene = SceneManager.GetSceneAt(i);
             if (scene.path != ScenePath || !scene.isLoaded) continue;
             bool wasDirty = scene.isDirty;
-            if (!Prepare(scene, false)) continue;
+            if (!RemoveGeneratedPlacements(scene)) continue;
             EditorSceneManager.MarkSceneDirty(scene);
             if (!wasDirty) EditorSceneManager.SaveScene(scene);
             SceneView.RepaintAll();
@@ -41,25 +42,36 @@ public sealed class WindgroveTurbineSceneSetup : IProcessSceneWithReport
 
     public void OnProcessScene(Scene scene, BuildReport report)
     {
-        if (report != null && scene.path == ScenePath) Prepare(scene, true);
+        // Also covers entering Play Mode or building before the delayed cleanup.
+        if (scene.path == ScenePath) RemoveGeneratedPlacements(scene);
     }
 
-    private static bool Prepare(Scene scene, bool building)
+    private static bool RemoveGeneratedPlacements(Scene scene)
     {
         bool changed = false;
         foreach (GameObject root in scene.GetRootGameObjects())
-        foreach (WindgroveTurbine turbine in root.GetComponentsInChildren<WindgroveTurbine>(true))
         {
-            // Existing visuals and every artist-owned placement remain untouched.
-            if (turbine.Ready) continue;
-            if (UserPlacedScenery.Contains(turbine.transform)) continue;
-            if (turbine.EnsureVisual())
+            if (root.name != GeneratedRoot || UserPlacedScenery.Contains(root.transform)) continue;
+            for (int i = root.transform.childCount - 1; i >= 0; i--)
             {
+                Transform child = root.transform.GetChild(i);
+                // Match only our original numbered placement wrappers. Directly
+                // dragged FBX instances do not carry this component.
+                if (child.GetComponent<WindgroveTurbine>() == null) continue;
+                if (UserPlacedScenery.Contains(child)) continue;
+                bool originalName = false;
+                for (int number = 1; number <= 30; number++)
+                    if (child.name == "Wind Turbine " + number.ToString("00")) originalName = true;
+                if (!originalName) continue;
+                Object.DestroyImmediate(child.gameObject);
                 changed = true;
-                EditorUtility.SetDirty(turbine);
             }
-            if (!turbine.Ready && building)
-                throw new BuildFailedException("Windgrove turbine import is incomplete: " + turbine.name);
+            // Preserve any unrelated children added by the user.
+            if (root.transform.childCount == 0)
+            {
+                Object.DestroyImmediate(root);
+                changed = true;
+            }
         }
         return changed;
     }
