@@ -19,30 +19,18 @@ public sealed class WindgrovePlacedTurbineAnimation : MonoBehaviour
         public Quaternion Rotation;
     }
 
-    private static AnimationClip sharedClip;
-    private static bool searched;
-    private AnimationClip clip;
+    // The original FBX clip was unreliable on direct imported scene instances.
+    // Spin the original three-bladed rotor transform itself, instead of relying
+    // on legacy FBX animation import, clip names, or Animator culling.
+    [SerializeField, Range(1f, 180f)]
+    private float degreesPerSecond = 86.4f; // original 100-frame/24fps full turn
+
+    private Transform rotor;
+    private Quaternion rotorInitialRotation;
+    private Vector3 spinAxisInParent;
     private RestPose[] stationaryParts;
     private Vector3 rootPosition, rootScale;
     private Quaternion rootRotation;
-
-    private static AnimationClip ImportedClip()
-    {
-        if (searched) return sharedClip;
-        searched = true;
-        foreach (AnimationClip candidate in Resources.LoadAll<AnimationClip>(WindgroveTurbine.ModelResource))
-        {
-            if (candidate == null || candidate.length <= 0f ||
-                candidate.name.StartsWith("__preview__", StringComparison.OrdinalIgnoreCase))
-                continue;
-            if (sharedClip == null || candidate.length > sharedClip.length)
-                sharedClip = candidate;
-        }
-
-        if (sharedClip == null)
-            Debug.LogError("Windgrove: original WindTurbine FBX rotation clip missing.");
-        return sharedClip;
-    }
 
     private static Transform NamedPart(Transform parent, params string[] patterns)
     {
@@ -95,20 +83,28 @@ public sealed class WindgrovePlacedTurbineAnimation : MonoBehaviour
         rootRotation = transform.localRotation;
         rootScale = transform.localScale;
 
-        clip = ImportedClip();
-        if (clip == null) { enabled = false; return; }
-
         // The source FBX exports the rotor take onto static parts too.
         // Hold all parts except 'Rotor blade 2' fixed to avoid swaying towers
         // and a floating or drifting anemometer during continuous playback.
         FixAnemometerMast();
-        Transform rotor = NamedPart(transform, "Rotor blade 2");
+        rotor = NamedPart(transform, "Rotor blade 2");
         if (rotor == null)
         {
             Debug.LogError("Windgrove: FBX rotor 'Rotor blade 2' not found.", this);
             enabled = false;
             return;
         }
+
+        rotorInitialRotation = rotor.localRotation;
+        Transform nacelle = NamedPart(transform, "Nacelle housing", "Nacelle roof panel");
+        // The rotor pivot is the hub in the original FBX. The vector from
+        // nacelle to rotor points along the rotor shaft in *world* space;
+        // convert to rotor-parent space so artist yaw/scale remain untouched.
+        Vector3 shaft = nacelle != null ? rotor.position - nacelle.position : transform.forward;
+        if (shaft.sqrMagnitude < .0001f) shaft = transform.forward;
+        spinAxisInParent = rotor.parent != null
+            ? rotor.parent.InverseTransformDirection(shaft.normalized).normalized
+            : shaft.normalized;
 
         var fixedParts = new List<RestPose>();
         foreach (Transform part in GetComponentsInChildren<Transform>(true))
@@ -132,17 +128,18 @@ public sealed class WindgrovePlacedTurbineAnimation : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (clip == null) return;
+        if (rotor == null) return;
 
-        // Never pauses when off camera, independent of timeScale or Animator culling.
-        float elapsed = Mathf.Repeat(Time.unscaledTime, clip.length);
-        clip.SampleAnimation(gameObject, elapsed);
+        // Absolute unscaled clock: no skipped rotation due to off-screen
+        // Animator culling, timeScale changes, re-enabling, or FPS differences.
+        float angle = Mathf.Repeat(Time.unscaledTime * degreesPerSecond, 360f);
+        rotor.localRotation = Quaternion.AngleAxis(angle, spinAxisInParent) *
+                              rotorInitialRotation;
 
         transform.localPosition = rootPosition;
         transform.localRotation = rootRotation;
         transform.localScale = rootScale;
 
-        // Restore FBX static parts. Rotor remains exactly as animated by the FBX.
         foreach (RestPose rest in stationaryParts)
         {
             if (rest.Target == null) continue;

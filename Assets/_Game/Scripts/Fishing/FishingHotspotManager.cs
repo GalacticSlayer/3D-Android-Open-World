@@ -112,48 +112,49 @@ public sealed class FishingHotspotManager : MonoBehaviour
     {
         if (ocean == null ||
             (PondWater.Active != null && PondWater.Active.Contains(p))) return false;
-        // Select only the tile actually beneath this point. Terrain.activeTerrain
-        // may be Suncrest even when the player is 3 km south at the oil rig.
-        Terrain terrain = null;
-        foreach (Terrain candidate in WorldTerrain.Tiles)
-        {
-            if (candidate == null || !candidate.isActiveAndEnabled || candidate.terrainData == null) continue;
-            Vector3 localPoint = p - candidate.transform.position;
-            Vector3 bounds = candidate.terrainData.size;
-            if (localPoint.x < 0f || localPoint.z < 0f ||
-                localPoint.x > bounds.x || localPoint.z > bounds.z) continue;
-            terrain = candidate;
-            break;
-        }
-        if (terrain == null) return false;
         foreach (var spot in pool)
-            if (spot != null && spot.gameObject.activeSelf && HorizontalDistance(p, spot.transform.position) < 12f) return false;
+            if (spot != null && spot.gameObject.activeSelf &&
+                HorizontalDistance(p, spot.transform.position) < 12f) return false;
 
-        // Check EVERY heightmap vertex in a conservatively expanded disk, not just
-        // a few radial samples which can miss a narrow spit or a user-edited rock island.
-        // The entire 10.08m effect footprint stays >=15m from land, not only its centre.
-        TerrainData data = terrain.terrainData;
-        Vector3 origin = terrain.transform.position;
-        Vector3 local = p - origin;
-        float sx = data.size.x / (data.heightmapResolution - 1);
-        float sz = data.size.z / (data.heightmapResolution - 1);
-        float clearance = LandClearance + Radius;
-        float search = clearance + Mathf.Sqrt(sx * sx + sz * sz);
-        if (local.x < search || local.z < search || local.x > data.size.x - search || local.z > data.size.z - search) return false;
+        // Open ocean beyond a finite TerrainData tile is still playable water.
+        // Evaluate every nearby authored terrain tile, clipping the heightmap
+        // search to each tile's bounds. This retains the full 15m dry-land
+        // clearance near edited shores without requiring terrain at the ripple.
         float sea = ocean.BaseWaterLevel;
-        if (terrain.SampleHeight(p) + origin.y > sea - 1.2f) return false;
-        int x0 = Mathf.FloorToInt((local.x - search) / sx);
-        int z0 = Mathf.FloorToInt((local.z - search) / sz);
-        int x1 = Mathf.CeilToInt((local.x + search) / sx);
-        int z1 = Mathf.CeilToInt((local.z + search) / sz);
-        float[,] heights = data.GetHeights(x0, z0, x1 - x0 + 1, z1 - z0 + 1);
-        for (int z = 0; z < heights.GetLength(0); z++)
-        for (int x = 0; x < heights.GetLength(1); x++)
+        if (WorldTerrain.TryGetHeight(p, out float localFloor) &&
+            localFloor > sea - 1.2f) return false;
+        float clearance = LandClearance + Radius;
+        foreach (Terrain terrain in WorldTerrain.Tiles)
         {
-            float dx = (x0 + x) * sx - local.x, dz = (z0 + z) * sz - local.z;
-            if (dx * dx + dz * dz <= search * search &&
-                heights[z, x] * data.size.y + origin.y >= sea - 0.15f) return false;
+            if (terrain == null || !terrain.isActiveAndEnabled || terrain.terrainData == null)
+                continue;
+            TerrainData data = terrain.terrainData;
+            Vector3 origin = terrain.transform.position;
+            float sx = data.size.x / (data.heightmapResolution - 1);
+            float sz = data.size.z / (data.heightmapResolution - 1);
+            float search = clearance + Mathf.Sqrt(sx * sx + sz * sz);
+
+            float dx = Mathf.Max(0f, Mathf.Max(origin.x - p.x, p.x - (origin.x + data.size.x)));
+            float dz = Mathf.Max(0f, Mathf.Max(origin.z - p.z, p.z - (origin.z + data.size.z)));
+            if (dx * dx + dz * dz > search * search) continue;
+
+            int last = data.heightmapResolution - 1;
+            int x0 = Mathf.Clamp(Mathf.FloorToInt((p.x - origin.x - search) / sx), 0, last);
+            int z0 = Mathf.Clamp(Mathf.FloorToInt((p.z - origin.z - search) / sz), 0, last);
+            int x1 = Mathf.Clamp(Mathf.CeilToInt((p.x - origin.x + search) / sx), 0, last);
+            int z1 = Mathf.Clamp(Mathf.CeilToInt((p.z - origin.z + search) / sz), 0, last);
+            float[,] heights = data.GetHeights(x0, z0, x1 - x0 + 1, z1 - z0 + 1);
+            for (int z = 0; z < heights.GetLength(0); z++)
+            for (int x = 0; x < heights.GetLength(1); x++)
+            {
+                float hx = (x0 + x) * sx + origin.x - p.x;
+                float hz = (z0 + z) * sz + origin.z - p.z;
+                if (hx * hx + hz * hz <= search * search &&
+                    heights[z, x] * data.size.y + origin.y >= sea - 0.15f)
+                    return false;
+            }
         }
+
         // Also reject exposed static mesh rocks/structures added in the Scene editor.
         p.y = sea;
         int count = Physics.OverlapSphereNonAlloc(p, clearance, obstacles, ~0, QueryTriggerInteraction.Ignore);

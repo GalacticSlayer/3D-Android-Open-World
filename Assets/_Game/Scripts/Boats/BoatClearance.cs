@@ -87,15 +87,18 @@ public static class BoatClearance
                 float ground=terrain.SampleHeight(p)+terrain.transform.position.y;
                 if(water.BaseWaterLevel-ground<requiredDepth)return false;
             }
-            // No known bathymetry: fail closed instead of allowing an unseen shore.
-            if(!found)return false;
+            // Beyond the edge of authored terrain is still open ocean.
+            // Keep the depth test for every terrain tile intersecting the hull,
+            // while solid-object checks below catch any man-made obstacle.
+            // No fabricated invisible shoreline at the terrain-map edge.
         }
         half.y=(draft+2f)*.5f;
         foreach(var c in Physics.OverlapBox(position+Vector3.up*((2f-draft)*.5f),half,rotation,~0,QueryTriggerInteraction.Ignore))
         {
             // Terrain depth was checked over the footprint above. The old
             // full-draft overlap would otherwise override the new shallow limit.
-            if(motorboat && c is TerrainCollider)continue;
+            if(c is TerrainCollider)continue; // Every intersecting tile was depth-tested above.
+            if(c.GetComponentInParent<OceanWater>() != null || c.name=="BoatPlacementWater")continue;
             var rider=c.GetComponentInParent<BoatPassenger>();
             if(rider!=null && rider.Boat!=null && ignored==rider.Boat.transform)continue;
             if(ignored!=null && c.transform.IsChildOf(ignored))continue;

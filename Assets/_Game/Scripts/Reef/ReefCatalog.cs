@@ -4,10 +4,9 @@ using UnityEngine;
 public static class ReefCatalog
 {
     // Menu order is independent of the stable biome IDs used by saves and fishing.
-    public static readonly int[] IslandIndexOrder = { 0, 4, 1, 3, 2, WindgroveShoalZone.BiomeId, OffshoreOilRigZone.BiomeId };
+    public static readonly int[] IslandIndexOrder = { 0, 4, 1, 3, 2, WindgroveShoalZone.BiomeId };
     public static bool SnapperDiscovered {get;set;}
     public static bool BluewaterDiscovered {get;set;}
-    public static bool OffshoreOilRigDiscovered {get;set;}
     public static bool WindgroveDiscovered {get;set;}
     public const string RuggedId="brinebreak-isle";
     public static bool BrinebreakDiscovered {get;set;}
@@ -22,7 +21,7 @@ public static class ReefCatalog
         public readonly float[] weights;
         public Zone(string id,string name,string description,bool unlocked,float[] weights)
         {this.id=id;this.name=name;this.description=description;unlockedByDefault=unlocked;this.weights=weights;}
-        public bool Unlocked=>unlockedByDefault||(id==RuggedId&&BrinebreakDiscovered)||(id==PelagicIslandGeometry.Id&&BluewaterDiscovered)||(id==SnapperIslandGeometry.Id&&SnapperDiscovered)||(id==OffshoreOilRigZone.Id&&OffshoreOilRigDiscovered)||(id==WindgroveShoalZone.Id&&WindgroveDiscovered);
+        public bool Unlocked=>unlockedByDefault||(id==RuggedId&&BrinebreakDiscovered)||(id==PelagicIslandGeometry.Id&&BluewaterDiscovered)||(id==SnapperIslandGeometry.Id&&SnapperDiscovered)||(id==WindgroveShoalZone.Id&&WindgroveDiscovered);
     }
 
     // Embedded odds remain only as a fallback if an editable tuning CSV is invalid.
@@ -37,9 +36,8 @@ public static class ReefCatalog
             new float[]{35,0,0,0,0,20,0,0,15,15,0,0,0,15,0}),
         new Zone(SnapperIslandGeometry.Id,SnapperIslandGeometry.Name,"A dedicated snapper island directly south of Suncrest. Snappers, blackfin and great barracuda, and Blacktip Reef Sharks bite within 100 m of its three cave rocks. Land here to unlock travel.",false,
             new float[]{0,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,37,13,2,0,0,10,4,2}),
-        new Zone(OffshoreOilRigZone.Id,OffshoreOilRigZone.Name,"Offshore oil-rig fishing grounds. Discover within 350 m of the rig. Black Marlin are found only here.",false,
-            new float[]{}),
-        new Zone(WindgroveShoalZone.Id,WindgroveShoalZone.Name,"Nine offshore wind turbines. Fish within 150 m of any turbine; approach one to unlock the index and teleport.",false,
+        new Zone(WindgroveShoalZone.Id,WindgroveShoalZone.Name,
+            "Remote wind-farm waters within 150 m of any of the nine turbines. Black Marlin live only here. Approach a turbine to unlock travel.",false,
             new float[]{})
     };
 
@@ -79,17 +77,7 @@ public static class ReefCatalog
     {
         if (biome == WindgroveShoalZone.BiomeId)
         {
-            float[] openOcean = EquippedWeights(bait, PelagicIslandGeometry.BiomeId);
-            // Do not reintroduce exclusive Bluewater trevally or Mako species.
-            for (int i = 0; i < openOcean.Length; i++)
-                if (i != 0 && i != 3 && i != 5 && i != 8 && i != 9 && i != 13)
-                    openOcean[i] = 0f;
-            return openOcean;
-        }
-        if (biome == OffshoreOilRigZone.BiomeId)
-        {
-            // First offshore release has one species. Any successful bite is a
-            // Black Marlin; future species can share the editable CSV odds.
+            // Inherit the retired offshore-rig catch rules: only Black Marlin.
             var offshore = new float[FishCatalog.Count];
             offshore[FishCatalog.BlackMarlinId] = 100f;
             return offshore;

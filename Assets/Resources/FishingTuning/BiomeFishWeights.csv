@@ -218,63 +218,19 @@ brinebreak-isle,44,Black Marlin,0,0
 deep-ocean,44,Black Marlin,0,0
 bluewater-cay,44,Black Marlin,0,0
 snapper-island,44,Black Marlin,0,0
-offshore-oil-rig,0,Blue Mackerel,0,0
-offshore-oil-rig,1,Red Snapper,0,0
-offshore-oil-rig,2,Sea Bass,0,0
-offshore-oil-rig,3,Yellowtail,0,0
-offshore-oil-rig,5,Yellowfin Tuna,0,0
-offshore-oil-rig,6,Yellow Goatfish,0,0
-offshore-oil-rig,7,Black Spot Goatfish,0,0
-offshore-oil-rig,8,Bigeye Tuna,0,0
-offshore-oil-rig,9,Bonito,0,0
-offshore-oil-rig,10,Black Sea Bass,0,0
-offshore-oil-rig,11,Striped Bass,0,0
-offshore-oil-rig,12,Spotted Sand Bass,0,0
-offshore-oil-rig,13,Albacore,0,0
-offshore-oil-rig,14,Greater Amberjack,0,0
-offshore-oil-rig,15,Blacktip Shark,0,0
-offshore-oil-rig,16,Yellowtail Snapper,0,0
-offshore-oil-rig,17,Mutton Snapper,0,0
-offshore-oil-rig,18,Blacktip Reef Shark,0,0
-offshore-oil-rig,19,Mako Shark,0,0
-offshore-oil-rig,20,Battle Scarred Mako Shark,0,0
-offshore-oil-rig,21,Mangrove Snapper,0,0
-offshore-oil-rig,22,Blackfin Barracuda,0,0
-offshore-oil-rig,23,Great Barracuda,0,0
-offshore-oil-rig,24,Bluefin Trevally,0,0
-offshore-oil-rig,25,Golden Trevally,0,0
-offshore-oil-rig,26,Giant Trevally,0,0
-offshore-oil-rig,27,Winter Flounder,0,0
-offshore-oil-rig,28,Roughtail Stingray,0,0
-offshore-oil-rig,29,Leopard Stingray,0,0
-offshore-oil-rig,30,Mahogany Snapper,0,0
-offshore-oil-rig,31,Picasso Triggerfish,0,0
-offshore-oil-rig,32,Titan Triggerfish,0,0
-offshore-oil-rig,33,Emperor Angelfish,0,0
-offshore-oil-rig,34,Juvenile Emperor Angelfish,0,0
-offshore-oil-rig,35,Panther Grouper,0,0
-offshore-oil-rig,36,Coral Grouper,0,0
-offshore-oil-rig,37,Blue Lined Grouper,0,0
-offshore-oil-rig,38,Nassau Grouper,0,0
-offshore-oil-rig,39,Napoleon Wrasse,0,0
-offshore-oil-rig,40,White Skate,0,0
-offshore-oil-rig,41,Blue Tang,0,0
-offshore-oil-rig,42,Dussumieri Tang,0,0
-offshore-oil-rig,44,Black Marlin,60,750
-# Windgrove uses Bluewater fish until dedicated species are provided.
-windgrove-shoal,0,Blue Mackerel,0.25,5
+windgrove-shoal,0,Blue Mackerel,0,0
 windgrove-shoal,1,Red Snapper,0,0
 windgrove-shoal,2,Sea Bass,0,0
-windgrove-shoal,3,Yellowtail,1.4,14.625
-windgrove-shoal,5,Yellowfin Tuna,1,63
+windgrove-shoal,3,Yellowtail,0,0
+windgrove-shoal,5,Yellowfin Tuna,0,0
 windgrove-shoal,6,Yellow Goatfish,0,0
 windgrove-shoal,7,Black Spot Goatfish,0,0
-windgrove-shoal,8,Bigeye Tuna,1,90
-windgrove-shoal,9,Bonito,0.5,11.25
+windgrove-shoal,8,Bigeye Tuna,0,0
+windgrove-shoal,9,Bonito,0,0
 windgrove-shoal,10,Black Sea Bass,0,0
 windgrove-shoal,11,Striped Bass,0,0
 windgrove-shoal,12,Spotted Sand Bass,0,0
-windgrove-shoal,13,Albacore,2,45
+windgrove-shoal,13,Albacore,0,0
 windgrove-shoal,14,Greater Amberjack,0,0
 windgrove-shoal,15,Blacktip Shark,0,0
 windgrove-shoal,16,Yellowtail Snapper,0,0
@@ -304,4 +260,4 @@ windgrove-shoal,39,Napoleon Wrasse,0,0
 windgrove-shoal,40,White Skate,0,0
 windgrove-shoal,41,Blue Tang,0,0
 windgrove-shoal,42,Dussumieri Tang,0,0
-windgrove-shoal,44,Black Marlin,0,0
+windgrove-shoal,44,Black Marlin,60,750

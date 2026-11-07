@@ -216,7 +216,6 @@ public sealed class TravelAndIslandMenuRuntime : MonoBehaviour
 
         foreach(int biome in ReefCatalog.IslandIndexOrder)
         {
-            if(biome==OffshoreOilRigZone.BiomeId && !ReefCatalog.OffshoreOilRigDiscovered)continue;
             if(biome==WindgroveShoalZone.BiomeId && !ReefCatalog.WindgroveDiscovered)continue;
             CreateIslandCard(list,biome,currentBiome);
         }
@@ -228,10 +227,9 @@ public sealed class TravelAndIslandMenuRuntime : MonoBehaviour
     {
         var entry=ReefCatalog.Zones[biome];
         bool unlocked=entry.Unlocked;
-        bool isIsland=biome==0 || biome==1 || biome==3 || biome==4 || biome==OffshoreOilRigZone.BiomeId || biome==WindgroveShoalZone.BiomeId;
+        bool isIsland=biome==0 || biome==1 || biome==3 || biome==4 || biome==WindgroveShoalZone.BiomeId;
         bool here=travel!=null && travel.Destination==0 && currentBiome==biome;
         bool worldReady=biome==WindgroveShoalZone.BiomeId?WindgroveShoalZone.TryGetArrival(out _,out _):
-            biome==OffshoreOilRigZone.BiomeId?OffshoreOilRigZone.TryGetArrival(out _):
             biome==4?SnapperIslandRuntime.Ready:biome==0 || biome==2 || (IslandExpansionWorld.Active!=null && IslandExpansionWorld.Active.Ready);
         bool fishingBusy=IsFishingBusy();
 
@@ -291,7 +289,7 @@ public sealed class TravelAndIslandMenuRuntime : MonoBehaviour
         if(IsFishingBusy())return;
         if(travel==null || travel.Traveling || !travel.TournamentAllowsIsland(biome) || biome<0 || biome>=ReefCatalog.Zones.Length)return;
         if(!ReefCatalog.Zones[biome].Unlocked)return;
-        if(biome!=0 && biome!=1 && biome!=3 && biome!=4 && biome!=OffshoreOilRigZone.BiomeId && biome!=WindgroveShoalZone.BiomeId)return; // Deep Ocean has no teleport.
+        if(biome!=0 && biome!=1 && biome!=3 && biome!=4 && biome!=WindgroveShoalZone.BiomeId)return; // Deep Ocean has no teleport.
         if((biome==1 || biome==3) && (IslandExpansionWorld.Active==null || !IslandExpansionWorld.Active.Ready))return;
 
         CapturePlacedBoat();

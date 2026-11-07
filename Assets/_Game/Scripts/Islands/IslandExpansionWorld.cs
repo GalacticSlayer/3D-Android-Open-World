@@ -307,7 +307,6 @@ public sealed class IslandExpansionWorld : MonoBehaviour
     {
         // Nine 150m turbine circles take priority over the offshore oil-rig area.
         if (WindgroveShoalZone.Contains(p)) return WindgroveShoalZone.BiomeId;
-        if (OffshoreOilRigZone.Contains(p)) return OffshoreOilRigZone.BiomeId;
         if(SnapperIslandRuntime.Ready && SnapperCavesRockRegion.ContainsBiome(p))
             return ReefCatalog.SnapperBiomeId;
         // The relocated Brinebreak is ONLY the union of 200m circles around its stalagmite meshes.

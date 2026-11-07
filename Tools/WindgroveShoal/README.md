@@ -1,47 +1,51 @@
-# The Windgrove Shoal — manual turbine placement
+# The Windgrove Shoal — authoritative manual layout
 
-The island display name remains The Windgrove Shoal. Save IDs are unchanged.
+Scene: `Assets/Scenes/PrototypeWorld.unity`.
+Nine manually placed, manually scaled FBX prefab instances from commit `c6f309a2`
+are preserved exactly. Never run the old automatic turbine-placement scripts.
 
-The original 30 generated placements are retired. The former scene installer
-now removes only the original numbered WindgroveTurbine wrappers beneath
-The Windgrove Shoal - Wind Turbines when PrototypeWorld opens, enters Play Mode,
-or builds. It never creates replacement objects. Empty generated roots are
-removed; unrelated children and protected user scenery are preserved.
-A clean open scene is saved after cleanup. If already dirty, save normally.
-This migration avoids distributing another scene edit that conflicts with
-locally saved terrain and scenery.
+## Fishing and discovery
+- Stable biome index: **5**, replacing the former offshore oil-rig biome.
+- Stable biome ID: `windgrove-shoal`; the retired `offshore-oil-rig` catch
+  string is recognized as a legacy save alias for previously caught fish.
+- Only **Black Marlin** spawn here, with the former offshore-rig tackle
+  chances, size distribution, fight/HP and coin values.
+- Zone is the union of 150-m horizontal circles around **each** manually
+  placed wind turbine. All other open ocean belongs to its existing biome.
+- Windgrove does not appear in the Island/Fish Index until the player
+  physically enters any 150-m circle (boats and swimming count).
+- Saved discovery then unlocks the region index and teleport.
+- Teleport destination: 9 m **north** of the northernmost wind turbine,
+  3 m above the base water level (not multiplied by FBX scale).
+- The old rig terrain, platform and arrival marker have been removed from
+  the scene. The rig scene installer is retired, so these cannot reappear.
 
-Model for manual placement:
-Assets/Resources/Environment/Windgrove/WindTurbine.fbx
+## Turbine animation and anemometer
+The directly placed FBX instance is kept intact. At runtime a lightweight
+component finds the imported `Rotor blade 2` transform and spins it around
+the shaft direction from the nacelle at 86.4 degrees/second. This works even
+when the legacy FBX animation clip is absent/incompatible or culled and
+continues through timeScale changes. Nonrotor transforms stay stationary;
+no turbine root position, rotation or scale is changed.
+The anemometer mast's base is aligned with the top service cap without
+modifying the manually placed root or rebuilding the entire FBX.
 
-Original supplied files retained at:
-ArtSources/WindgroveShoal/SingleWindTurbine-original.fbx
-ArtSources/WindgroveShoal/SingleWindTurbine.blend
+## Ocean outside finite terrain
+Outside terrain-map extents, ambient fish use deep open-water defaults.
+Fishing hotspots use the ocean surface and still check real land within
+15 m of the ripple footprint. Boat placement validates any mapped seabed
+under the hull and solid collisions, but no longer demands terrain at
+every hull point. Unmapped sea is not an invisible coastline.
 
-Drag the imported FBX into the scene and adjust its placement and scale manually.
-Do not add WindgroveTurbine to these direct model instances: it is the old
-wrapper component and would instantiate another model child.
-After the authored scene is supplied, animation playback will be configured
-without changing the user's transforms or model-part proportions.
+## Testing in Unity
+1. Pull main and let Unity import/compile the changed scripts.
+2. Check all nine rotors in Play Mode; towers and anemometers stay fixed.
+3. Enter Windgrove and confirm one unlock, one region and a working teleport.
+4. Catch a Black Marlin with Worms and a lure; no other species should bite.
+5. Fish, see ripple hotspots and place each boat over open water outside the
+   last terrain tile, then test near a genuine shore and obstacle.
+6. Verify tournament/server and the other islands behave unchanged.
 
-The imported FBX is now a byte-for-byte copy of the original supplied FBX.
-No Blender re-export, part-transform corrections, or custom scaling are applied.
-The material importer retains the existing approved URP colors.
-Unity gameplay/visual validation must be performed in the Unity Editor.
-The old placement/export/verification scripts are historical tooling only;
-do not rerun place_turbines.py to repopulate the scene or prepare_turbine.py
-to rewrite the supplied model. verify_turbine.py validates the retired modified
-export and does not apply to the restored original FBX.
-
-## Nine manually placed Windgrove turbines (from scene c6f309a2)
-The nine user-authored FBX instances each define a 150m horizontal biome
-radius, discovery trigger and fish-catching zone. These are biome 6 with
-the stable ID windgrove-shoal. Existing biome 5 (offshore-oil-rig) keeps
-the Black Marlin and oil-rig terrain, arrival and player unlock.
-Windgrove is invisible in Island / Fish Index until entering any turbine
-radius by boat, swimming or walking. Travel arrives 9m north of the
-northernmost turbine at water level +3m. Root transforms and geometry stay
-as saved by the user. The imported rotor clip plays continuously while
-static parts are held in place, including the nacelle anemometer mast.
-Until dedicated shoal species are provided, the editable Windgrove fishing
-probabilities, weights, HP and coin ranges are seeded with non-exclusive offshore fish.
+`Tools/WindgroveShoal/verify_scene.py` verifies the saved scene layout and
+the retired oil-rig removal. The code and tables can be statically checked,
+but gameplay/visual validation requires a Unity runtime.

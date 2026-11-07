@@ -9,7 +9,7 @@ using UnityEngine.SceneManagement;
 /// </summary>
 public static class WindgroveShoalZone
 {
-    public const int BiomeId = 6;
+    public const int BiomeId = 5;
     public const string Id = "windgrove-shoal";
     public const string Name = "The Windgrove Shoal";
     public const float Radius = 150f;

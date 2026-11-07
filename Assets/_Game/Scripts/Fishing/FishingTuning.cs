@@ -53,7 +53,7 @@ public static class FishingTuning
     // cannot silently leave the editable tuning system one fish behind.
     // Event-only bosses never enter ordinary biome probability tables.
     private static readonly int[] ActiveSpecies=Array.FindAll(FishCatalog.ActiveIds,id=>id!=FishCatalog.AbyssalLeviathanId);
-    private static readonly string[] Biomes={"suncrest-reef","brinebreak-isle","deep-ocean","bluewater-cay","snapper-island","offshore-oil-rig","windgrove-shoal"};
+    private static readonly string[] Biomes={"suncrest-reef","brinebreak-isle","deep-ocean","bluewater-cay","snapper-island","windgrove-shoal"};
     private static readonly string[] RequiredBaits={
         "worms","worms-legacy","shrimp","squid",
         "lure:0","lure:1","lure:2","lure:3","lure:4"
@@ -324,6 +324,8 @@ public static class FishingTuning
         stat=null;minimum=maximum=0f;
         EnsureLoaded();
         if(!valid || string.IsNullOrEmpty(biomeId))return false;
+        // Previously caught Black Marlin still retain the historical saved ID.
+        if (biomeId == "offshore-oil-rig") biomeId = WindgroveShoalZone.Id;
         int id=Canonical(species);
         if(!BiomeStats.TryGetValue(WeightKey(biomeId,id),out stat))return false;
         WeightDistribution distribution;

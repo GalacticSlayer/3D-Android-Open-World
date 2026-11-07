@@ -10,7 +10,7 @@ public static class IslandIndexArtwork
 
     public static Texture2D Load(int biome)
     {
-        if (biome < 0 || biome >= Cache.Length || biome == 2 || biome == OffshoreOilRigZone.BiomeId) return null;
+        if (biome < 0 || biome >= Cache.Length || biome == 2 || biome == WindgroveShoalZone.BiomeId) return null;
         if (Attempted[biome]) return Cache[biome];
         Attempted[biome] = true;
         string name = biome == 0 ? "SuncrestBeach" : biome == 1 ? "BrinebreakIsle" :

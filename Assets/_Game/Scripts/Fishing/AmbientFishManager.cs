@@ -74,15 +74,15 @@ public class AmbientFishManager : MonoBehaviour
         poolBiome=biome;replacing=false;
     }
     public void Configure(OceanWater water,Transform target){oceanWater=water;player=target;fishCount=12;}
-    // The 350 m oil-rig circle intentionally exceeds the 512 m seabed tile.
-    // Outside its bounds there is open ocean, not a shallow invisible wall.
-    // Only ambient fish at the rig get this virtual deep-water safety floor.
-    private bool TryFloor(Vector3 point,out float floor)
+    // Outside saved terrain tiles there is still real ocean. A virtual deep
+    // floor permits ambient fish to spawn/swim there; authored islands and
+    // mesh-rock clearance checks remain authoritative wherever present.
+    private bool TryFloor(Vector3 point, out float floor)
     {
-        if(WorldTerrain.TryGetHeight(point,out floor))return true;
-        if(oceanWater!=null && OffshoreOilRigZone.Contains(point))
-        {floor=oceanWater.BaseWaterLevel-250f;return true;}
-        return false;
+        if (WorldTerrain.TryGetHeight(point, out floor)) return true;
+        if (oceanWater == null) return false;
+        floor = oceanWater.BaseWaterLevel - 250f;
+        return true;
     }
 
     public bool Visible(Vector3 position)

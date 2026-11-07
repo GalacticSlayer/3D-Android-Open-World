@@ -36,7 +36,11 @@ for block in docs:
 assert len(turbines) == 9, f"Expected nine authored turbines; found {len(turbines)}"
 northmost = max(turbines, key=lambda t: t[1]["z"])
 zone = (root / "Assets/_Game/Scripts/Islands/WindgroveShoalZone.cs").read_text()
+assert "BiomeId = 5;" in zone
 assert "Radius = 150f;" in zone
+assert "m_Name: Oil Rig Seabed (Editable)" not in scene
+assert "m_Name: Offshore Oil Rig Starter Platform" not in scene
+assert "m_Name: Offshore Oil Rig Arrival" not in scene
 assert "water.BaseWaterLevel + 3f" in zone
 assert "northern.position.z + 9f" in zone
 assert 'Id = "windgrove-shoal"' in zone
@@ -45,5 +49,5 @@ assert (root / "Assets/_Game/Scripts/Islands/WindgroveShoalDiscovery.cs").exists
 print(
     "PASS: nine authored turbine prefabs, correct 150m zone/discovery, "
     f"northmost {northmost[0]} at {northmost[1]}, "
-    "teleport at sea +3m. Scene was not changed."
+    "teleport at sea +3m; old rig removed."
 )
