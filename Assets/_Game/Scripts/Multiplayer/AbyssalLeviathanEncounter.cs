@@ -50,6 +50,11 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
     private GameObject hudRoot,noticeRoot;
     private Text status,notice;
     private Image health;
+    private RectTransform healthFill;
+    private Text healthTitle;
+    public const float CatchRegionRadius = 80f;
+    public bool NavigationArrived { get; private set; }
+    public Vector3 RegionCenter => current == null ? Vector3.zero : new Vector3(current.x,current.y,current.z);
     public string Status {get;private set;}="";
     public bool Active => (local!=null || Online) && current!=null && current.phase=="active" && Remaining>0;
     public float Remaining => current==null?0:Mathf.Max(0,current.secondsLeft-(Time.realtimeSinceStartup-receivedAt));
@@ -123,6 +128,7 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
     private void ApplyView(View view)
     {
         if(current!=null && view.serverTime<current.serverTime)return;
+        if (current == null || current.id != view.id) NavigationArrived = false;
         current=view;receivedAt=Time.realtimeSinceStartup;
         if(view.phase=="active" && announced!=view.id)
         {
@@ -132,7 +138,7 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
     }
     public bool TryHook(Vector3 point,int cast)
     {
-        if(!Active || !string.IsNullOrEmpty(current.owner) || Vector2.Distance(new Vector2(point.x,point.z),new Vector2(current.x,current.z))>80f)return false;
+        if(!Active || !string.IsNullOrEmpty(current.owner) || Vector2.Distance(new Vector2(point.x,point.z),new Vector2(current.x,current.z))>CatchRegionRadius)return false;
         StartCoroutine(Claim(cast));return true;
     }
     private IEnumerator Claim(int cast)
@@ -193,14 +199,25 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
         bool active=Active;
         // Hide the universal bar only on this player's screen while they fight any fish.
         // The encounter continues to tick and replicate for everyone else.
-        hudRoot.SetActive(active && (fishing==null || !fishing.HasHookedFish));
+        var destination = ShopDimensionManager.Instance;
+        bool inWorld = destination == null || (!destination.InDimension && !destination.Traveling);
+        if (active && inWorld && !NavigationArrived)
+        {
+            Vector3 offset = transform.position - RegionCenter; offset.y = 0;
+            if (offset.magnitude <= CatchRegionRadius + 100f) NavigationArrived = true;
+        }
+        hudRoot.SetActive(active && NavigationArrived && inWorld && !ShopWorldHUD.MenuOpen &&
+            (fishing==null || (!fishing.HasHookedFish && !fishing.IsFishPosing)));
         if(active)
         {
             int hp=current.hp;
             if(HasLease && fishing.IsBossFight)hp=fishing.CurrentFishHealth;
-            health.fillAmount=hp/150000f;
+            int maximumHp = current.maxHp > 0 ? current.maxHp : 150000;
+            float fraction = Mathf.Clamp01(hp / (float)maximumHp);
+            healthFill.anchorMax = new Vector2(fraction,1);
+            health.gameObject.SetActive(fraction > 0);
             int left=Mathf.CeilToInt(Remaining);
-            status.text=$"ABYSSAL LEVIATHAN   {hp:N0} / 150,000 HP   {left/60}:{left%60:00}";
+            status.text=$"{hp:N0} / {maximumHp:N0} HP     •     {left/60}:{left%60:00}";
             if(ocean==null)ocean=FindFirstObjectByType<OceanWater>();
             var travel=ShopDimensionManager.Instance;
             if(ocean!=null && (travel==null || travel.Destination==0) && Time.realtimeSinceStartup>=nextRipple)
@@ -209,7 +226,9 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
                 AbyssalBloodRipple.Spawn(new Vector3(current.x,current.y,current.z),ocean);
             }
         }
-        noticeRoot.SetActive(Time.realtimeSinceStartup<noticeUntil);
+        noticeRoot.SetActive(Time.realtimeSinceStartup<noticeUntil && (fishing==null || !fishing.IsFishPosing));
+        // Keep awakening text below the shared compass rather than behind it.
+        noticeRoot.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, (active && !NavigationArrived) || WindgroveNavigation.CompassVisible ? -325 : -185);
         if(HasLease && !landing && (!active || current.owner!=OwnerId || current.lease!=lease))
         {lease="";fightId="";fishing.AbortBossFight("The Leviathan is no longer on your line.");}
         if(HasLease && !landing && !busy && Time.realtimeSinceStartup>=nextReport)
@@ -282,10 +301,24 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
         var go=new GameObject("Leviathan HUD",typeof(RectTransform),typeof(Canvas),typeof(CanvasScaler));go.transform.SetParent(transform,false);
         var c=go.GetComponent<Canvas>();c.renderMode=RenderMode.ScreenSpaceOverlay;c.sortingOrder=215;
         var s=go.GetComponent<CanvasScaler>();s.uiScaleMode=CanvasScaler.ScaleMode.ScaleWithScreenSize;s.referenceResolution=new Vector2(1920,1080);s.matchWidthOrHeight=.5f;
-        hudRoot=Panel(go.transform,"Boss health",new Vector2(850,62),18,new Color(.05f,.02f,.04f,.92f));
-        var bar=Panel(hudRoot.transform,"Health fill",new Vector2(842,54),4,new Color(.65f,.03f,.09f));
-        health=bar.GetComponent<Image>();health.sprite=Sprite.Create(Texture2D.whiteTexture,new Rect(0,0,Texture2D.whiteTexture.width,Texture2D.whiteTexture.height),new Vector2(.5f,.5f));
-        health.type=Image.Type.Filled;health.fillMethod=Image.FillMethod.Horizontal;status=Label(hudRoot.transform,25);
+        hudRoot=Panel(go.transform,"Boss health",new Vector2(850,122),26,Color.white);
+        FishingHudTheme.Panel(hudRoot);
+        healthTitle=Label(hudRoot.transform,25);
+        healthTitle.text="ABYSSAL LEVIATHAN";healthTitle.fontStyle=FontStyle.Bold;
+        healthTitle.color=new Color(1f,.22f,.26f);
+        healthTitle.rectTransform.anchorMin=new Vector2(0,.60f);
+        var track=Panel(hudRoot.transform,"Health track",new Vector2(806,48),60,Color.white);
+        FishingHudTheme.Panel(track,3);
+        // A rounded mask keeps the red fill inside the frame, even at low HP.
+        var clip=Panel(track.transform,"Health clip",new Vector2(798,40),4,Color.white);
+        FishingHudTheme.Fill(clip.GetComponent<Image>());
+        clip.AddComponent<Mask>().showMaskGraphic=false;
+        var bar=Panel(clip.transform,"Health fill",Vector2.zero,0,Color.white);
+        FishingHudTheme.Panel(bar,8);
+        health=bar.GetComponent<Image>();healthFill=bar.GetComponent<RectTransform>();
+        healthFill.anchorMin=Vector2.zero;healthFill.anchorMax=Vector2.one;
+        healthFill.offsetMin=healthFill.offsetMax=Vector2.zero;
+        status=Label(track.transform,22);status.fontStyle=FontStyle.Bold;
         noticeRoot=Panel(go.transform,"Awakening notification",new Vector2(980,130),185,new Color(.08f,.02f,.04f,.96f));notice=Label(noticeRoot.transform,26);
         hudRoot.SetActive(false);noticeRoot.SetActive(false);
     }

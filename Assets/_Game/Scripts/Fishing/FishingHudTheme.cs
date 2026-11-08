@@ -5,7 +5,7 @@ using UnityEngine.UI;
 public static class FishingHudTheme
 {
     public static readonly Color Cyan = new Color(.05f, .95f, 1f, 1f);
-    private static readonly Sprite[] sprites = new Sprite[9];
+    private static readonly Sprite[] sprites = new Sprite[10];
 
     public static void Panel(GameObject target, int style = 0)
     {
@@ -14,6 +14,14 @@ public static class FishingHudTheme
         image.sprite = Surface(style);
         image.type = Image.Type.Sliced;
         image.color = Color.white;
+    }
+
+    public static void RoundedWhiteBorder(Image image)
+    {
+        image.sprite = Surface(9);
+        image.type = Image.Type.Sliced;
+        image.color = Color.white;
+        image.raycastTarget = false;
     }
 
     // 0: navy glass; 1: teal action; 2: translucent bait; 3: meter track;
@@ -66,6 +74,9 @@ public static class FishingHudTheme
                 c=Color.Lerp(bottom,top,vertical);
                 c=Color.Lerp(c,border,Mathf.Clamp01(Mathf.Max(rim,glow)*.85f));
             }
+            // Same signed-distance contour and nine-slice margins as the panel rim.
+            // Five pixel white stroke, with a transparent interior and soft edge.
+            if (style == 9) c = new Color(1, 1, 1, Mathf.Clamp01(3f - Mathf.Abs(d + 1.7f)));
             c.a *= Mathf.Clamp01(.5f - d);
             pixels[y * size + x] = c;
         }

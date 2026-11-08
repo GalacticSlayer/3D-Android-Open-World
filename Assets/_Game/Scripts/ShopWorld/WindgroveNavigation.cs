@@ -10,7 +10,11 @@ public sealed class WindgroveNavigation : MonoBehaviour
     private FishingSystem fishing;
     private GameObject badge, surface, announcement, menu;
     private RectTransform strip, marker;
-    private Text distance;
+    private Text distance, destinationTitle;
+    private GameObject shortcutBorder;
+    private AbyssalLeviathanEncounter boss;
+    private FishingHUD fishingHud;
+    public static bool CompassVisible => active != null && active.surface != null && active.surface.activeInHierarchy;
     private readonly RectTransform[] ticks = new RectTransform[32];
     private readonly Text[] headings = new Text[8];
     private static readonly string[] Directions = { "N", "NE", "E", "SE", "S", "SW", "W", "NW" };
@@ -37,6 +41,10 @@ public sealed class WindgroveNavigation : MonoBehaviour
         player = controller;
         fishing = system;
         active = this;
+        boss = owner.GetComponent<AbyssalLeviathanEncounter>();
+        fishingHud = GetComponent<FishingHUD>();
+        shortcutBorder = AddFlashingBorder(shortcut.transform);
+        shortcutBorder.SetActive(false);
         var icon = new GameObject("Windgrove Alert", typeof(RectTransform), typeof(RawImage));
         icon.transform.SetParent(shortcut.transform, false);
         var raw = icon.GetComponent<RawImage>();
@@ -62,19 +70,28 @@ public sealed class WindgroveNavigation : MonoBehaviour
         if (badge == null || surface == null) return;
         bool pending = Pending;
         badge.SetActive(pending);
+        shortcutBorder.SetActive(pending);
         if (!pending) navigating = false;
         var travel = ShopDimensionManager.Instance;
-        bool show = pending && navigating && player != null && player.ViewCamera != null &&
+        if (boss == null && progress != null) boss = progress.GetComponent<AbyssalLeviathanEncounter>();
+        bool bossActive = boss != null && boss.Active;
+        bool guideBoss = bossActive && !boss.NavigationArrived;
+        bool show = (bossActive ? guideBoss : pending && navigating) && player != null && player.ViewCamera != null &&
             (travel == null || (!travel.InDimension && !travel.Traveling)) &&
             !ShopWorldHUD.MenuOpen && (menu == null || !menu.activeInHierarchy) && (fishing == null || !fishing.IsFishPosing);
-        surface.SetActive(show);
-        if (!show) return;
-        announcement.SetActive(Time.unscaledTime < announcementUntil);
-        if (!WindgroveShoalZone.TryGetNorthmost(out Transform target))
+        Vector3 targetPosition = Vector3.zero;
+        if (show)
         {
-            surface.SetActive(false);
-            return;
+            if (guideBoss) targetPosition = boss.RegionCenter;
+            else if (WindgroveShoalZone.TryGetNorthmost(out Transform target)) targetPosition = target.position;
+            else show = false;
         }
+        surface.SetActive(show);
+        if (fishingHud != null) fishingHud.SetNavigationCovered(show);
+        if (!show) return;
+        destinationTitle.text = guideBoss ? "ABYSSAL LEVIATHAN" : "WINDGROVE SHOAL";
+        destinationTitle.color = guideBoss ? new Color(1f,.16f,.20f) : FishingHudTheme.Cyan;
+        announcement.SetActive(!guideBoss && Time.unscaledTime < announcementUntil);
         Vector3 forward = FishingThirdPersonView.ViewingRotation(player.ViewCamera) * Vector3.forward;
         float yaw = Mathf.Atan2(forward.x, forward.z) * Mathf.Rad2Deg;
         float width = strip.rect.width;
@@ -91,13 +108,14 @@ public sealed class WindgroveNavigation : MonoBehaviour
             headings[i].gameObject.SetActive(Mathf.Abs(delta) < 83f);
             headings[i].rectTransform.anchoredPosition = new Vector2(delta / 180f * width, 8f);
         }
-        Vector3 offset = target.position - player.transform.position;
+        Vector3 offset = targetPosition - player.transform.position;
         offset.y = 0;
         float bearing = Mathf.Atan2(offset.x, offset.z) * Mathf.Rad2Deg;
         float relative = Mathf.DeltaAngle(yaw, bearing);
         marker.anchoredPosition = new Vector2(Mathf.Clamp(relative, -78f, 78f) / 180f * width, 0);
         string arrow = relative < -78f ? "◀ " : relative > 78f ? "▶ " : "";
-        distance.text = arrow + Mathf.RoundToInt(offset.magnitude) + "m";
+        float meters = guideBoss ? Mathf.Max(0, offset.magnitude - AbyssalLeviathanEncounter.CatchRegionRadius) : offset.magnitude;
+        distance.text = arrow + Mathf.RoundToInt(meters) + "m";
     }
 
     private void BuildCompass(Transform parent)
@@ -111,7 +129,7 @@ public sealed class WindgroveNavigation : MonoBehaviour
         layout.offsetMin = new Vector2(0, -275);
         layout.offsetMax = new Vector2(0, -26);
         var title = Panel(surface.transform, "Destination", new Vector2(.5f, 1), new Vector2(0, -28), new Vector2(320, 56));
-        Label(title, "WINDGROVE SHOAL", 25, FishingHudTheme.Cyan, Vector2.zero, new Vector2(310, 50));
+        destinationTitle = Label(title, "WINDGROVE SHOAL", 25, FishingHudTheme.Cyan, Vector2.zero, new Vector2(310, 50));
         Line(surface.transform, new Vector2(.15f, 1), new Vector2(0, -28), new Vector2(120, 2), FishingHudTheme.Cyan);
         Line(surface.transform, new Vector2(.85f, 1), new Vector2(0, -28), new Vector2(120, 2), FishingHudTheme.Cyan);
         strip = Panel(surface.transform, "Compass", new Vector2(.5f, 1), new Vector2(0, -100), new Vector2(0, 74));
@@ -165,23 +183,21 @@ public sealed class WindgroveNavigation : MonoBehaviour
         rect.anchorMin = rect.anchorMax = anchor; rect.pivot = new Vector2(.5f,.5f);
         rect.anchoredPosition = position; rect.sizeDelta = size;
     }
-    public static void AddFlashingBorder(Transform parent)
+    public static GameObject AddFlashingBorder(Transform parent)
     {
-        var go = new GameObject("White Discovery Border", typeof(RectTransform), typeof(CanvasGroup));
+        var go = new GameObject("White Discovery Border", typeof(RectTransform), typeof(Image), typeof(CanvasGroup));
         go.transform.SetParent(parent, false);
         var rect = go.GetComponent<RectTransform>(); rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one;
         rect.offsetMin = rect.offsetMax = Vector2.zero;
+        FishingHudTheme.RoundedWhiteBorder(go.GetComponent<Image>());
         go.GetComponent<CanvasGroup>().blocksRaycasts = false;
         go.AddComponent<WindgroveFlashingBorder>();
-        for (int i = 0; i < 4; i++)
-        {
-            var edge = Line(rect, Vector2.zero, Vector2.zero, Vector2.zero, Color.white);
-            edge.anchorMin = i == 0 ? new Vector2(0,1) : i == 3 ? new Vector2(1,0) : Vector2.zero;
-            edge.anchorMax = i == 1 ? new Vector2(1,0) : i == 2 ? new Vector2(0,1) : Vector2.one;
-            edge.offsetMin = Vector2.zero; edge.offsetMax = Vector2.zero;
-            if (i < 2) { edge.sizeDelta = new Vector2(0,3); edge.pivot = new Vector2(.5f,i == 0 ? 1 : 0); }
-            else { edge.sizeDelta = new Vector2(3,0); edge.pivot = new Vector2(i == 2 ? 0 : 1,.5f); }
-        }
+        return go;
+    }
+    private void OnDisable()
+    {
+        if (surface != null) surface.SetActive(false);
+        if (fishingHud != null) fishingHud.SetNavigationCovered(false);
     }
     private void OnDestroy() { if (active == this) active = null; }
 }
