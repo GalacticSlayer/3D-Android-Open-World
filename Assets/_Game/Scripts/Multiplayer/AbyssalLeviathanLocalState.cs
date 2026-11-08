@@ -4,7 +4,7 @@ using System;
 // menu pauses do not stop the deadline or healing. No server or HTTP dependency.
 public sealed class AbyssalLeviathanLocalState
 {
-    public const int MaximumHealth=150000;
+    public const int MaximumHealth=220000;
     public readonly string Id=Guid.NewGuid().ToString("N");
     public string Phase {get;private set;}="active";
     public string Lease {get;private set;}="";
@@ -24,7 +24,7 @@ public sealed class AbyssalLeviathanLocalState
         if(Phase!="active")return;
         if(now>=ends){Phase="expired";Lease="";return;}
         if(string.IsNullOrEmpty(Lease))
-            Health=Math.Min(MaximumHealth,Health+Math.Max(0,now-Math.Max(updated,unhookedAt+5))*10000/60);
+            Health=Math.Min(MaximumHealth,Health+Math.Max(0,now-Math.Max(updated,unhookedAt+5))*20000/60);
         updated=now;
     }
     public bool TryHook(int cast,float roll,double now)
