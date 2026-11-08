@@ -1211,7 +1211,7 @@ public class FishingSystem : MonoBehaviour
 
         fightTension = 0.24f;
         fragileBreakTimer=0f;
-        fishMaxHealth=hookedSpeciesId==FishCatalog.AbyssalLeviathanId?150000:Mathf.RoundToInt(FishingRules.MaxHealth(hookedSpeciesId,hookedWeightKg,pondCast?-1:fightBiome)*ReefCatalog.HealthMultiplier(fightBiome));
+        fishMaxHealth=hookedSpeciesId==FishCatalog.AbyssalLeviathanId?AbyssalLeviathanLocalState.MaximumHealth:Mathf.RoundToInt(FishingRules.MaxHealth(hookedSpeciesId,hookedWeightKg,pondCast?-1:fightBiome)*ReefCatalog.HealthMultiplier(fightBiome));
         // Ordinary fish begin at full HP; a re-hooked boss starts with the
         // authoritative shared HP from the accepted claim, including zero.
         fishHealthPoints=initialHealth<0 ? fishMaxHealth : Mathf.Clamp(initialHealth,0,fishMaxHealth);
