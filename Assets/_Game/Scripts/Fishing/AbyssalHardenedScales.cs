@@ -3,7 +3,7 @@ using System;
 /// <summary>Per-hook boss defence. Times use the same clock as fishing statuses.</summary>
 public sealed class AbyssalHardenedScales
 {
-    public const float ActivationChance = .2f;
+    public const float ActivationChance = .5f;
     public int Status { get; private set; } = -1;
     private float activeUntil, flashUntil;
     private bool hit;
