@@ -51,7 +51,6 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
     private RawImage abilityGuideArtwork;
     private FishingHUD fishingHud;
     private bool abilityGuideSeen;
-    private const string AbilityGuideSeenKey = "AbyssalLeviathan.HardenedScalesGuideSeen";
     public const int SummonCostCoins = 100000;
     private GameObject spawnTipPopup;
     private RawImage spawnTipArtwork;
@@ -76,7 +75,6 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
     private void Awake()
     {
         session=GetComponent<FishingMultiplayer>();fishing=GetComponent<FishingSystem>();progress=GetComponent<ShopProgress>();
-        abilityGuideSeen=PlayerPrefs.GetInt(AbilityGuideSeenKey,0)!=0;
         BuildHud();
     }
     public bool Unlocked(out int found,out int requiredCount)
@@ -144,7 +142,11 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
         {
             NavigationArrived = false;
             spawnTipShown = false;
+            // The player must see the flashing guide on EACH new summon,
+            // even if they read it during a previous encounter.
+            abilityGuideSeen = false;
             if(spawnTipPopup!=null)spawnTipPopup.SetActive(false);
+            if(abilityGuidePopup!=null)abilityGuidePopup.SetActive(false);
         }
         current=view;receivedAt=Time.realtimeSinceStartup;
         if(view.phase=="active" && announced!=view.id)
@@ -347,9 +349,8 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
             Debug.LogWarning("Hardened Scales guide image missing: import Assets/Resources/Fishing/HardenedScalesAbilityPopup.png");
             return;
         }
+        // Acknowledged for this encounter only. The next boss ID resets it.
         abilityGuideSeen=true;
-        PlayerPrefs.SetInt(AbilityGuideSeenKey,1);
-        PlayerPrefs.Save();
         abilityGuideBorder.SetActive(false);
         abilityGuidePopup.SetActive(true);
         abilityGuidePopup.transform.SetAsLastSibling();
@@ -394,7 +395,16 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
         titleOutline.effectColor=Color.black;
         titleOutline.effectDistance=new Vector2(1.5f,-1.5f);
         titleOutline.useGraphicAlpha=true;
-        healthTitle.rectTransform.anchorMin=new Vector2(0,.60f);
+        // A 40-point line does not fit into the former 40px-high stretched
+        // label region, so Unity clipped the entire title on Android. Give it
+        // an explicit 58px box ABOVE the existing HP track.
+        var titleRect=healthTitle.rectTransform;
+        titleRect.anchorMin=titleRect.anchorMax=new Vector2(.5f,1f);
+        titleRect.pivot=new Vector2(.5f,1f);
+        titleRect.sizeDelta=new Vector2(850,58);
+        titleRect.anchoredPosition=new Vector2(0,12);
+        healthTitle.horizontalOverflow=HorizontalWrapMode.Overflow;
+        healthTitle.verticalOverflow=VerticalWrapMode.Overflow;
         var track=Panel(hudRoot.transform,"Health track",new Vector2(806,48),60,Color.white);
         FishingHudTheme.Panel(track,3);
         // A rounded mask keeps the red fill inside the frame, even at low HP.
@@ -407,6 +417,7 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
         healthFill.anchorMin=Vector2.zero;healthFill.anchorMax=Vector2.one;
         healthFill.offsetMin=healthFill.offsetMax=Vector2.zero;
         status=Label(track.transform,22);status.fontStyle=FontStyle.Bold;
+        healthTitle.transform.SetAsLastSibling(); // Ensure the title stays above the HP track.
         noticeRoot=Panel(go.transform,"Awakening notification",new Vector2(980,130),185,new Color(.08f,.02f,.04f,.96f));
         notice=Label(noticeRoot.transform,26);
         var artworkGo=new GameObject("Abyssal Leviathan Awakening Banner",typeof(RectTransform),typeof(RawImage));
@@ -429,7 +440,8 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
         var buttonRect=abilityGuideButton.GetComponent<RectTransform>();
         buttonRect.anchorMin=buttonRect.anchorMax=new Vector2(1,1);
         buttonRect.pivot=new Vector2(1,1);
-        buttonRect.anchoredPosition=new Vector2(-36,-246);
+        // Match the 28px vertical gap used between ISLAND / FISH INDEX and bait.
+        buttonRect.anchoredPosition=new Vector2(-36,-152);
         abilityGuideButton.GetComponent<Image>().raycastTarget=true;
         var button=abilityGuideButton.AddComponent<Button>();
         button.targetGraphic=abilityGuideButton.GetComponent<Image>();
@@ -477,10 +489,11 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
         gotIt.GetComponent<Image>().raycastTarget=true;
         gotIt.GetComponent<Button>().onClick.AddListener(CloseAbilityGuide);
 
-        // Center the supplied 2048x682 transparent tip image, preserving its
-        // aspect ratio. The entire screen is a single invisible dismiss button:
-        // touch anywhere to close, without forwarding the tap to gameplay.
-        spawnTipPopup=Panel(go.transform,"Leviathan Arrival Tip",Vector2.zero,0,new Color(0f,.015f,.035f,.32f));
+        // Center the supplied 2048x682 transparent tip image at the same
+        // on-screen banner width as the original 1080px awakening notice.
+        // Keep the full-screen invisible touch target (not a dark fullscreen
+        // backdrop) so any tap dismisses the tip without affecting gameplay.
+        spawnTipPopup=Panel(go.transform,"Leviathan Arrival Tip",Vector2.zero,0,Color.clear);
         var spawnPanel=spawnTipPopup.GetComponent<RectTransform>();
         spawnPanel.anchorMin=Vector2.zero;
         spawnPanel.anchorMax=Vector2.one;
@@ -494,9 +507,11 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
         var tipFit=new GameObject("Spawn Tip Fit Bounds",typeof(RectTransform));
         tipFit.transform.SetParent(spawnTipPopup.transform,false);
         var tipFitRect=tipFit.GetComponent<RectTransform>();
-        tipFitRect.anchorMin=new Vector2(.035f,.06f);
-        tipFitRect.anchorMax=new Vector2(.965f,.94f);
-        tipFitRect.offsetMin=tipFitRect.offsetMax=Vector2.zero;
+        tipFitRect.anchorMin=tipFitRect.anchorMax=new Vector2(.5f,.5f);
+        tipFitRect.pivot=new Vector2(.5f,.5f);
+        tipFitRect.anchoredPosition=Vector2.zero;
+        // 1080 / (2048 / 682) = 359.65; uniform scaling, never stretched.
+        tipFitRect.sizeDelta=new Vector2(1080f,1080f*682f/2048f);
         var tipArt=new GameObject("Leviathan Spawn Tip Artwork",typeof(RectTransform),typeof(RawImage),typeof(AspectRatioFitter));
         tipArt.transform.SetParent(tipFit.transform,false);
         spawnTipArtwork=tipArt.GetComponent<RawImage>();
