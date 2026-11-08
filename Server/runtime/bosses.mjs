@@ -19,11 +19,11 @@ export function createBosses({clock=Date.now, random=Math.random, ledgerPath=nul
       // Start the five-second healing grace at the actual stale lease boundary.
       const lost=Math.min(now,b.heartbeat+5000);release(b);b.unhookedAt=lost;b.updated=lost;
     }
-    if(!b.owner){const from=Math.max(b.updated,b.unhookedAt+5000);b.hp=Math.min(150000,b.hp+Math.max(0,now-from)*10000/60000);}
+    if(!b.owner){const from=Math.max(b.updated,b.unhookedAt+5000);b.hp=Math.min(220000,b.hp+Math.max(0,now-from)*20000/60000);}
     b.updated=now;
   }
   function view(room){tick(room);const b=room.boss;if(!b)return null;
-    return {id:b.id,phase:b.phase,owner:b.owner,lease:b.lease,hp:Math.ceil(b.hp),maxHp:150000,x:b.x,y:b.y,z:b.z,kg:b.kg,
+    return {id:b.id,phase:b.phase,owner:b.owner,lease:b.lease,hp:Math.ceil(b.hp),maxHp:220000,x:b.x,y:b.y,z:b.z,kg:b.kg,
       secondsLeft:Math.max(0,(b.ends-clock())/1000),serverTime:clock()};
   }
   function receipt(data){
@@ -43,7 +43,7 @@ export function createBosses({clock=Date.now, random=Math.random, ledgerPath=nul
       if(!Number.isInteger(c.balance)||c.balance<10000)fail('Summoning costs 10,000 coins.');
       if(!['x','y','z'].every(k=>Number.isFinite(c[k])&&Math.abs(c[k])<100000))fail('Invalid Bluewater spawn.');
       // Geometry is authored in Unity; the summoner supplies the inspected south-rock point.
-      const now=clock();const b={id:randomUUID(),phase:'active',x:c.x,y:c.y,z:c.z,kg:400+40*random(),hp:150000,
+      const now=clock();const b={id:randomUUID(),phase:'active',x:c.x,y:c.y,z:c.z,kg:400+40*random(),hp:220000,
         ends:now+900000,owner:'',lease:'',unhookedAt:now,updated:now,attempts:new Map()};
       receipts[c.ticket]={accepted:true};try{save();}catch(e){delete receipts[c.ticket];throw e;}
       p.room.boss=b;return {accepted:true};
@@ -65,7 +65,7 @@ export function createBosses({clock=Date.now, random=Math.random, ledgerPath=nul
     if(c.op==='catch'&&b.phase==='caught'&&b.catcher===p.id&&b.catchLease===c.lease)return {caught:true};
     if(b.phase!=='active'||b.owner!==p.id||b.lease!==c.lease)fail('The boss is no longer on your line.');
     if(!['damage','release','catch'].includes(c.op))fail('Invalid boss operation.');
-    if(!Number.isInteger(c.damage)||c.damage<0||c.damage>150000)fail('Invalid boss damage.');
+    if(!Number.isInteger(c.damage)||c.damage<0||c.damage>220000)fail('Invalid boss damage.');
     // Cumulative damage per lease makes retries/out-of-order reports idempotent.
     if(c.damage>b.damage){b.hp=Math.max(0,b.hp-(c.damage-b.damage));b.damage=c.damage;}
     b.heartbeat=clock();
