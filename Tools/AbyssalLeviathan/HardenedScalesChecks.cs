@@ -17,10 +17,10 @@ public static class HardenedScalesChecks
         Check(!scales.IsActive(1f), "Initial status must not activate protection");
         scales.ObserveStatus(0, 2f, 0f, 5f);
         Check(!scales.IsActive(2f), "Repeated frames must not reroll");
-        scales.ObserveStatus(1, 3f, .2f, 5f);
-        Check(!scales.IsActive(3f), "20% boundary must fail");
-        scales.ObserveStatus(2, 4f, .19999f, 6f);
-        Check(scales.IsActive(4f), "Roll below 20% must activate");
+        scales.ObserveStatus(1, 3f, .5f, 5f);
+        Check(!scales.IsActive(3f), "50% boundary must fail");
+        scales.ObserveStatus(2, 4f, .49999f, 6f);
+        Check(scales.IsActive(4f), "Roll below 50% must activate");
         Check(scales.Opacity(4f) == .4f, "Initial opacity must be 40%");
         Check(scales.ReduceDamage(1000, 4f) == 200, "Lightning must lose 80% damage");
         Check(scales.ReduceDamage(4000, 4f) == 800, "Hookset must lose 80% damage");
@@ -52,7 +52,7 @@ public static class HardenedScalesChecks
             scales.ObserveStatus(1, 1f, i / 1000f, 5f);
             if (scales.IsActive(1f)) activations++;
         }
-        Check(activations == 200, "Exactly 20% of uniform rolls must activate");
+        Check(activations == 500, "Exactly 50% of uniform rolls must activate");
         Console.WriteLine("PASS: " + checks + " Hardened Scales checks");
     }
 }
