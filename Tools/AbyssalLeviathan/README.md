@@ -28,14 +28,14 @@ and the mouth attachment. The supplied texture and blood PNG are unchanged.
 - Each successful Popper landing in the radius gets exactly one server-side 50%
   roll. A miss resumes ordinary fishing. Only one angler can hold the boss at a
   time; retries never reroll. Other baits/lures retain normal fish selection.
-- 150,000 HP, effective difficulty 2.1, base yellow swim speed 12 m/s (ordinary
+- 220,000 HP, effective difficulty 2.1, base yellow swim speed 12 m/s (ordinary
   mood, drag and ability modifiers still apply). HP/weight bypass depth, biome,
   hotspot and Charm bonuses. One weight is rolled per summon: 400–440 kg;
   length interpolates from 3.2–3.4 m in all saved/held/display contexts.
 - In a room, server-owned health is shared across re-hooks, including hooks by different
   players. Client-simulated ordinary burst/skill damage is reported cumulatively
   per exclusive hook lease, preventing duplicated damage on retry.
-- Healing starts after five unhooked seconds at 10,000 HP/minute, capped at full.
+- Healing starts after five unhooked seconds at 20,000 HP/minute, capped at full.
   A lost client lease releases after five seconds without a heartbeat, followed
   by the same five-second healing grace. Normal disconnect releases immediately.
 - All room members, including late joiners, see the HP and the 15-minute deadline.
@@ -53,9 +53,9 @@ and the mouth attachment. The supplied texture and blood PNG are unchanged.
 Offline summoning requires only the updated Unity client. Shared online boss
 encounters require the updated Server/runtime too. Old server
 snapshots lack bossReady, so the summon button remains disabled and no fee is
-charged. The checked-in Oracle updater currently fetches EthanL1245/main;
-ensure the runtime changes reach the VM's actual deployment source before using
-this feature. Publishing only to GalacticSlayer/main does not prove deployment.
+charged. The checked-in Oracle updater (Server/ops/prepare.sh) fetches GalacticSlayer/main;
+confirm the live VM has that updater and has deployed the new Server/runtime tree
+before testing multiplayer HP/regen. Pushing main alone does not prove live deployment.
 
 Run:
 
@@ -95,3 +95,16 @@ dotnet run --project Tools/AbyssalLeviathan/Checks/OfflineRules.csproj
 
 These tests compile and execute the production rule classes directly. Unity UI,
 coroutine integration and Android rendering still need device verification.
+
+## Hardened Scales ability guide UI (Nov 2026)
+
+- When a summon is active, a rounded blue BOSS ABILITY GUIDE button is visible
+  above the right HUD. Its white edge uses the existing WindgroveFlashingBorder
+  pulse until the player opens it once; the viewed flag is saved in PlayerPrefs.
+- The guide image is a centered, aspect-ratio-fitted RawImage (source 1447 × 1087).
+  Import the user-supplied PNG into
+  Assets/Resources/Fishing/HardenedScalesAbilityPopup.png (Unity generates its
+  .meta file). The transparent GOT IT region dismisses the image on touch.
+- The normal fishing hint is hidden while the universal Leviathan HP bar is
+  visible and restores when the bar disappears. The boss name uses 40-point
+  lettering, up from 25. These changes do not alter normal fishing HUD behavior.
