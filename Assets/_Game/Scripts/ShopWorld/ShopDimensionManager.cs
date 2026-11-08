@@ -128,7 +128,7 @@ public sealed class ShopDimensionManager : MonoBehaviour
         Vector3 windArrival=Vector3.zero;
         Quaternion windRotation=Quaternion.identity;
         bool toWindgrove=biome==WindgroveShoalZone.BiomeId;
-        if(toWindgrove && !WindgroveShoalZone.TryGetArrival(out windArrival,out windRotation))return;
+        if(toWindgrove && !WindgroveShoalZone.TryGetArrival(GetComponent<CharacterController>(),out windArrival,out windRotation))return;
         Transform point=biome==4?SnapperIslandRuntime.Arrival:biome==3?expansion.PelagicArrival:
             biome==1?expansion.Arrival:GetComponent<BoatSystem>()?.IslandDock;
         if(point==null && biome==0)point=islandArrival;
@@ -210,7 +210,7 @@ public sealed class ShopDimensionManager : MonoBehaviour
             Vector3 windReturnPosition=Vector3.zero;
             Quaternion windReturnRotation=Quaternion.identity;
             bool returningToWindgrove=travelIslandBiome==WindgroveShoalZone.BiomeId &&
-                ReefCatalog.WindgroveDiscovered && WindgroveShoalZone.TryGetArrival(out windReturnPosition,out windReturnRotation);
+                ReefCatalog.WindgroveDiscovered && WindgroveShoalZone.TryGetArrival(GetComponent<CharacterController>(),out windReturnPosition,out windReturnRotation);
             bool returningToSnapper=travelIslandBiome==4 && dock==SnapperIslandRuntime.Arrival &&
                 SnapperIslandRuntime.Ready;
             bool returningToBluewater=travelIslandBiome==3 && expansion!=null &&
