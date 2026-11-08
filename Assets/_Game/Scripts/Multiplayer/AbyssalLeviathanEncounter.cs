@@ -50,6 +50,7 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
     private GameObject hudRoot,noticeRoot,abilityGuideButton,abilityGuideBorder,abilityGuidePopup;
     private RawImage abilityGuideArtwork;
     private FishingHUD fishingHud;
+    private FishingMenuSafetyRuntime menuSafety;
     private bool abilityGuideSeen;
     public const int SummonCostCoins = 100000;
     private GameObject spawnTipPopup;
@@ -248,11 +249,17 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
         // correctly regardless of Update/LateUpdate order.
         if(fishingHud==null)fishingHud=FindFirstObjectByType<FishingHUD>();
         if(fishingHud!=null)fishingHud.SetBossHealthCovered(showBossHealth);
-        bool guideAvailable=active && inWorld && !ShopWorldHUD.MenuOpen &&
+        // The passive Island/Fish Index deliberately leaves ShopWorldHUD.MenuOpen
+        // false to avoid interrupting a cast or fight. Respect its separate
+        // visibility flag so this higher-sorting boss button never overlaps it.
+        if(menuSafety==null)menuSafety=FindFirstObjectByType<FishingMenuSafetyRuntime>();
+        bool indexOpen=menuSafety!=null && menuSafety.IsIndexOpen;
+        bool guideAvailable=active && inWorld && !ShopWorldHUD.MenuOpen && !indexOpen &&
             (fishing==null || !fishing.IsFishPosing);
         if(!active && abilityGuidePopup.activeSelf)abilityGuidePopup.SetActive(false);
-        abilityGuideButton.SetActive(guideAvailable && !abilityGuidePopup.activeSelf);
-        abilityGuideBorder.SetActive(guideAvailable && !abilityGuideSeen);
+        bool guideButtonVisible=guideAvailable && !abilityGuidePopup.activeSelf;
+        abilityGuideButton.SetActive(guideButtonVisible);
+        abilityGuideBorder.SetActive(guideButtonVisible && !abilityGuideSeen);
         if(active)
         {
             int hp=current.hp;
