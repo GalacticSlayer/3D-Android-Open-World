@@ -327,8 +327,9 @@ public sealed class TabbedTackleStoreExtension : MonoBehaviour
         bool owned=progress.Data.OwnsGear(kind,tier);
         bool equipped=progress.Data.Equipped(kind)==tier;
         int price=ShopCatalog.GearPrice(kind,tier);
-        string action=equipped?"EQUIPPED":owned?"EQUIP":"BUY "+price.ToString("N0");
-        bool enabled=!progress.ReadOnly && !equipped && (owned || progress.Data.coins>=price);
+        bool locked=!owned && tier>0 && !progress.Data.OwnsGear(kind,tier-1);
+        string action=equipped?"EQUIPPED":owned?"EQUIP":locked?"LOCKED":"BUY "+price.ToString("N0");
+        bool enabled=!progress.ReadOnly && !equipped && !locked && (owned || progress.Data.coins>=price);
 
         string detail;
         string previewKey;
@@ -349,6 +350,8 @@ public sealed class TabbedTackleStoreExtension : MonoBehaviour
             detail="40 m line • 30 m maximum cast • "+(tier*12)+"% more line tolerance";
             previewKey="Line";
         }
+
+        if(locked)detail="Buy "+ShopCatalog.GearName(kind,tier-1)+" first.\n"+detail;
 
         GearKind selectedKind=kind;
         int selectedTier=tier;
@@ -530,3 +533,4 @@ public sealed class TabbedTackleStoreExtension : MonoBehaviour
         rect.offsetMax=new Vector2(right,top);
     }
 }
+

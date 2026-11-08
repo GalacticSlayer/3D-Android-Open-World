@@ -21,8 +21,23 @@ internal static class Program
         d.coins=2000; Check(d.BuyGear(GearKind.Rod,1) && d.coins==0 && d.rodEquipped==1,"Exact-price upgrade failed");
         Check(!d.BuyGear(GearKind.Rod,1),"Duplicate gear purchase");
         var direct=new ShopLedger {coins=6000};direct.EnsureGearOwnership();
-        Check(direct.BuyGear(GearKind.Rod,2) && direct.coins==0 && direct.rodEquipped==2,"Direct Level 3 rod purchase incorrectly required Level 2");
-        Check(direct.OwnsGear(GearKind.Rod,1) && direct.OwnsGear(GearKind.Rod,2),"Direct higher-tier purchase did not keep equipment ownership consistent");
+        Check(!direct.BuyGear(GearKind.Rod,2) && direct.coins==6000 && direct.rodEquipped==0,"Skipped Level 2 rod prerequisite or changed balance/equipment");
+        Check(!direct.OwnsGear(GearKind.Rod,1) && !direct.OwnsGear(GearKind.Rod,2),"Rejected purchase granted gear");
+        foreach(GearKind kind in Enum.GetValues(typeof(GearKind)))
+        {
+            var gear=new ShopLedger {coins=1000000};gear.EnsureGearOwnership();
+            int max=kind==GearKind.Rod?ShopCatalog.MaxRodTier:kind==GearKind.Reel?ShopCatalog.MaxReelTier:ShopCatalog.LineNames.Length-1;
+            for(int tier=1;tier<=max;tier++)
+            {
+                int before=gear.coins;
+                if(tier<max)
+                    Check(!gear.BuyGear(kind,tier+1) && gear.coins==before && !gear.OwnsGear(kind,tier+1),"Skipped tier or charged for a locked item: "+kind);
+                Check(gear.BuyGear(kind,tier) && gear.coins==before-ShopCatalog.GearPrice(kind,tier) && gear.Equipped(kind)==tier,"Sequential gear purchase failed: "+kind);
+                before=gear.coins;
+                Check(!gear.BuyGear(kind,tier) && gear.coins==before,"Duplicate gear purchase charged: "+kind);
+            }
+            Check(gear.Equip(kind,0) && gear.Equip(kind,max),"Owned gear could not be re-equipped: "+kind);
+        }
 
         var reels=new ShopLedger {coins=6000};reels.EnsureGearOwnership();
         Check(ShopCatalog.MaxReelTier==2 && ShopCatalog.ReelNames[2]=="Level 3 Fishing Reel","Level 3 reel catalog entry missing");
@@ -96,3 +111,4 @@ internal static class Program
         Console.WriteLine($"PASS: {checks} commerce, gear, bait, capacity, transfer, weight scaling and save checks.");
     }
 }
+

@@ -44,9 +44,8 @@ using System.Collections.Generic;
     }
 
     // rodOwned/reelOwned/lineOwned remain as the highest owned tier for backwards
-    // compatibility. Ownership masks are authoritative. Buying a higher tier no
-    // longer requires the previous one; lower tiers are marked owned automatically
-    // so the existing equipment UI remains consistent after a direct purchase.
+    // compatibility. Ownership masks are authoritative. New purchases require
+    // the previous tier; existing ownership and legacy saves remain intact.
     public int rodOwned, reelOwned, lineOwned, rodEquipped, reelEquipped, lineEquipped, baitEquipped;
     public int gearOwnershipVersion;
     public int rodOwnedMask = 1, reelOwnedMask = 1, lineOwnedMask = 1;
@@ -297,10 +296,10 @@ using System.Collections.Generic;
     public bool Spend(int price) { if (price < 0 || price==int.MaxValue || coins < price) return false; coins -= price; return true; }
     public bool BuyGear(GearKind kind, int tier)
     {
-        if(tier<1 || tier>MaxTier(kind) || OwnsGear(kind,tier))return false;
+        if(tier<1 || tier>MaxTier(kind) || OwnsGear(kind,tier) || !OwnsGear(kind,tier-1))return false;
         int price=ShopCatalog.GearPrice(kind,tier);
         if(!Spend(price))return false;
-        SetGearMask(kind,GearMask(kind)|LegacyGearMask(tier));
+        SetGearMask(kind,GearMask(kind)|(1<<tier));
         int highest=HighestOwnedTier(GearMask(kind));
         if(kind==GearKind.Rod)rodOwned=highest;
         else if(kind==GearKind.Reel)reelOwned=highest;
@@ -369,6 +368,7 @@ using System.Collections.Generic;
         coins+=value; return true;
     }
 }
+
 
 
 
