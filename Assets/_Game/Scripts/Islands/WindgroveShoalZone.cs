@@ -82,21 +82,26 @@ public static class WindgroveShoalZone
         return northmost != null;
     }
 
+    private const string ArrivalMarkerName = "Windgrove Shoal Arrival";
+
     public static bool TryGetArrival(out Vector3 position, out Quaternion rotation)
     {
         position = Vector3.zero;
         rotation = Quaternion.identity;
-        if (!TryGetNorthmost(out Transform northern)) return false;
-        IslandExpansionWorld world = IslandExpansionWorld.Active;
-        OceanWater water = world != null ? world.Water : null;
-        if (water == null) water = UnityEngine.Object.FindFirstObjectByType<OceanWater>();
-        if (water == null) return false;
+        Scene scene = SceneManager.GetSceneByName("PrototypeWorld");
+        if (!scene.IsValid() || !scene.isLoaded || !HasTurbines) return false;
 
-        // 9 m north of the northernmost base, 3 m above the actual ocean level.
-        // Never scale this offset by the FBX's manually authored scene scale.
-        position = new Vector3(northern.position.x, water.BaseWaterLevel + 3f,
-            northern.position.z + 9f);
-        rotation = Quaternion.LookRotation(Vector3.back, Vector3.up);
-        return true;
+        // Uses the exact position of the former Grass_0843 on the staircase.
+        // The authored, movable marker lives as a separate root in the scene;
+        // no turbine or staircase transform is changed.
+        foreach (GameObject root in scene.GetRootGameObjects())
+        {
+            if (root.name != ArrivalMarkerName || !root.activeInHierarchy) continue;
+            position = root.transform.position + Vector3.up * 0.12f; // footing clearance
+            rotation = Quaternion.LookRotation(Vector3.right, Vector3.up); // East (+X)
+            return true;
+        }
+        Debug.LogError("Windgrove Shoal Arrival marker is missing from PrototypeWorld.");
+        return false;
     }
 }
