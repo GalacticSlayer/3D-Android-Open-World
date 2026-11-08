@@ -479,11 +479,23 @@ public class FishingHUD : MonoBehaviour
             actionArtwork.sprite = FishingActionArtwork.Get(text == "REEL");
     }
 
-    // The compass occupies the normal top-center status area. Keep updating the
-    // hint text while hidden so it restores immediately with the current state.
+    // Compass and Leviathan HP use the normal top-center hint area. Both
+    // overlays may update in different Unity phases, so combine their states
+    // instead of letting the last caller accidentally reveal covered text.
+    private bool navigationCovered, bossHealthCovered;
+    private void RefreshStatusHintVisibility()
+    {
+        if (statusText != null) statusText.enabled = !navigationCovered && !bossHealthCovered;
+    }
     public void SetNavigationCovered(bool covered)
     {
-        if (statusText != null) statusText.enabled = !covered;
+        navigationCovered = covered;
+        RefreshStatusHintVisibility();
+    }
+    public void SetBossHealthCovered(bool covered)
+    {
+        bossHealthCovered = covered;
+        RefreshStatusHintVisibility();
     }
 
     public void SetStatus(string text)
