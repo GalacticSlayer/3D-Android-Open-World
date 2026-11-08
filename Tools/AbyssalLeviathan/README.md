@@ -99,15 +99,18 @@ coroutine integration and Android rendering still need device verification.
 ## Hardened Scales ability guide UI (Nov 2026)
 
 - When a summon is active, a rounded blue BOSS ABILITY GUIDE button is visible
-  above the right HUD. Its white edge uses the existing WindgroveFlashingBorder
-  pulse until the player opens it once; the viewed flag is saved in PlayerPrefs.
+  just below MENU / TRAVEL at the same spacing as the left index/bait buttons.
+  Its white edge uses the existing WindgroveFlashingBorder pulse until opened
+  once PER SUMMON. A new boss ID resets the flag, without saved PlayerPrefs state.
 - The guide image is a centered, aspect-ratio-fitted RawImage (source 1447 × 1087).
   Import the user-supplied PNG into
   Assets/Resources/Fishing/HardenedScalesAbilityPopup.png (Unity generates its
   .meta file). The transparent GOT IT region dismisses the image on touch.
 - The normal fishing hint is hidden while the universal Leviathan HP bar is
   visible and restores when the bar disappears. The boss name uses 40-point
-  lettering, up from 25. These changes do not alter normal fishing HUD behavior.
+  lettering, up from 25, in a dedicated 58px-high text region above the bar
+  (the prior 40px-high label clipped the entire enlarged name on Android).
+  These changes do not alter normal fishing HUD behavior.
 
 ## November 2026 cost, spawn-tip and Hardened Scales updates
 
@@ -115,8 +118,10 @@ coroutine integration and Android rendering still need device verification.
   require 100,000 coins. Server tests cover the old 10,000-coin amount being denied.
 - The navigation-to-public-boss-HP change remains at 85 m horizontally from
   the spawn center. When the HP UI first becomes visible, show the arrival tip
-  for 15 seconds maximum, once per boss summon. A fullscreen UI button dismisses
-  it on any touch/click without passing the touch through to gameplay.
+  for 15 seconds maximum, once per boss summon. The artwork is uniformly sized
+  to the original 1,080px-wide awakening notice, with no fullscreen dimming.
+  A transparent fullscreen button dismisses it on any touch/click without
+  passing the touch through to gameplay.
 - Import the supplied **Abyssal Leviathan Popping Tip.png** as
   Assets/Resources/Fishing/AbyssalLeviathanSpawnTip.png, and the earlier
   **Hardened Scales Ability Popup.png** as
