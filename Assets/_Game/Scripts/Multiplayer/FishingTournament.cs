@@ -40,6 +40,7 @@ public sealed partial class FishingTournament : MonoBehaviour
     private FirstPersonController controls;
     private ShopProgress progress;
     private TournamentStand stand;
+    private AbyssalLeviathanEncounter bossEncounter;
     private View current;
     private float receivedAt,nextRecovery;
     private string shownInvite="",shownResult="",announcement="",notice="";
@@ -67,6 +68,7 @@ public sealed partial class FishingTournament : MonoBehaviour
         controls=GetComponent<FirstPersonController>();progress=GetComponent<ShopProgress>();
         session=FishingMultiplayer.For(controls);
         if(progress!=null && progress.Data.tournamentWagers==null)progress.Data.tournamentWagers=new List<TournamentWager>();
+        bossEncounter=GetComponent<AbyssalLeviathanEncounter>();
         stand=gameObject.AddComponent<TournamentStand>();
         BuildUI();
     }
@@ -133,7 +135,11 @@ public sealed partial class FishingTournament : MonoBehaviour
         }
         wasConnected=connected;
         bool near=NearStand;
-        interact.gameObject.SetActive(near && !ModalOpen && !ShopWorldHUD.MenuOpen && !controls.BoatUIBlocked);
+        // Keep the stand prompt behind the boss guide popup while it is open.
+        // Restore it on close if the player is still within interaction range.
+        if(bossEncounter==null)bossEncounter=GetComponent<AbyssalLeviathanEncounter>();
+        bool guideOpen=bossEncounter!=null && bossEncounter.AbilityGuidePopupVisible;
+        interact.gameObject.SetActive(near && !ModalOpen && !ShopWorldHUD.MenuOpen && !controls.BoatUIBlocked && !guideOpen);
         if(interact.gameObject.activeSelf && Keyboard.current!=null && Keyboard.current.eKey.wasPressedThisFrame)OpenStand();
         float elapsed=Time.realtimeSinceStartup-receivedAt;
         if(current!=null && (current.phase=="running" || current.phase=="countdown"))

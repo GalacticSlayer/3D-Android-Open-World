@@ -65,6 +65,8 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
     private Text healthTitle;
     public const float CatchRegionRadius = 80f;
     public bool NavigationArrived { get; private set; }
+    // The tournament stand prompt is drawn in another overlay canvas.
+    public bool AbilityGuidePopupVisible => abilityGuidePopup!=null && abilityGuidePopup.activeInHierarchy;
     public Vector3 RegionCenter => current == null ? Vector3.zero : new Vector3(current.x,current.y,current.z);
     public string Status {get;private set;}="";
     public bool Active => (local!=null || Online) && current!=null && current.phase=="active" && Remaining>0;
