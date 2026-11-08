@@ -33,7 +33,7 @@ public static class FishSizeTable
         GameplayCurve(18f,36), // Golden trevally gameplay approximation kg = 18 * metres^3
         GameplayCurve(17f,36), // Giant trevally uses the 1.8x Bluefin formula below
         GameplayCurve(10f,14), // Winter flounder gameplay approximation: kg = 10 * metres^3
-        GameplayCurve(10f,14), // Roughtail: Leopard curve to 85 kg, custom quadratic tail afterwards
+        GameplayCurve(10f,14), // Roughtail: Leopard curve to 85 kg, then 1 cm per additional kg
         GameplayCurve(10f,14), // Leopard stingray: identical size curve to Roughtail
         GameplayCurve(10f,16), // Mahogany snapper: same length curve as Yellowtail Snapper
         RhinecanthusAculeatusCurve(), // Picasso triggerfish: measured species-specific W(g)=0.1559*TL(cm)^2.4059
@@ -144,11 +144,10 @@ public static class FishSizeTable
     private static float[] GameplayCurve(float kgAtOneMetre,int samples)
     { var row=new float[samples];for(int i=0;i<samples;i++){float m=(i+1)*.05f;row[i]=kgAtOneMetre*m*m*m;}return row; }
 
-    // Roughtail matches Leopard up to its 85 kg maximum, then length rises
-    // quadratically to 2.75 m at 360 kg. Mirror of FISH STATS F34/AA19.
+    // Roughtail matches Leopard through 85 kg (1.26 m), then gains 1 cm/kg.
+    // Include bonus catch weight above the catalog maximum in both directions.
     private const float RoughtailCutoffKg=85f;
-    private const float RoughtailMaximumKg=360f;
-    private const float RoughtailMaximumMetres=2.75f;
+    private const float RoughtailMetresPerKg=.01f;
 
     // Inverse of LengthMetres, so tiny pond catches retain their size in every view/save.
     public static float WeightForLength(int species,float metres)
@@ -159,9 +158,7 @@ public static class FishSizeTable
             float cutoffLength=LengthMetres(FishCatalog.LeopardStingrayId,RoughtailCutoffKg);
             if(metres>=cutoffLength)
             {
-                float t=(float)Math.Sqrt(Math.Max(0f,Math.Min(1f,
-                    (metres-cutoffLength)/(RoughtailMaximumMetres-cutoffLength))));
-                return RoughtailCutoffKg+(RoughtailMaximumKg-RoughtailCutoffKg)*t;
+                return RoughtailCutoffKg+(metres-cutoffLength)/RoughtailMetresPerKg;
             }
             return WeightForLength(FishCatalog.LeopardStingrayId,metres);
         }
@@ -185,10 +182,7 @@ public static class FishSizeTable
                 return LengthMetres(FishCatalog.LeopardStingrayId,kg);
             float leopardLength=LengthMetres(FishCatalog.LeopardStingrayId,
                 RoughtailCutoffKg);
-            float roughtailSizeRatio=(float)Math.Max(0.0,Math.Min(1.0,
-                (kg-RoughtailCutoffKg)/(RoughtailMaximumKg-RoughtailCutoffKg)));
-            return leopardLength+(RoughtailMaximumMetres-leopardLength)*
-                roughtailSizeRatio*roughtailSizeRatio;
+            return leopardLength+(kg-RoughtailCutoffKg)*RoughtailMetresPerKg;
         }
         if(species==FishCatalog.BattleScarredMakoSharkId)return 1.5f*LengthMetres(FishCatalog.MakoSharkId,kg/1.5f);
         if(species==FishCatalog.GiantTrevallyId)return 1.8f*LengthMetres(FishCatalog.BluefinTrevallyId,kg/1.8f);
@@ -211,4 +205,5 @@ public static class FishSizeTable
         return Math.Max(.05f,(hi+t)*.05f);
     }
 }
+
 

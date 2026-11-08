@@ -109,13 +109,17 @@ public static class FishingTuning
     public const float GreenToYellowSpeed=0.95f/1.35f;
     public const float RedToYellowSpeed=1.75f/1.35f;
 
-    public static float YellowSpeed(int species,float legacyDifficulty)
+    public static float YellowSpeed(int species,float legacyDifficulty,float weightKg=0f)
     {
         if(species==FishCatalog.AbyssalLeviathanId)return 12f;
         SpeciesStats stats;
-        return TryGetSpeciesStats(species,out stats)
+        float speed=TryGetSpeciesStats(species,out stats)
             ? stats.YellowSpeedMps
             : Mathf.Lerp(1.85f,2.95f,legacyDifficulty)*1.35f;
+        // Smoothly add 0.1 m/s per 20 kg above 85 kg, including catch bonuses.
+        if(species==FishCatalog.RoughtailStingrayId && weightKg>85f)
+            speed+=(weightKg-85f)*(.1f/20f);
+        return speed;
     }
 
     public static bool TryGetWeightDistribution(int species,int biome,out WeightDistribution row)
@@ -620,3 +624,4 @@ public static class FishingTuning
         return false;
     }
 }
+

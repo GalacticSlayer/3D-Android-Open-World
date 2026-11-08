@@ -2251,7 +2251,7 @@ public class FishingSystem : MonoBehaviour
                 : 1f;
 
         float outwardSpeed =
-            FishingTuning.YellowSpeed(hookedSpeciesId,effectiveDifficulty) *
+            FishingTuning.YellowSpeed(hookedSpeciesId,effectiveDifficulty,hookedWeightKg) *
             FishingDragRules.EscapeMultiplier(CurrentDrag) *
             moodSwimMultiplier *
             initialBurstMultiplier *
@@ -2263,7 +2263,7 @@ public class FishingSystem : MonoBehaviour
         // Purple status has a fixed fraction of base speed, independent of drag,
         // surges or the initial escape burst.
         if(ActiveTemperament==FishTemperament.Fragile)
-            outwardSpeed=FishingTuning.YellowSpeed(hookedSpeciesId,effectiveDifficulty)*.2f;
+            outwardSpeed=FishingTuning.YellowSpeed(hookedSpeciesId,effectiveDifficulty,hookedWeightKg)*.2f;
         Vector3 velocity =
             outwardDirection *
             outwardSpeed;
@@ -4347,6 +4347,7 @@ public class FishingSystem : MonoBehaviour
         return material;
     }
 }
+
 
 
 

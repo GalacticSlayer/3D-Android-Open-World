@@ -29,8 +29,8 @@ speciesId,speciesName,minWeightKg,maxWeightKg,minHealth,maxHealth,minCostCoins,m
 25,Golden Trevally,1,70,1300,19500,338,10400,4.2
 26,Giant Trevally,1.8,126,3900,26000,744,22880,4.6
 27,Winter Flounder,0.25,5,600,1600,320,2200,3.438
-28,Roughtail Stingray,3,360,10000,160000,3500,44000,1.6
-29,Leopard Stingray,3,85,10000,60000,3500,20000,1.5
+28,Roughtail Stingray,3,360,10000,160000,3500,44000,3.1
+29,Leopard Stingray,3,85,10000,60000,3500,20000,2.7
 30,Mahogany Snapper,0.25,4.1,225,540,135,495,3
 31,Picasso Triggerfish,0.06,4,160,550,90,500,3.152
 32,Titan Triggerfish,0.1,12,160,1100,170,1200,3.152
@@ -41,7 +41,8 @@ speciesId,speciesName,minWeightKg,maxWeightKg,minHealth,maxHealth,minCostCoins,m
 37,Blue Lined Grouper,0.3,5,340,1700,320,1800,3.8
 38,Nassau Grouper,2,25,900,5250,300,4500,3.5
 39,Napoleon Wrasse,2,160,1000,25000,1000,15000,4.2
-40,White Skate,3,85,9000,50000,3000,20000,1.5
+40,White Skate,3,85,9000,50000,3000,20000,2.3
 41,Blue Tang,0.02,1,115,342,40,300,3.152
 42,Dussumieri Tang,0.1,5.5,330,1100,170,1300,3.5
 44,Black Marlin,60,750,21500,36000,2600,28000,6.5
+
