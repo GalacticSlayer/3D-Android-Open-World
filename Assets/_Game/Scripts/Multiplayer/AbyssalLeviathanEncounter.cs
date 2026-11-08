@@ -49,6 +49,8 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
     private bool busy,landing;
     private GameObject hudRoot,noticeRoot;
     private Text status,notice;
+    private RawImage awakeningArtwork;
+    private bool awakeningNotice;
     private Image health;
     private RectTransform healthFill;
     private Text healthTitle;
@@ -204,7 +206,7 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
         if (active && inWorld && !NavigationArrived)
         {
             Vector3 offset = transform.position - RegionCenter; offset.y = 0;
-            if (offset.sqrMagnitude <= 5f * 5f) NavigationArrived = true;
+            if (offset.sqrMagnitude <= 85f * 85f) NavigationArrived = true;
         }
         hudRoot.SetActive(active && NavigationArrived && inWorld && !ShopWorldHUD.MenuOpen &&
             (fishing==null || (!fishing.HasHookedFish && !fishing.IsFishPosing)));
@@ -283,7 +285,18 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
             done(reply);
         }
     }
-    private void ShowNotice(string text){Status=text;notice.text=text;noticeUntil=Time.realtimeSinceStartup+14f;}
+    private void ShowNotice(string text)
+    {
+        Status=text;
+        awakeningNotice=text.StartsWith("Abyssal Leviathan has awakened",StringComparison.Ordinal);
+        // Use the original text as a fallback until the banner asset is imported.
+        bool artworkReady=awakeningNotice && awakeningArtwork!=null && awakeningArtwork.texture!=null;
+        if(awakeningArtwork!=null)awakeningArtwork.gameObject.SetActive(artworkReady);
+        noticeRoot.GetComponent<Image>().enabled=!artworkReady;
+        notice.gameObject.SetActive(!artworkReady);
+        notice.text=text;
+        noticeUntil=Time.realtimeSinceStartup+(awakeningNotice?10f:14f);
+    }
     private static Text Label(Transform parent,int size)
     {
         var go=new GameObject("Label",typeof(RectTransform),typeof(Text));go.transform.SetParent(parent,false);
@@ -323,7 +336,20 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
         healthFill.anchorMin=Vector2.zero;healthFill.anchorMax=Vector2.one;
         healthFill.offsetMin=healthFill.offsetMax=Vector2.zero;
         status=Label(track.transform,22);status.fontStyle=FontStyle.Bold;
-        noticeRoot=Panel(go.transform,"Awakening notification",new Vector2(980,130),185,new Color(.08f,.02f,.04f,.96f));notice=Label(noticeRoot.transform,26);
+        noticeRoot=Panel(go.transform,"Awakening notification",new Vector2(1080,215),185,new Color(.08f,.02f,.04f,.96f));
+        notice=Label(noticeRoot.transform,26);
+        var artworkGo=new GameObject("Abyssal Leviathan Awakening Banner",typeof(RectTransform),typeof(RawImage));
+        artworkGo.transform.SetParent(noticeRoot.transform,false);
+        awakeningArtwork=artworkGo.GetComponent<RawImage>();
+        awakeningArtwork.texture=Resources.Load<Texture2D>("Fishing/AbyssalLeviathanAwakeningBanner");
+        awakeningArtwork.raycastTarget=false;
+        // Crop transparent top/bottom margins without modifying the supplied artwork.
+        awakeningArtwork.uvRect=new Rect(0f,152f/682f,1f,385f/682f);
+        var artworkRect=awakeningArtwork.rectTransform;
+        artworkRect.anchorMin=Vector2.zero;
+        artworkRect.anchorMax=Vector2.one;
+        artworkRect.offsetMin=artworkRect.offsetMax=Vector2.zero;
+        artworkGo.SetActive(false);
         hudRoot.SetActive(false);noticeRoot.SetActive(false);
     }
 }
