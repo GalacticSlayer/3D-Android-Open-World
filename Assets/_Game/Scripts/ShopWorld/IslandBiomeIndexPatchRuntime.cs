@@ -31,6 +31,7 @@ public sealed class IslandBiomeIndexPatchRuntime : MonoBehaviour
     private FishingMenuSafetyRuntime menuSafety;
     private BoatSystem boats;
     private Font font;
+    private bool lastNavigationPending, lastWindgroveDiscovered;
 
     private readonly Color teal = new Color(.04f, .36f, .39f, 1f);
     private readonly Color gold = new Color(.89f, .72f, .40f, 1f);
@@ -79,7 +80,11 @@ public sealed class IslandBiomeIndexPatchRuntime : MonoBehaviour
         }
 
         if (page != "islands") return;
-        if (list.Find(MarkerName) != null) return;
+        bool pending = WindgroveNavigation.Pending;
+        if (list.Find(MarkerName) != null && lastNavigationPending == pending &&
+            lastWindgroveDiscovered == ReefCatalog.WindgroveDiscovered) return;
+        lastNavigationPending = pending;
+        lastWindgroveDiscovered = ReefCatalog.WindgroveDiscovered;
 
         BuildIslandIndex(list);
     }
@@ -96,6 +101,8 @@ public sealed class IslandBiomeIndexPatchRuntime : MonoBehaviour
     {
         ClearList(list);
         int currentBiome = player != null ? IslandExpansionWorld.FishingBiome(player.transform.position) : 0;
+
+        if (WindgroveNavigation.Pending) CreateIslandCard(list, WindgroveShoalZone.BiomeId, currentBiome);
 
         foreach (int biome in ReefCatalog.IslandIndexOrder)
         {
@@ -114,6 +121,7 @@ public sealed class IslandBiomeIndexPatchRuntime : MonoBehaviour
     {
         ReefCatalog.Zone entry = ReefCatalog.Zones[biome];
         bool unlocked = entry.Unlocked;
+        bool navigate = biome == WindgroveShoalZone.BiomeId && WindgroveNavigation.Pending;
         bool island = biome == 0 || biome == 1 || biome == 3 || biome == 4 || biome == WindgroveShoalZone.BiomeId;
         bool here = travel != null && travel.Destination == 0 && currentBiome == biome;
         bool worldReady = biome == WindgroveShoalZone.BiomeId ? player != null && WindgroveShoalZone.TryGetArrival(player.GetComponent<CharacterController>(), out _, out _) :
@@ -125,10 +133,11 @@ public sealed class IslandBiomeIndexPatchRuntime : MonoBehaviour
             : biome == 1
                 ? new Color(.20f, .23f, .25f, 1f)
                 : new Color(.025f, .12f, .20f, 1f);
-        if (!unlocked) cardColor = muted;
+        if (!unlocked && !navigate) cardColor = muted;
 
         GameObject card = Panel("BiomeCard_" + biome, list, cardColor);
         card.AddComponent<LayoutElement>().preferredHeight = 250f;
+        if (navigate) WindgroveNavigation.AddFlashingBorder(card.transform);
 
         RawImage picture = new GameObject("Preview", typeof(RectTransform), typeof(RawImage)).GetComponent<RawImage>();
         picture.transform.SetParent(card.transform, false);
@@ -136,18 +145,18 @@ public sealed class IslandBiomeIndexPatchRuntime : MonoBehaviour
         picture.raycastTarget = false;
         if (BiomeThumbnailMethod != null)
             picture.texture = BiomeThumbnailMethod.Invoke(hud, new object[] { biome }) as Texture;
-        picture.color = unlocked ? Color.white : new Color(.38f, .38f, .38f, 1f);
+        picture.color = unlocked || navigate ? Color.white : new Color(.38f, .38f, .38f, 1f);
         IslandIndexArtwork.Round(picture);
 
         Text title = Label(card.transform,
-            entry.name.ToUpperInvariant() + "   •   " + (unlocked ? "UNLOCKED" : "LOCKED"),
-            28, unlocked ? gold : mutedText, TextAnchor.UpperLeft);
+            entry.name.ToUpperInvariant() + "   •   " + (navigate ? "NEW AREA" : unlocked ? "UNLOCKED" : "LOCKED"),
+            28, unlocked || navigate ? gold : mutedText, TextAnchor.UpperLeft);
         Anchor(title.rectTransform, .27f, .68f, .70f, .96f, 10, 0, -10, 0);
         title.horizontalOverflow = HorizontalWrapMode.Wrap;
         title.verticalOverflow = VerticalWrapMode.Truncate;
 
         Text description = Label(card.transform, entry.description, 22,
-            unlocked ? Color.white : mutedText, TextAnchor.UpperLeft);
+            unlocked || navigate ? Color.white : mutedText, TextAnchor.UpperLeft);
         // The description owns only the middle column. It cannot flow under the
         // right-side controls, even with long localization/wrapped text.
         Anchor(description.rectTransform, .27f, .08f, .70f, .69f, 10, 0, -12, 0);
@@ -160,11 +169,12 @@ public sealed class IslandBiomeIndexPatchRuntime : MonoBehaviour
         if (island)
         {
             bool allowed = travel == null || travel.TournamentAllowsIsland(biome);
-            string teleportLabel = !allowed ? "TOURNAMENT LOCK" : here ? "YOU ARE HERE" : fishingBusy ? "FISHING…" : "TELEPORT";
-            Button teleport = ButtonAt(card.transform, teleportLabel, () => TeleportToIsland(biome));
+            string teleportLabel = navigate ? "NAVIGATE" : !allowed ? "TOURNAMENT LOCK" : here ? "YOU ARE HERE" : fishingBusy ? "FISHING…" : "TELEPORT";
+            Button teleport = ButtonAt(card.transform, teleportLabel, () => { if (navigate) BeginNavigation(); else TeleportToIsland(biome); });
             Anchor(teleport.GetComponent<RectTransform>(), .735f, .55f, .975f, .88f, 0, 0, 0, 0);
             SetAvailable(teleport,
-                allowed && unlocked && worldReady && !here && !fishingBusy && travel != null && !travel.Traveling);
+                navigate || (allowed && unlocked && worldReady && !here && !fishingBusy && travel != null && !travel.Traveling));
+            if (navigate) WindgroveNavigation.AddFlashingBorder(teleport.transform);
         }
 
         Button fishIndex = ButtonAt(card.transform, "FISH INDEX", () => OpenFishIndex(biome));
@@ -173,6 +183,15 @@ public sealed class IslandBiomeIndexPatchRuntime : MonoBehaviour
         else
             Anchor(fishIndex.GetComponent<RectTransform>(), .735f, .31f, .975f, .69f, 0, 0, 0, 0);
         SetAvailable(fishIndex, unlocked);
+    }
+
+    private void BeginNavigation()
+    {
+        if (!WindgroveNavigation.Pending) return;
+        if (ShopWorldHUD.MenuOpen) hud.Close();
+        else if (menuSafety != null && SafeCloseIndexMethod != null) SafeCloseIndexMethod.Invoke(menuSafety, null);
+        else hud.Close();
+        GetComponent<WindgroveNavigation>()?.BeginNavigation();
     }
 
     private void OpenFishIndex(int biome)

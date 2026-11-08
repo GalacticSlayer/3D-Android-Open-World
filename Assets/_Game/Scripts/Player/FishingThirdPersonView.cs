@@ -287,6 +287,18 @@ public sealed class FishingThirdPersonView : MonoBehaviour
         rendering = false;
     }
 
+    public static Quaternion ViewingRotation(Camera camera)
+    {
+        if (camera == null) return Quaternion.identity;
+        var perspective = camera.GetComponentInParent<FishingThirdPersonView>();
+        if (perspective != null && perspective.IsThirdPerson && !perspective.rendering)
+        {
+            perspective.CameraPose(out _, out Quaternion rotation);
+            return rotation;
+        }
+        return camera.transform.rotation;
+    }
+
     // World-attached HUD labels must use the displayed perspective, not the aiming eye.
     public static Vector3 WorldToScreenPoint(Camera camera, Vector3 point)
     {

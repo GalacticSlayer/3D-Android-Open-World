@@ -79,6 +79,8 @@ public sealed class ShopWorldHUD : MonoBehaviour
         fishingHUD=GetComponent<FishingHUD>(); font=Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         previews=gameObject.AddComponent<ShopPreview>();
         Build(); progress.Changed+=RefreshSoon;
+        if (GetComponent<WindgroveNavigation>() == null)
+            gameObject.AddComponent<WindgroveNavigation>().Initialize(progress, player, fishing, indexShortcut, root.transform, modal);
         homeDirectory=HomeDirectoryClient.Instance;
         if(homeDirectory!=null)homeDirectory.Changed+=RefreshVisitedHabitatSoon;
         message=progress.Notice; MenuOpen=false;
