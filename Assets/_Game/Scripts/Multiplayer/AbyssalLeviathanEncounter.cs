@@ -293,6 +293,7 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
         bool artworkReady=awakeningNotice && awakeningArtwork!=null && awakeningArtwork.texture!=null;
         if(awakeningArtwork!=null)awakeningArtwork.gameObject.SetActive(artworkReady);
         noticeRoot.GetComponent<Image>().enabled=!artworkReady;
+        noticeRoot.GetComponent<RectTransform>().sizeDelta=artworkReady ? new Vector2(1080,215) : new Vector2(980,130);
         notice.gameObject.SetActive(!artworkReady);
         notice.text=text;
         noticeUntil=Time.realtimeSinceStartup+(awakeningNotice?10f:14f);
@@ -336,7 +337,7 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
         healthFill.anchorMin=Vector2.zero;healthFill.anchorMax=Vector2.one;
         healthFill.offsetMin=healthFill.offsetMax=Vector2.zero;
         status=Label(track.transform,22);status.fontStyle=FontStyle.Bold;
-        noticeRoot=Panel(go.transform,"Awakening notification",new Vector2(1080,215),185,new Color(.08f,.02f,.04f,.96f));
+        noticeRoot=Panel(go.transform,"Awakening notification",new Vector2(980,130),185,new Color(.08f,.02f,.04f,.96f));
         notice=Label(noticeRoot.transform,26);
         var artworkGo=new GameObject("Abyssal Leviathan Awakening Banner",typeof(RectTransform),typeof(RawImage));
         artworkGo.transform.SetParent(noticeRoot.transform,false);
