@@ -11,7 +11,7 @@ function fixture(random=()=>.25,ledgerPath=null){
  const room={players:new Map()};
  const make=id=>{const p={id,room,pose:{world:0,rodEquipped:true,swimming:false,lureVariant:4,lineKind:1,lineX:0,lineZ:-200,castSequence:1}};room.players.set(id,p);return p;};
  const a=make('a'),b=make('b');
- const summon=(p=a,n=1,extra={})=>api.action(p,{op:'summon',ticket:ticket(n),caught:requiredBossSpecies,balance:10000,x:0,y:0,z:-200,...extra});
+ const summon=(p=a,n=1,extra={})=>api.action(p,{op:'summon',ticket:ticket(n),caught:requiredBossSpecies,balance:100000,x:0,y:0,z:-200,...extra});
  const claim=(p=a)=>api.action(p,{op:'claim',id:room.boss.id,cast:p.pose.castSequence});
  const act=(op,damage=0,p=a,lease=room.boss.lease)=>api.action(p,{op,id:room.boss.id,lease,damage});
  return {api,room,a,b,summon,claim,act,advance:ms=>{now+=ms;api.tick(room);}};
@@ -20,7 +20,8 @@ test('unlock excludes only actual variants; all four islands, not Deep Ocean',()
  const f=fixture();assert(!requiredBossSpecies.includes(20));assert(!requiredBossSpecies.includes(34));
  for(const id of [19,33,29,28,23,22,26,24,40,42])assert(requiredBossSpecies.includes(id));
  assert.throws(()=>f.summon(f.a,1,{caught:requiredBossSpecies.slice(1)}));
- assert.throws(()=>f.summon(f.a,1,{balance:9999}));
+ assert.throws(()=>f.summon(f.a,1,{balance:99999}));
+ assert.throws(()=>f.summon(f.a,1,{balance:10000}));
  f.summon(f.a,1,{caught:requiredBossSpecies.map(id=>id===19?20:id===33?34:id)});
  assert.equal(f.room.boss.hp,220000);assert.equal(f.room.boss.kg,410);assert.equal(f.api.view(f.room).secondsLeft,900);
  assert.throws(()=>f.summon(f.b,2));assert.equal(f.summon().accepted,true);
@@ -68,7 +69,7 @@ test('HTTP snapshots replicate boss to current and late-joining players',async()
  const post=async(path,data,token)=>(await fetch(url+path,{method:'POST',headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:JSON.stringify(data)})).json();
  try{
  const a=await post('/v1/open',{protocol:PROTOCOL,build:'boss',pose});
- const s=await post('/v1/boss',{pose,boss:{op:'summon',ticket:ticket(1),caught:requiredBossSpecies,balance:10000,x:0,y:0,z:-200}},a.token);assert(s.accepted);
+ const s=await post('/v1/boss',{pose,boss:{op:'summon',ticket:ticket(1),caught:requiredBossSpecies,balance:100000,x:0,y:0,z:-200}},a.token);assert(s.accepted);
  const b=await post('/v1/join',{protocol:PROTOCOL,build:'boss',pose,code:a.code});assert.equal(b.boss.id,s.boss.id);
  const c=await post('/v1/boss',{pose,boss:{op:'claim',id:s.boss.id,cast:1}},a.token);assert(c.hooked);
  await post('/v1/boss',{pose,boss:{op:'damage',id:s.boss.id,lease:c.boss.lease,damage:1234}},a.token);

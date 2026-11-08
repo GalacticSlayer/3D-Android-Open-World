@@ -2330,6 +2330,11 @@ public class FishingSystem : MonoBehaviour
             velocity = toPlayer.sqrMagnitude > .0001f
                 ? toPlayer.normalized * 2f : Vector3.zero;
         }
+        // Hardened Scales slows the Leviathan's actual swim movement by
+        // 40% after ALL temperament, drag, reel and Siren modifiers are applied.
+        // Do not alter ordinary fish, damage, tension or collision rules.
+        if (HardenedScalesActive)
+            velocity *= 0.6f;
         if (velocity.sqrMagnitude <
             0.001f)
         {

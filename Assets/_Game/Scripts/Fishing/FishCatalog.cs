@@ -67,6 +67,7 @@ public static class FishCatalog
     public const int BlueTangId=41;
     public const int DussumieriTangId=42;
     public const int AbyssalLeviathanId=43;
+    public const int AbyssalLeviathanSellCoins=200000;
     public const int BlackMarlinId=44; // Stable new species ID; never reassign saved catch IDs.
     // Positive Unity yaw is clockwise viewed from above. Keep pitch/roll and mouth pinning unchanged.
     public static float HeldYaw(int id)=>id==RoughtailStingrayId || id==LeopardStingrayId || id==WhiteSkateId ? 16f : IsFlatfish(id) ? -4f : 86f;
@@ -119,7 +120,7 @@ public static class FishCatalog
         new FishSpeciesDefinition("White Skate",new Color(.8f,.78f,.72f),new Color(.94f,.92f,.86f),3f,85f,2.2f,26f,3000),
         new FishSpeciesDefinition("Blue Tang",new Color(.03f,.2f,.9f),new Color(1f,.85f,.05f),0.02f,1f,0.42f,0f,40),
         new FishSpeciesDefinition("Dussumieri Tang",new Color(.3f,.45f,.55f),new Color(.95f,.8f,.1f),0.1f,5.5f,1.05f,0f,170),
-        new FishSpeciesDefinition("Abyssal Leviathan",new Color(.04f,.1f,.16f),Color.cyan,400f,440f,2.1f,0f,2340),
+        new FishSpeciesDefinition("Abyssal Leviathan",new Color(.04f,.1f,.16f),Color.cyan,400f,440f,2.1f,0f,AbyssalLeviathanSellCoins),
         new FishSpeciesDefinition("Black Marlin",new Color(.04f,.09f,.18f),new Color(.28f,.57f,.72f),60f,750f,2.20f,0f,2600)
     };
 
@@ -185,6 +186,8 @@ public static class FishCatalog
     // location never changes its catch reward. Older saves default to global.
     public static int GetSellValue(int speciesId,float weightKg,string biomeId=null)
     {
+        // Boss reward is a fixed amount, not scaled by ordinary CSV, weight or biome.
+        if(CanonicalId(speciesId)==AbyssalLeviathanId)return AbyssalLeviathanSellCoins;
         int configured;
         if(FishingTuning.TryGetBiomeCost(speciesId,weightKg,biomeId,out configured))
             return configured;

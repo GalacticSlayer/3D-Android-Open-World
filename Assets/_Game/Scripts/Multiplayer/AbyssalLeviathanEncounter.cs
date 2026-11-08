@@ -52,6 +52,11 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
     private FishingHUD fishingHud;
     private bool abilityGuideSeen;
     private const string AbilityGuideSeenKey = "AbyssalLeviathan.HardenedScalesGuideSeen";
+    public const int SummonCostCoins = 100000;
+    private GameObject spawnTipPopup;
+    private RawImage spawnTipArtwork;
+    private float spawnTipUntil;
+    private bool spawnTipShown;
     private Text status,notice;
     private RawImage awakeningArtwork;
     private bool awakeningNotice;
@@ -83,7 +88,7 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
         return requiredCount>0 && found==requiredCount;
     }
     public bool CanSummon => (session==null || !session.Busy) && (!Online || session.BossReady) && !busy && !Active && progress!=null && !progress.ReadOnly &&
-        string.IsNullOrEmpty(progress.Data.bossSummonTicket) && progress.Data.coins>=10000 && Unlocked(out _,out _);
+        string.IsNullOrEmpty(progress.Data.bossSummonTicket) && progress.Data.coins>=SummonCostCoins && Unlocked(out _,out _);
     public void Summon()
     {
         if(!CanSummon)return;
@@ -91,13 +96,13 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
         if(!Online)
         {
             int previous=progress.Data.coins;
-            progress.Data.coins-=10000;
+            progress.Data.coins-=SummonCostCoins;
             try{progress.Save();}catch(Exception){progress.Data.coins=previous;ShowNotice("Could not save the summon fee.");return;}
             local=new AbyssalLeviathanLocalState(Time.realtimeSinceStartup,UnityEngine.Random.value);
             localPosition=point;current=null;RefreshLocal();return;
         }
         string ticket=Guid.NewGuid().ToString("N");int balance=progress.Data.coins;
-        progress.Data.bossSummonTicket=ticket;progress.Data.coins-=10000;
+        progress.Data.bossSummonTicket=ticket;progress.Data.coins-=SummonCostCoins;
         try{progress.Save();}catch(Exception){progress.Data.bossSummonTicket=null;progress.Data.coins=balance;ShowNotice("Could not save the summon fee.");return;}
         var caught=new List<int>();
         foreach(int id in FishCatalog.ActiveIds)if(FishIndexCatalog.Discovered(progress.Data,id))caught.Add(id);
@@ -116,8 +121,8 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
         string ticket=progress.Data.bossSummonTicket;if(string.IsNullOrEmpty(ticket))return;
         int old=progress.Data.coins;
         progress.Data.bossSummonTicket=null;
-        if(!accepted)progress.Data.coins=(int)Math.Min(int.MaxValue,(long)old+10000);
-        try{progress.Save();if(!accepted)ShowNotice("Summon did not start. Your 10,000 coins were refunded.");}
+        if(!accepted)progress.Data.coins=(int)Math.Min(int.MaxValue,(long)old+SummonCostCoins);
+        try{progress.Save();if(!accepted)ShowNotice("Summon did not start. Your "+SummonCostCoins.ToString("N0")+" coins were refunded.");}
         catch(Exception){progress.Data.bossSummonTicket=ticket;progress.Data.coins=old;}
     }
     private IEnumerator RecoverFee()
@@ -135,7 +140,12 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
     private void ApplyView(View view)
     {
         if(current!=null && view.serverTime<current.serverTime)return;
-        if (current == null || current.id != view.id) NavigationArrived = false;
+        if (current == null || current.id != view.id)
+        {
+            NavigationArrived = false;
+            spawnTipShown = false;
+            if(spawnTipPopup!=null)spawnTipPopup.SetActive(false);
+        }
         current=view;receivedAt=Time.realtimeSinceStartup;
         if(view.phase=="active" && announced!=view.id)
         {
@@ -216,6 +226,21 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
         bool showBossHealth = active && NavigationArrived && inWorld && !ShopWorldHUD.MenuOpen &&
             (fishing==null || (!fishing.HasHookedFish && !fishing.IsFishPosing));
         hudRoot.SetActive(showBossHealth);
+        // Show exactly once per summon, at the same moment the compass yields
+        // to the public HP bar. Do not re-open after a touch or timer expiry.
+        if(showBossHealth && !spawnTipShown)
+        {
+            spawnTipShown=true;
+            if(spawnTipArtwork!=null && spawnTipArtwork.texture!=null)
+            {
+                spawnTipUntil=Time.realtimeSinceStartup+15f;
+                spawnTipPopup.SetActive(true);
+                spawnTipPopup.transform.SetAsLastSibling();
+            }
+            else Debug.LogWarning("Leviathan spawn tip missing: import Assets/Resources/Fishing/AbyssalLeviathanSpawnTip.png");
+        }
+        if(spawnTipPopup.activeSelf && (!active || Time.realtimeSinceStartup>=spawnTipUntil))
+            CloseSpawnTip();
         // Hide the ordinary white casting hint only while this HP bar is visible.
         // FishingHUD combines this with compass coverage so the hint returns
         // correctly regardless of Update/LateUpdate order.
@@ -334,9 +359,14 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
     {
         if(abilityGuidePopup!=null)abilityGuidePopup.SetActive(false);
     }
+    private void CloseSpawnTip()
+    {
+        if(spawnTipPopup!=null)spawnTipPopup.SetActive(false);
+    }
     private void OnDisable()
     {
         if(fishingHud!=null)fishingHud.SetBossHealthCovered(false);
+        CloseSpawnTip();
     }
     private static Text Label(Transform parent,int size)
     {
@@ -447,9 +477,42 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
         gotIt.GetComponent<Image>().raycastTarget=true;
         gotIt.GetComponent<Button>().onClick.AddListener(CloseAbilityGuide);
 
+        // Center the supplied 2048x682 transparent tip image, preserving its
+        // aspect ratio. The entire screen is a single invisible dismiss button:
+        // touch anywhere to close, without forwarding the tap to gameplay.
+        spawnTipPopup=Panel(go.transform,"Leviathan Arrival Tip",Vector2.zero,0,new Color(0f,.015f,.035f,.32f));
+        var spawnPanel=spawnTipPopup.GetComponent<RectTransform>();
+        spawnPanel.anchorMin=Vector2.zero;
+        spawnPanel.anchorMax=Vector2.one;
+        spawnPanel.offsetMin=spawnPanel.offsetMax=Vector2.zero;
+        var spawnBackground=spawnTipPopup.GetComponent<Image>();
+        spawnBackground.raycastTarget=true;
+        var dismissAnywhere=spawnTipPopup.AddComponent<Button>();
+        dismissAnywhere.targetGraphic=spawnBackground;
+        dismissAnywhere.transition=Selectable.Transition.None;
+        dismissAnywhere.onClick.AddListener(CloseSpawnTip);
+        var tipFit=new GameObject("Spawn Tip Fit Bounds",typeof(RectTransform));
+        tipFit.transform.SetParent(spawnTipPopup.transform,false);
+        var tipFitRect=tipFit.GetComponent<RectTransform>();
+        tipFitRect.anchorMin=new Vector2(.035f,.06f);
+        tipFitRect.anchorMax=new Vector2(.965f,.94f);
+        tipFitRect.offsetMin=tipFitRect.offsetMax=Vector2.zero;
+        var tipArt=new GameObject("Leviathan Spawn Tip Artwork",typeof(RectTransform),typeof(RawImage),typeof(AspectRatioFitter));
+        tipArt.transform.SetParent(tipFit.transform,false);
+        spawnTipArtwork=tipArt.GetComponent<RawImage>();
+        spawnTipArtwork.texture=Resources.Load<Texture2D>("Fishing/AbyssalLeviathanSpawnTip");
+        spawnTipArtwork.raycastTarget=false;
+        var tipArtRect=spawnTipArtwork.rectTransform;
+        tipArtRect.anchorMin=tipArtRect.anchorMax=tipArtRect.pivot=new Vector2(.5f,.5f);
+        tipArtRect.anchoredPosition=Vector2.zero;
+        var tipAspect=tipArt.GetComponent<AspectRatioFitter>();
+        tipAspect.aspectMode=AspectRatioFitter.AspectMode.FitInParent;
+        tipAspect.aspectRatio=2048f/682f;
+
         hudRoot.SetActive(false);
         noticeRoot.SetActive(false);
         abilityGuideButton.SetActive(false);
         abilityGuidePopup.SetActive(false);
+        spawnTipPopup.SetActive(false);
     }
 }

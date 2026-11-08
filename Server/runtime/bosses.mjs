@@ -40,7 +40,7 @@ export function createBosses({clock=Date.now, random=Math.random, ledgerPath=nul
       if(p.pose.world!==0)fail('Return to the fishing islands.');
       const caught=new Set((Array.isArray(c.caught)?c.caught:[]).filter(Number.isInteger).map(family));
       if(!requiredBossSpecies.every(id=>caught.has(id)))fail('Catch every species on all four islands first.');
-      if(!Number.isInteger(c.balance)||c.balance<10000)fail('Summoning costs 10,000 coins.');
+      if(!Number.isInteger(c.balance)||c.balance<100000)fail('Summoning costs 100,000 coins.');
       if(!['x','y','z'].every(k=>Number.isFinite(c[k])&&Math.abs(c[k])<100000))fail('Invalid Bluewater spawn.');
       // Geometry is authored in Unity; the summoner supplies the inspected south-rock point.
       const now=clock();const b={id:randomUUID(),phase:'active',x:c.x,y:c.y,z:c.z,kg:400+40*random(),hp:220000,

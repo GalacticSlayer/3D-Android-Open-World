@@ -17,7 +17,7 @@ and the mouth attachment. The supplied texture and blood PNG are unchanged.
   species available on Suncrest, Snapper, Brinebreak and Bluewater. Deep Ocean is
   not an additional requirement. Either Mako or Emperor form satisfies its
   family; rays, trevallies and barracudas remain separate species.
-- Any eligible room member may summon; one encounter at a time, 10,000 coins.
+- Any eligible room member may summon; one encounter at a time, 100,000 coins.
   Debit is saved first. Offline summons spend the fee once without an online
   receipt; online summons use idempotent server receipts to settle or refund
   interrupted requests. Accepted summon fees remain spent if the host subsequently leaves.
@@ -45,8 +45,8 @@ and the mouth attachment. The supplied texture and blood PNG are unchanged.
 - Offline fights use the same HP, timer, healing and Popper rules, within the
   current play session. Catch or wait for the private encounter to end before
   opening/joining multiplayer, so switching rooms cannot discard a paid summon.
-- No new sell reward was specified, so the fallback sell formula uses the Mako
-  base value (2,340). This can be tuned separately.
+- The Abyssal Leviathan sells for a fixed 200,000 coins, regardless of its
+  weight, catching biome or ordinary tuning-table multipliers.
 
 ## Deployment and checks
 
@@ -108,3 +108,20 @@ coroutine integration and Android rendering still need device verification.
 - The normal fishing hint is hidden while the universal Leviathan HP bar is
   visible and restores when the bar disappears. The boss name uses 40-point
   lettering, up from 25. These changes do not alter normal fishing HUD behavior.
+
+## November 2026 cost, spawn-tip and Hardened Scales updates
+
+- The stand, offline wallet debit/refund and multiplayer summon validation all
+  require 100,000 coins. Server tests cover the old 10,000-coin amount being denied.
+- The navigation-to-public-boss-HP change remains at 85 m horizontally from
+  the spawn center. When the HP UI first becomes visible, show the arrival tip
+  for 15 seconds maximum, once per boss summon. A fullscreen UI button dismisses
+  it on any touch/click without passing the touch through to gameplay.
+- Import the supplied **Abyssal Leviathan Popping Tip.png** as
+  Assets/Resources/Fishing/AbyssalLeviathanSpawnTip.png, and the earlier
+  **Hardened Scales Ability Popup.png** as
+  Assets/Resources/Fishing/HardenedScalesAbilityPopup.png. Unity generates .meta
+  files. The tip is rendered with a fitted, unmodified 2048:682 aspect ratio.
+- When Hardened Scales is active, only the Leviathan's physical movement
+  velocity is multiplied by 0.6 after status-specific movement calculations.
+  This affects all fish temperaments without changing ordinary fish movement.
