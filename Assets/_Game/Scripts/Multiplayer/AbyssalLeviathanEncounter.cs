@@ -47,7 +47,11 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
     private int damage;
     private float receivedAt,nextReport,nextRipple,nextRecovery,noticeUntil,nextLocalSnapshot;
     private bool busy,landing;
-    private GameObject hudRoot,noticeRoot;
+    private GameObject hudRoot,noticeRoot,abilityGuideButton,abilityGuideBorder,abilityGuidePopup;
+    private RawImage abilityGuideArtwork;
+    private FishingHUD fishingHud;
+    private bool abilityGuideSeen;
+    private const string AbilityGuideSeenKey = "AbyssalLeviathan.HardenedScalesGuideSeen";
     private Text status,notice;
     private RawImage awakeningArtwork;
     private bool awakeningNotice;
@@ -61,12 +65,13 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
     public bool Active => (local!=null || Online) && current!=null && current.phase=="active" && Remaining>0;
     public float Remaining => current==null?0:Mathf.Max(0,current.secondsLeft-(Time.realtimeSinceStartup-receivedAt));
     public bool HasLease => !string.IsNullOrEmpty(lease);
-    public int InitialHealth => current!=null?current.hp:150000;
+    public int InitialHealth => current!=null?current.hp:220000;
     public float Weight => current!=null?current.kg:420f;
 
     private void Awake()
     {
         session=GetComponent<FishingMultiplayer>();fishing=GetComponent<FishingSystem>();progress=GetComponent<ShopProgress>();
+        abilityGuideSeen=PlayerPrefs.GetInt(AbilityGuideSeenKey,0)!=0;
         BuildHud();
     }
     public bool Unlocked(out int found,out int requiredCount)
@@ -154,12 +159,12 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
         {
             fightId=result.boss.id;lease=result.boss.lease;damage=0;
             if(fishing.BossCastWaiting(cast) && Active && current.owner==OwnerId && current.lease==lease)
-                fishing.BeginBossFight(Mathf.Clamp(result.boss.hp,0,result.boss.maxHp>0?result.boss.maxHp:150000),result.boss.kg);
+                fishing.BeginBossFight(Mathf.Clamp(result.boss.hp,0,result.boss.maxHp>0?result.boss.maxHp:220000),result.boss.kg);
             else Release();
         }
         fishing.BossClaimFinished(cast);
     }
-    public void ReportDamage(int amount){if(HasLease)damage=Mathf.Clamp(damage+Mathf.Max(0,amount),0,150000);}
+    public void ReportDamage(int amount){if(HasLease)damage=Mathf.Clamp(damage+Mathf.Max(0,amount),0,220000);}
     public void Release()
     {
         if(!HasLease)return;
@@ -208,13 +213,24 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
             Vector3 offset = transform.position - RegionCenter; offset.y = 0;
             if (offset.sqrMagnitude <= 85f * 85f) NavigationArrived = true;
         }
-        hudRoot.SetActive(active && NavigationArrived && inWorld && !ShopWorldHUD.MenuOpen &&
-            (fishing==null || (!fishing.HasHookedFish && !fishing.IsFishPosing)));
+        bool showBossHealth = active && NavigationArrived && inWorld && !ShopWorldHUD.MenuOpen &&
+            (fishing==null || (!fishing.HasHookedFish && !fishing.IsFishPosing));
+        hudRoot.SetActive(showBossHealth);
+        // Hide the ordinary white casting hint only while this HP bar is visible.
+        // FishingHUD combines this with compass coverage so the hint returns
+        // correctly regardless of Update/LateUpdate order.
+        if(fishingHud==null)fishingHud=FindFirstObjectByType<FishingHUD>();
+        if(fishingHud!=null)fishingHud.SetBossHealthCovered(showBossHealth);
+        bool guideAvailable=active && inWorld && !ShopWorldHUD.MenuOpen &&
+            (fishing==null || !fishing.IsFishPosing);
+        if(!active && abilityGuidePopup.activeSelf)abilityGuidePopup.SetActive(false);
+        abilityGuideButton.SetActive(guideAvailable && !abilityGuidePopup.activeSelf);
+        abilityGuideBorder.SetActive(guideAvailable && !abilityGuideSeen);
         if(active)
         {
             int hp=current.hp;
             if(HasLease && fishing.IsBossFight)hp=fishing.CurrentFishHealth;
-            int maximumHp = current.maxHp > 0 ? current.maxHp : 150000;
+            int maximumHp = current.maxHp > 0 ? current.maxHp : 220000;
             float fraction = Mathf.Clamp01(hp / (float)maximumHp);
             healthFill.anchorMax = new Vector2(fraction,1);
             health.gameObject.SetActive(fraction > 0);
@@ -298,6 +314,30 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
         notice.text=text;
         noticeUntil=Time.realtimeSinceStartup+(awakeningNotice?10f:14f);
     }
+    private void OpenAbilityGuide()
+    {
+        // Do not consume the one-time flashing prompt before its artwork exists.
+        if(abilityGuideArtwork==null || abilityGuideArtwork.texture==null)
+        {
+            Debug.LogWarning("Hardened Scales guide image missing: import Assets/Resources/Fishing/HardenedScalesAbilityPopup.png");
+            return;
+        }
+        abilityGuideSeen=true;
+        PlayerPrefs.SetInt(AbilityGuideSeenKey,1);
+        PlayerPrefs.Save();
+        abilityGuideBorder.SetActive(false);
+        abilityGuidePopup.SetActive(true);
+        abilityGuidePopup.transform.SetAsLastSibling();
+        abilityGuideButton.SetActive(false);
+    }
+    private void CloseAbilityGuide()
+    {
+        if(abilityGuidePopup!=null)abilityGuidePopup.SetActive(false);
+    }
+    private void OnDisable()
+    {
+        if(fishingHud!=null)fishingHud.SetBossHealthCovered(false);
+    }
     private static Text Label(Transform parent,int size)
     {
         var go=new GameObject("Label",typeof(RectTransform),typeof(Text));go.transform.SetParent(parent,false);
@@ -312,12 +352,12 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
     }
     private void BuildHud()
     {
-        var go=new GameObject("Leviathan HUD",typeof(RectTransform),typeof(Canvas),typeof(CanvasScaler));go.transform.SetParent(transform,false);
+        var go=new GameObject("Leviathan HUD",typeof(RectTransform),typeof(Canvas),typeof(CanvasScaler),typeof(GraphicRaycaster));go.transform.SetParent(transform,false);
         var c=go.GetComponent<Canvas>();c.renderMode=RenderMode.ScreenSpaceOverlay;c.sortingOrder=215;
         var s=go.GetComponent<CanvasScaler>();s.uiScaleMode=CanvasScaler.ScaleMode.ScaleWithScreenSize;s.referenceResolution=new Vector2(1920,1080);s.matchWidthOrHeight=.5f;
         hudRoot=Panel(go.transform,"Boss health",new Vector2(850,122),26,Color.white);
         hudRoot.GetComponent<Image>().enabled=false; // Keep the title, timer and HP meter without an outer panel.
-        healthTitle=Label(hudRoot.transform,25);
+        healthTitle=Label(hudRoot.transform,40); // 1.6x the former 25-point boss title.
         healthTitle.text="ABYSSAL LEVIATHAN";healthTitle.fontStyle=FontStyle.Bold;
         healthTitle.color=new Color(1f,.22f,.26f);
         var titleOutline=healthTitle.gameObject.AddComponent<Outline>();
@@ -351,6 +391,65 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
         artworkRect.anchorMax=Vector2.one;
         artworkRect.offsetMin=artworkRect.offsetMax=Vector2.zero;
         artworkGo.SetActive(false);
-        hudRoot.SetActive(false);noticeRoot.SetActive(false);
+
+        // Show the guide throughout the active summon, not only after
+        // the 85 m navigation-to-health-bar transition.
+        abilityGuideButton=Panel(go.transform,"Boss Ability Guide",new Vector2(380,76),0,Color.white);
+        FishingHudTheme.Panel(abilityGuideButton,1);
+        var buttonRect=abilityGuideButton.GetComponent<RectTransform>();
+        buttonRect.anchorMin=buttonRect.anchorMax=new Vector2(1,1);
+        buttonRect.pivot=new Vector2(1,1);
+        buttonRect.anchoredPosition=new Vector2(-36,-246);
+        abilityGuideButton.GetComponent<Image>().raycastTarget=true;
+        var button=abilityGuideButton.AddComponent<Button>();
+        button.targetGraphic=abilityGuideButton.GetComponent<Image>();
+        button.onClick.AddListener(OpenAbilityGuide);
+        var buttonText=Label(abilityGuideButton.transform,25);
+        buttonText.text="BOSS ABILITY GUIDE";
+        buttonText.fontStyle=FontStyle.Bold;
+        abilityGuideBorder=WindgroveNavigation.AddFlashingBorder(abilityGuideButton.transform);
+        abilityGuideBorder.SetActive(false);
+
+        // The popup uses the source aspect ratio and scales only uniformly:
+        // no image stretching on tall or wide mobile displays.
+        abilityGuidePopup=Panel(go.transform,"Hardened Scales Guide Popup",Vector2.zero,0,new Color(0,.015f,.035f,.78f));
+        var overlayRect=abilityGuidePopup.GetComponent<RectTransform>();
+        overlayRect.anchorMin=Vector2.zero;
+        overlayRect.anchorMax=Vector2.one;
+        overlayRect.offsetMin=overlayRect.offsetMax=Vector2.zero;
+        abilityGuidePopup.GetComponent<Image>().raycastTarget=true;
+        var fitBox=new GameObject("Guide Fit Bounds",typeof(RectTransform));
+        fitBox.transform.SetParent(abilityGuidePopup.transform,false);
+        var fitRect=fitBox.GetComponent<RectTransform>();
+        fitRect.anchorMin=new Vector2(.04f,.03f);
+        fitRect.anchorMax=new Vector2(.96f,.97f);
+        fitRect.offsetMin=fitRect.offsetMax=Vector2.zero;
+        var art=new GameObject("Hardened Scales Ability Artwork",typeof(RectTransform),typeof(RawImage),typeof(AspectRatioFitter));
+        art.transform.SetParent(fitBox.transform,false);
+        abilityGuideArtwork=art.GetComponent<RawImage>();
+        abilityGuideArtwork.texture=Resources.Load<Texture2D>("Fishing/HardenedScalesAbilityPopup");
+        abilityGuideArtwork.raycastTarget=false;
+        var artRect=abilityGuideArtwork.rectTransform;
+        artRect.anchorMin=artRect.anchorMax=artRect.pivot=new Vector2(.5f,.5f);
+        artRect.anchoredPosition=Vector2.zero;
+        var aspect=art.GetComponent<AspectRatioFitter>();
+        aspect.aspectMode=AspectRatioFitter.AspectMode.FitInParent;
+        aspect.aspectRatio=1447f/1087f;
+        // Transparent hit target precisely over the artwork's GOT IT button.
+        // Clicks elsewhere are blocked from gameplay but do not dismiss it.
+        var gotIt=new GameObject("GOT IT Hit Area",typeof(RectTransform),typeof(Image),typeof(Button));
+        gotIt.transform.SetParent(art.transform,false);
+        var hitRect=gotIt.GetComponent<RectTransform>();
+        hitRect.anchorMin=new Vector2(.33f,.13f);
+        hitRect.anchorMax=new Vector2(.67f,.26f);
+        hitRect.offsetMin=hitRect.offsetMax=Vector2.zero;
+        gotIt.GetComponent<Image>().color=Color.clear;
+        gotIt.GetComponent<Image>().raycastTarget=true;
+        gotIt.GetComponent<Button>().onClick.AddListener(CloseAbilityGuide);
+
+        hudRoot.SetActive(false);
+        noticeRoot.SetActive(false);
+        abilityGuideButton.SetActive(false);
+        abilityGuidePopup.SetActive(false);
     }
 }
