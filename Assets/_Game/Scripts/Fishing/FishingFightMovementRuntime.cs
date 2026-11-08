@@ -115,12 +115,13 @@ public sealed class FishingFightMovementRuntime : MonoBehaviour
             return;
         }
 
-        // Palm Pond and active player reeling use FishingSystem's normal movement.
-        // Preserve our previous-position baseline so releasing REEL cannot produce a
-        // fake giant planner step from an old position.
-        if ((bool)PondCastField.GetValue(fishing) || reeling || fishing.IsSirenCalling)
+        // Pond movement has no ocean route. Temporary forced movement pauses the
+        // route instead of forgetting which way the fish was rounding an obstacle.
+        if ((bool)PondCastField.GetValue(fishing) || fishing.IsSirenCalling || fishing.IsSkillStunned)
         {
-            ResetRouteOnly();
+            if ((bool)PondCastField.GetValue(fishing)) ResetRouteOnly();
+            plannerCooldown = 0f;
+            stalledSeconds = 0f;
             previousBobberPosition = bobber.transform.position;
             havePreviousBobberPosition = true;
             previousDistance = HorizontalDistance(bobber.transform.position, fishing.transform.position);
@@ -165,12 +166,25 @@ public sealed class FishingFightMovementRuntime : MonoBehaviour
             // Once the planner commits to circling one side of the island, keep
             // evaluating that route before each turn rather than waiting for another
             // shallow-water collision.
-            if (routeThreatened || routeSideSign != 0)
+            if (routeThreatened)
                 PlanRoute(routeOrigin, away, currentDirection, routeThreatened);
-            else
-                steeringActive = false;
+            else if (steeringActive && routeSideTimer <= 0f &&
+                     RouteMinimumDepth(routeOrigin, away) >= SafeRouteDepth)
+                ResetRouteOnly();
 
             plannerCooldown = PlannerInterval;
+        }
+
+        // The core uses our saved escape heading before applying reel pull. Do not
+        // rotate that combined velocity here: doing so would turn retrieval into
+        // extra escape movement. Still plan/check routes while REEL is held.
+        if (reeling)
+        {
+            previousBobberPosition = corePosition;
+            havePreviousBobberPosition = true;
+            previousDistance = HorizontalDistance(corePosition, fishing.transform.position);
+            stalledSeconds = 0f;
+            return;
         }
 
         // FishingSystem already moved the bobber this frame. If a route is active,
@@ -238,6 +252,16 @@ public sealed class FishingFightMovementRuntime : MonoBehaviour
         }
 
         previousBobberPosition = corePosition;
+    }
+
+    // Supply only the fish's escape direction; reel pull and status-dependent
+    // speed remain the core movement's responsibility.
+    public bool TryGetEscapeDirection(out Vector3 direction)
+    {
+        direction = steeringDirection;
+        return enabled && steeringActive && fishing != null && IsFighting() &&
+            !(bool)UnconsciousField.GetValue(fishing) &&
+            !(bool)PondCastField.GetValue(fishing);
     }
 
     private void PlanRoute(Vector3 position, Vector3 away, Vector3 currentDirection, bool threatened)
@@ -447,4 +471,5 @@ public sealed class FishingFightMovementRuntime : MonoBehaviour
         previousDistance = -1f;
     }
 }
+
 

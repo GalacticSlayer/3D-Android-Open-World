@@ -2223,6 +2223,13 @@ public class FishingSystem : MonoBehaviour
                 )
             ).normalized;
 
+        // Keep an obstacle-avoidance decision independent of reel input and mood.
+        // Reel pull below still acts toward the player, using the actual radial
+        // component of this escape velocity.
+        var fightMovement = GetComponent<FishingFightMovementRuntime>();
+        if (fightMovement != null && fightMovement.TryGetEscapeDirection(out Vector3 escapeDirection))
+            outwardDirection = escapeDirection;
+
         float moodSwimMultiplier;
 
         switch (ActiveTemperament)
@@ -4347,6 +4354,7 @@ public class FishingSystem : MonoBehaviour
         return material;
     }
 }
+
 
 
 
