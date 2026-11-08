@@ -78,7 +78,7 @@ public sealed class WindgroveNavigation : MonoBehaviour
         bool guideBoss = bossActive && !boss.NavigationArrived;
         bool show = (bossActive ? guideBoss : pending && navigating) && player != null && player.ViewCamera != null &&
             (travel == null || (!travel.InDimension && !travel.Traveling)) &&
-            !ShopWorldHUD.MenuOpen && (menu == null || !menu.activeInHierarchy) && (fishing == null || !fishing.IsFishPosing);
+            !ShopWorldHUD.MenuOpen && (menu == null || !menu.activeInHierarchy) && (fishing == null || (!fishing.IsFishPosing && !fishing.HasHookedFish));
         Vector3 targetPosition = Vector3.zero;
         if (show)
         {

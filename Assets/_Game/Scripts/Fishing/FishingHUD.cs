@@ -449,22 +449,9 @@ public class FishingHUD : MonoBehaviour
 
     // The compass occupies the normal top-center status area. Keep updating the
     // hint text while hidden so it restores immediately with the current state.
-    private bool navigationCovered;
-    private Vector2 fightPositionBeforeNavigation;
     public void SetNavigationCovered(bool covered)
     {
         if (statusText != null) statusText.enabled = !covered;
-        if (fightPanel != null && covered != navigationCovered)
-        {
-            var rect = fightPanel.GetComponent<RectTransform>();
-            if (covered)
-            {
-                fightPositionBeforeNavigation = rect.anchoredPosition;
-                rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, -300f);
-            }
-            else rect.anchoredPosition = fightPositionBeforeNavigation;
-        }
-        navigationCovered = covered;
     }
 
     public void SetStatus(string text)
