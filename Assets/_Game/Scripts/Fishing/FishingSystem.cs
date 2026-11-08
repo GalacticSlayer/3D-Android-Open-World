@@ -73,6 +73,7 @@ public class FishingSystem : MonoBehaviour
     {
         if (state != FishingState.Fighting || fishUnconscious) return;
         skillStunUntil = Time.time + FishingDragRules.SkillStunSeconds;
+        RefreshHardenedScalesStatus();
         surgeAmount = 0f;
         fragileBreakTimer = 0f;
         lineBreakTimer = 0f;
@@ -142,6 +143,7 @@ public class FishingSystem : MonoBehaviour
     private readonly bool[] castSamples=new bool[51];
     private int fishMaxHealth=1,fishHealthPoints=1,pendingDamage;
     private float damageFraction,damageDisplayTimer;
+    private bool pendingDamageHardened;
 
     private float stateTimer;
     private float fightTension;
@@ -168,6 +170,26 @@ public class FishingSystem : MonoBehaviour
     public bool HasHookedFish => state==FishingState.Fighting;
     public bool IsBossFight => HasHookedFish && hookedSpeciesId==FishCatalog.AbyssalLeviathanId;
     public int CurrentFishHealth => fishHealthPoints;
+    private readonly AbyssalHardenedScales hardenedScales = new AbyssalHardenedScales();
+    public bool HardenedScalesActive => IsBossFight && !fishUnconscious && fishHealthPoints > 0 && hardenedScales.IsActive(Time.time);
+    public float HardenedScalesOpacity => hardenedScales.Opacity(Time.time);
+    public void RefreshHardenedScalesStatus()
+    {
+        if (!IsBossFight || fishUnconscious || fishHealthPoints <= 0)
+        {
+            hardenedScales.Reset();
+            return;
+        }
+        int status = IsSkillStunned ? 6 : (int)ActiveTemperament;
+        if (hardenedScales.Status != status)
+            hardenedScales.ObserveStatus(status, Time.time, Random.value, Random.Range(5f, 8f));
+    }
+    public int MitigateBossDamage(int damage, out bool hardened)
+    {
+        RefreshHardenedScalesStatus();
+        hardened = HardenedScalesActive;
+        return hardened ? hardenedScales.ReduceDamage(damage, Time.time) : damage;
+    }
     public bool BossCastWaiting(int cast)=>state==FishingState.Waiting && CastSequence==cast && bossClaimPending;
     public void BossClaimFinished(int cast){if(CastSequence==cast)bossClaimPending=false;}
     public void BeginBossFight(int hp,float kg)
@@ -1200,11 +1222,15 @@ public class FishingSystem : MonoBehaviour
         if (castQuality != null && hookedSpeciesId!=FishCatalog.AbyssalLeviathanId) castQuality.PrepareHookedFish();
         hookedSpeciesId=FishCatalog.ResolveSizeVariant(hookedSpeciesId,hookedWeightKg);
         damageFraction=0;pendingDamage=0;damageDisplayTimer=0;
+        pendingDamageHardened=false;
         lineBreakTimer = 0f;
         fightTime = 0f;
         surgeAmount = 0f;
         fishUnconscious = false;
         fishOnShore = false;
+
+        // The initial hooked status is a baseline, not a status change.
+        hardenedScales.Reset(IsSkillStunned ? 6 : (int)ActiveTemperament);
 
         temperamentTimer =
             Random.Range(
@@ -1264,6 +1290,7 @@ public class FishingSystem : MonoBehaviour
 
     private void UpdateFight(bool reeling)
     {
+        RefreshHardenedScalesStatus();
         if(dragDamage==null)dragDamage=GetComponent<FishingBurstDamageRuntime>();
         // Activate protection before any reeling/fish resistance is calculated when
         // the hooked fish begins this frame at the equipped line limit.
@@ -1321,6 +1348,7 @@ public class FishingSystem : MonoBehaviour
                     );
                 fragileBreakTimer=0f;
                 if(hookedTemperament==FishTemperament.Fragile)temperamentTimer=Random.Range(3.5f,5f);
+                RefreshHardenedScalesStatus();
             }
 
             // Two seconds to loosen drag, then actual tension rises instead of
@@ -1405,8 +1433,11 @@ public class FishingSystem : MonoBehaviour
                 if(dragDamage==null || !dragDamage.enabled)
                 {
                     damageFraction+=Time.deltaTime*8.5f*moodHealthFactor*reelPower;
-                    int damage=Mathf.Min(fishHealthPoints,Mathf.FloorToInt(damageFraction));
-                    damageFraction-=damage;fishHealthPoints-=damage;pendingDamage+=damage;
+                    int rolledDamage=Mathf.FloorToInt(damageFraction);
+                    damageFraction-=rolledDamage;
+                    int damage=Mathf.Min(fishHealthPoints,MitigateBossDamage(rolledDamage,out bool hardened));
+                    fishHealthPoints-=damage;pendingDamage+=damage;
+                    pendingDamageHardened |= hardened && damage > 0;
                     if(IsBossFight)GetComponent<AbyssalLeviathanEncounter>()?.ReportDamage(damage);
                     fishHealth=fishHealthPoints/(float)fishMaxHealth;
                 }
@@ -1434,8 +1465,9 @@ public class FishingSystem : MonoBehaviour
             damageDisplayTimer+=Time.deltaTime;
             if(pendingDamage>0 && (damageDisplayTimer>=.35f || fishHealthPoints==0))
             {
-                hud.ShowDamage(pendingDamage,FishingThirdPersonView.WorldToScreenPoint(playerCamera, bobber.transform.position));
+                hud.ShowDamage(pendingDamage,FishingThirdPersonView.WorldToScreenPoint(playerCamera, bobber.transform.position),false,pendingDamageHardened);
                 pendingDamage=0;damageDisplayTimer=0;
+                pendingDamageHardened=false;
             }
             if (fishHealth <= 0f)
             {

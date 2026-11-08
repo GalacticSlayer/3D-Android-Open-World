@@ -86,6 +86,8 @@ public class FishingHUD : MonoBehaviour
     private Text fightStatusText, fightHintText;
     private RawImage fightStatusIcon;
     public RawImage CombatFishStatusIcon => fightStatusIcon;
+    private RawImage hardenedMainOverlay, hardenedTopOverlay, hardenedHealthOverlay, hardenedIcon;
+    private RawImage hardenedMainSource;
     private readonly Dictionary<string, Texture2D> hudStatusTextures = new Dictionary<string, Texture2D>();
     private string currentStatus = "";
     private int displayDrag = 1;
@@ -172,7 +174,7 @@ public class FishingHUD : MonoBehaviour
             if(callback!=null)b.onClick.AddListener(()=>callback());
         }
     }
-    public void ShowDamage(int amount,Vector3 screenPoint,bool lightning=false)
+    public void ShowDamage(int amount,Vector3 screenPoint,bool lightning=false,bool hardened=false)
     {
         int i=nextDamage++%damageLabels.Length;
         if(damageLabels[i]==null)
@@ -185,7 +187,7 @@ public class FishingHUD : MonoBehaviour
         RectTransformUtility.ScreenPointToLocalPointInRectangle(root.GetComponent<RectTransform>(),screenPoint,canvas.renderMode==RenderMode.ScreenSpaceOverlay?null:canvas.worldCamera,out var local);
         damageLabels[i].rectTransform.anchoredPosition=local+new Vector2(Random.Range(-35f,35f),25);
         damageLabels[i].text="−"+amount;damageLabels[i].color=new Color(1,.85f,.35f,1);damageLabels[i].gameObject.SetActive(true);damageLife[i]=.9f;
-        FishingDamagePresentation.ConfigureDamageLabel(damageLabels[i],lightning);
+        FishingDamagePresentation.ConfigureDamageLabel(damageLabels[i],lightning,hardened);
     }
     private void UpdateDamage()
     {
@@ -229,6 +231,36 @@ public class FishingHUD : MonoBehaviour
         {
             catchPanel.SetActive(false);
         }
+    }
+
+    private void LateUpdate()
+    {
+        if (system == null) return;
+        system.RefreshHardenedScalesStatus();
+        bool active = system.HardenedScalesActive;
+        if (active)
+        {
+            var source = system.PresentationFishStatusIcon;
+            if (source != null && (hardenedMainOverlay == null || hardenedMainSource != source))
+            {
+                if (hardenedMainOverlay != null) Destroy(hardenedMainOverlay.gameObject);
+                hardenedMainSource = source;
+                hardenedMainOverlay = HardenedScalesArtwork.Circle(source);
+            }
+            if (hardenedTopOverlay == null && fightStatusIcon != null)
+                hardenedTopOverlay = HardenedScalesArtwork.Circle(fightStatusIcon);
+            if (hardenedHealthOverlay == null && progressFill != null)
+            {
+                hardenedHealthOverlay = HardenedScalesArtwork.HealthBar(progressFill);
+                hardenedIcon = HardenedScalesArtwork.Shield(progressFill);
+            }
+        }
+        HardenedScalesArtwork.Show(hardenedMainOverlay, active, system.HardenedScalesOpacity);
+        HardenedScalesArtwork.Show(hardenedTopOverlay, active, .4f);
+        HardenedScalesArtwork.Show(hardenedHealthOverlay, active, .5f);
+        if (hardenedHealthOverlay != null)
+            hardenedHealthOverlay.transform.parent.gameObject.SetActive(active);
+        HardenedScalesArtwork.Show(hardenedIcon, active, 1f);
     }
 
     public void SetDragFightUI(bool fighting,bool live,int mode,float charge,float cooldown=0f)

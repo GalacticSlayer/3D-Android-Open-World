@@ -14,13 +14,15 @@ public sealed class FishingDamagePresentation : MonoBehaviour
 {
     private static bool criticalQueued;
     private static readonly HashSet<Text> lightningLabels = new HashSet<Text>();
+    private static readonly HashSet<Text> hardenedLabels = new HashSet<Text>();
     private static Font electricFont;
 
-    public static void ConfigureDamageLabel(Text label, bool lightning)
+    public static void ConfigureDamageLabel(Text label, bool lightning, bool hardened = false)
     {
         // Tag the actual pooled label, not a shared "next hit" flag: a skill
         // critical and its initial zap can create separate popups in one frame.
         if (lightning) lightningLabels.Add(label); else lightningLabels.Remove(label);
+        if (hardened) hardenedLabels.Add(label); else hardenedLabels.Remove(label);
         if (electricFont == null) electricFont = Resources.Load<Font>("Fishing/Bungee-Regular");
         label.font = lightning && electricFont != null ? electricFont : Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         label.fontStyle = lightning ? FontStyle.Italic : FontStyle.Normal;
@@ -31,6 +33,7 @@ public sealed class FishingDamagePresentation : MonoBehaviour
             label.resizeTextForBestFit = false;
             label.rectTransform.sizeDelta = new Vector2(220f,76f);
         }
+        if (hardened) label.color = new Color(.62f, .62f, .62f, 1f);
         EnsureOutline(label);
     }
 
@@ -93,7 +96,13 @@ public sealed class FishingDamagePresentation : MonoBehaviour
                 // exactly doubled by FishingBurstDamageRuntime. A modest size/tint
                 // change is enough to distinguish it without covering the screen.
                 label.resizeTextForBestFit=false;
-                if(lightning)
+                if(hardenedLabels.Contains(label))
+                {
+                    label.fontSize=32;
+                    label.rectTransform.sizeDelta=new Vector2(180f,64f);
+                    label.color=new Color(.62f,.62f,.62f,1f);
+                }
+                else if(lightning)
                 {
                     ConfigureDamageLabel(label,true);
                 }
@@ -119,7 +128,11 @@ public sealed class FishingDamagePresentation : MonoBehaviour
 
     private void OnDestroy()
     {
-        foreach (Text label in previousText.Keys) lightningLabels.Remove(label);
+        foreach (Text label in previousText.Keys)
+        {
+            lightningLabels.Remove(label);
+            hardenedLabels.Remove(label);
+        }
     }
 
     private static void EnsureOutline(Text label)

@@ -121,6 +121,7 @@ public sealed class FishingBurstDamageRuntime : MonoBehaviour
         if(id==3)
         {
             SirenSeconds=fishing.Progression.SirenDuration;
+            fishing.RefreshHardenedScalesStatus();
             fishing.PlaySirensCallSound();
         }
     }
@@ -337,6 +338,7 @@ public sealed class FishingBurstDamageRuntime : MonoBehaviour
 
         ImmortalitySeconds=Mathf.Max(0f,ImmortalitySeconds-Time.deltaTime);
         SirenSeconds=Mathf.Max(0f,SirenSeconds-Time.deltaTime);
+        fishing.RefreshHardenedScalesStatus();
         UpdateLightning(Time.deltaTime,maxHp);
         if(skillQueued)
         {
@@ -414,14 +416,15 @@ public sealed class FishingBurstDamageRuntime : MonoBehaviour
 
     private void DealDamage(int rolledDamage,int maxHp,bool critical,bool lightning=false)
     {
+        if (authoritativeHp <= 0 || rolledDamage <= 0) return;
+        rolledDamage = fishing.MitigateBossDamage(rolledDamage, out bool hardened);
         int appliedDamage = Mathf.Min(authoritativeHp, rolledDamage);
-        if (appliedDamage <= 0) return;
 
         authoritativeHp -= appliedDamage;
         if(fishing.IsBossFight)fishing.GetComponent<AbyssalLeviathanEncounter>()?.ReportDamage(appliedDamage);
         WriteAuthoritativeHealth(maxHp);
 
-        if (critical) FishingDamagePresentation.MarkCriticalHit();
+        if (critical && !hardened) FishingDamagePresentation.MarkCriticalHit();
 
         if (hud != null)
         {
@@ -434,7 +437,7 @@ public sealed class FishingBurstDamageRuntime : MonoBehaviour
             // Show the rolled attack value, not the remaining-HP-capped value. A
             // finishing critical keeps its rolled attack number even if the fish had
             // less health remaining; only the health bar clamps at zero.
-            hud.ShowDamage(rolledDamage, screenPoint, lightning);
+            hud.ShowDamage(rolledDamage, screenPoint, lightning, hardened);
         }
     }
 
