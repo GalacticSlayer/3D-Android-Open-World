@@ -229,7 +229,7 @@ public sealed class TravelAndIslandMenuRuntime : MonoBehaviour
         bool unlocked=entry.Unlocked;
         bool isIsland=biome==0 || biome==1 || biome==3 || biome==4 || biome==WindgroveShoalZone.BiomeId;
         bool here=travel!=null && travel.Destination==0 && currentBiome==biome;
-        bool worldReady=biome==WindgroveShoalZone.BiomeId?WindgroveShoalZone.TryGetArrival(out _,out _):
+        bool worldReady=biome==WindgroveShoalZone.BiomeId?player!=null && WindgroveShoalZone.TryGetArrival(player.GetComponent<CharacterController>(),out _,out _):
             biome==4?SnapperIslandRuntime.Ready:biome==0 || biome==2 || (IslandExpansionWorld.Active!=null && IslandExpansionWorld.Active.Ready);
         bool fishingBusy=IsFishingBusy();
 
