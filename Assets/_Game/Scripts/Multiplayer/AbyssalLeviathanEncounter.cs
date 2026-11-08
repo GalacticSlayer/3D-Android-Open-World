@@ -302,7 +302,7 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
         var c=go.GetComponent<Canvas>();c.renderMode=RenderMode.ScreenSpaceOverlay;c.sortingOrder=215;
         var s=go.GetComponent<CanvasScaler>();s.uiScaleMode=CanvasScaler.ScaleMode.ScaleWithScreenSize;s.referenceResolution=new Vector2(1920,1080);s.matchWidthOrHeight=.5f;
         hudRoot=Panel(go.transform,"Boss health",new Vector2(850,122),26,Color.white);
-        FishingHudTheme.Panel(hudRoot);
+        hudRoot.GetComponent<Image>().enabled=false; // Keep the title, timer and HP meter without an outer panel.
         healthTitle=Label(hudRoot.transform,25);
         healthTitle.text="ABYSSAL LEVIATHAN";healthTitle.fontStyle=FontStyle.Bold;
         healthTitle.color=new Color(1f,.22f,.26f);

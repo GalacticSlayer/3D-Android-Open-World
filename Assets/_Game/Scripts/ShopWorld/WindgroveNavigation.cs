@@ -45,16 +45,7 @@ public sealed class WindgroveNavigation : MonoBehaviour
         fishingHud = GetComponent<FishingHUD>();
         shortcutBorder = AddFlashingBorder(shortcut.transform);
         shortcutBorder.SetActive(false);
-        var icon = new GameObject("Windgrove Alert", typeof(RectTransform), typeof(RawImage));
-        icon.transform.SetParent(shortcut.transform, false);
-        var raw = icon.GetComponent<RawImage>();
-        raw.texture = Resources.Load<Texture2D>("WindgroveNotification");
-        // Use the supplied transparent image as-is; its artwork occupies the central square.
-        raw.uvRect = new Rect(.25f, .25f, .5f, .55f);
-        raw.raycastTarget = false;
-        Place(raw.rectTransform, new Vector2(1, 1), new Vector2(-5, -4), new Vector2(64, 64));
-        badge = icon;
-        badge.SetActive(false);
+        badge = AddNotificationBadge(shortcut.transform, "Windgrove Alert");
         BuildCompass(hudRoot);
     }
 
@@ -183,6 +174,20 @@ public sealed class WindgroveNavigation : MonoBehaviour
         rect.anchorMin = rect.anchorMax = anchor; rect.pivot = new Vector2(.5f,.5f);
         rect.anchoredPosition = position; rect.sizeDelta = size;
     }
+    public static GameObject AddNotificationBadge(Transform parent, string name)
+    {
+        var icon = new GameObject(name, typeof(RectTransform), typeof(RawImage));
+        icon.transform.SetParent(parent, false);
+        var raw = icon.GetComponent<RawImage>();
+        raw.texture = Resources.Load<Texture2D>("WindgroveNotification");
+        // Use the supplied transparent image as-is; its artwork occupies the central square.
+        raw.uvRect = new Rect(.25f, .25f, .5f, .55f);
+        raw.raycastTarget = false;
+        Place(raw.rectTransform, new Vector2(1, 1), new Vector2(-5, -4), new Vector2(64, 64));
+        icon.SetActive(false);
+        return icon;
+    }
+
     public static GameObject AddFlashingBorder(Transform parent)
     {
         var go = new GameObject("White Discovery Border", typeof(RectTransform), typeof(Image), typeof(CanvasGroup));

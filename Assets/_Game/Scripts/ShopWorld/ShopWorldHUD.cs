@@ -60,6 +60,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
     private int bagSort, speciesFilter=-1, habitatSort, habitatSpeciesFilter=-1;
     private bool homeHabitatPage;
     private GameObject menuShortcut, indexShortcut, baitShortcut;
+    private GameObject abilityMenuBorder, abilityMenuBadge, abilityStatsBorder;
     private RawImage baitPicture;
     private Text baitQuantity, baitName;
     private ShopPreview baitPreview;
@@ -146,6 +147,15 @@ public sealed class ShopWorldHUD : MonoBehaviour
         if(travel.TravelError!=null) feedback.text=travel.TravelError;
         if(dirty && MenuOpen) { dirty=false; Refresh(false); }
     }
+    private void LateUpdate()
+    {
+        bool pending=progress!=null && !progress.ReadOnly && progress.Data.angler!=null &&
+            progress.Data.angler.AvailableAbilityPoints>0;
+        if(abilityMenuBorder!=null)abilityMenuBorder.SetActive(pending);
+        if(abilityMenuBadge!=null)abilityMenuBadge.SetActive(pending);
+        if(abilityStatsBorder!=null)abilityStatsBorder.SetActive(pending);
+    }
+
     public void Open(string destination)
     {
         if(root==null || travel.Traveling || (fishing!=null && fishing.IsFishPosing)) return;
@@ -185,6 +195,9 @@ public sealed class ShopWorldHUD : MonoBehaviour
         root.GetComponent<Image>().raycastTarget=false;
         Button menu=ButtonAt(root.transform,"MENU / TRAVEL",()=>Open("travel"));
         menuShortcut=menu.gameObject;
+        abilityMenuBorder=WindgroveNavigation.AddFlashingBorder(menu.transform);
+        abilityMenuBorder.SetActive(false);
+        abilityMenuBadge=WindgroveNavigation.AddNotificationBadge(menu.transform,"Ability Upgrade Alert");
         Rect(menu.GetComponent<RectTransform>(),new Vector2(1,1),new Vector2(1,1),new Vector2(1,1),new Vector2(-36,-32),new Vector2(380,92));
         poseShortcut=ButtonAt(root.transform,"POSE",()=>fishing.ToggleFishPose()).gameObject;
         Rect(poseShortcut.GetComponent<RectTransform>(),Vector2.one,Vector2.one,Vector2.one,new Vector2(-36,-136),new Vector2(380,76));
@@ -263,6 +276,11 @@ public sealed class ShopWorldHUD : MonoBehaviour
             label.color=i==0?new Color(1f,.87f,.22f):new Color(.76f,.95f,1f);
             var arrow=Label(b.transform,"›",32,label.color);arrow.alignment=TextAnchor.MiddleCenter;
             Anchor(arrow.rectTransform,.90f,0,1,1,0,0,-6,0);
+            if(tab=="stats")
+            {
+                abilityStatsBorder=WindgroveNavigation.AddFlashingBorder(b.transform);
+                abilityStatsBorder.SetActive(false);
+            }
         }
         GameObject viewport=Panel("ScrollViewport",modal.transform,new Color(0,0,0,0.1f));
         var vr=viewport.GetComponent<RectTransform>(); Anchor(vr,0,0,1,1,20,70,-30,-164);
