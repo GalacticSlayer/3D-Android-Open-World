@@ -13,6 +13,8 @@ using UnityEngine;
 public sealed class DeepOceanWaterRuntime : MonoBehaviour
 {
     private const float DeepWaveMultiplier = 4.5f;
+    // Windgrove waves are 30% taller than the fully developed deep-ocean waves.
+    private const float WindgroveWaveHeightBonus = 1.30f;
     private const float BrinebreakWaveMultiplier = DeepWaveMultiplier * .90f;
     private const float DeepWaveSpeedMultiplier = 1.35f;
     private const float DeepAlpha = 0.82f;
@@ -35,7 +37,7 @@ public sealed class DeepOceanWaterRuntime : MonoBehaviour
     private float baseSpeed1, baseSpeed2, baseSpeed3;
     private Color baseShallowColor, baseDeepColor;
     private float baseAlpha, baseSmoothness, baseFoamStrength, baseSpecularStrength;
-    private float roughBlend, darkBlend, brinebreakMatteBlend;
+    private float roughBlend, windgroveBlend, darkBlend, brinebreakMatteBlend;
     private bool cached;
 
     public float VisibilityBlend => darkBlend;
@@ -82,6 +84,7 @@ public sealed class DeepOceanWaterRuntime : MonoBehaviour
         IslandExpansionWorld expansion = IslandExpansionWorld.Active;
         float targetDark = 0f;
         float targetRough = 0f;
+        float targetWindgrove = 0f;
         float targetBrinebreakMatte = 0f;
         WaterDepth = 0f;
 
@@ -100,7 +103,13 @@ public sealed class DeepOceanWaterRuntime : MonoBehaviour
             // Rough-water progression is specifically an outer-ocean effect. At
             // the shelf edge it starts at normal ocean strength and builds over the
             // next ~180 m, avoiding the previous instant wave jump.
-            if (biome == 1 && BrinebreakRockRegion.HasRocks)
+            if (biome == WindgroveShoalZone.BiomeId)
+            {
+                // Start from the same peak height as Deep Ocean, then add 30%.
+                targetRough = 1f;
+                targetWindgrove = 1f;
+            }
+            else if (biome == 1 && BrinebreakRockRegion.HasRocks)
                 targetRough = Mathf.InverseLerp(1f, DeepWaveMultiplier, BrinebreakWaveMultiplier);
             else if (biome == 2)
             {
@@ -110,6 +119,7 @@ public sealed class DeepOceanWaterRuntime : MonoBehaviour
         }
 
         roughBlend = Mathf.MoveTowards(roughBlend, targetRough, Time.deltaTime * 0.35f);
+        windgroveBlend = Mathf.MoveTowards(windgroveBlend, targetWindgrove, Time.deltaTime * 0.35f);
         darkBlend = Mathf.MoveTowards(darkBlend, targetDark, Time.deltaTime * 0.45f);
         brinebreakMatteBlend = Mathf.MoveTowards(brinebreakMatteBlend, targetBrinebreakMatte, Time.deltaTime * 1.5f);
 
@@ -167,7 +177,8 @@ public sealed class DeepOceanWaterRuntime : MonoBehaviour
 
     private void ApplyWaveSimulation()
     {
-        float amplitudeScale = Mathf.Lerp(1f, DeepWaveMultiplier, roughBlend);
+        float amplitudeScale = Mathf.Lerp(1f, DeepWaveMultiplier, roughBlend) *
+            Mathf.Lerp(1f, WindgroveWaveHeightBonus, windgroveBlend);
         float speedScale = Mathf.Lerp(1f, DeepWaveSpeedMultiplier, roughBlend);
         amplitude1Field.SetValue(ocean, baseAmplitude1 * amplitudeScale);
         amplitude2Field.SetValue(ocean, baseAmplitude2 * amplitudeScale);
@@ -182,6 +193,7 @@ public sealed class DeepOceanWaterRuntime : MonoBehaviour
         WaterDepth = 0f;
         darkBlend = 0f;
         roughBlend = 0f;
+        windgroveBlend = 0f;
         brinebreakMatteBlend = 0f;
 
         if (!cached || ocean == null) return;
