@@ -26,7 +26,6 @@ public class UnderwaterVisuals : MonoBehaviour
     private static readonly Color DeepFogColor = new Color(0.025f, 0.19f, 0.27f, 1f);
 
     private Camera viewCamera;
-    private DeepOceanWaterRuntime deepWater;
     private UnderwaterFogPass fogPass;
     private Material fogMaterial;
     private float originalFarClip;
@@ -67,28 +66,48 @@ public class UnderwaterVisuals : MonoBehaviour
     {
         if (camera != viewCamera) return;
         RestoreRendering();
+        // Third person temporarily moves the aiming camera only for rendering.
+        // Explicit preparation removes dependency on event subscription order.
+        FishingThirdPersonView.PrepareViewingCamera(camera);
         ResolveWater();
 
         // The render pass may run for a partly wet near plane. Its shader decides
         // wet/dry per pixel; this flag only skips work for a completely dry view.
         float margin = waterContact ? SurfaceMargin + 0.03f : SurfaceMargin;
         waterContact = TouchesWater(camera.transform.position, margin);
-        bool fullySubmerged = TouchesWater(camera.transform.position, -SurfaceMargin);
+        bool fullySubmerged = IsStrictlySubmerged(camera.transform.position);
         camera.CalculateFrustumCorners(new Rect(0f, 0f, 1f, 1f), camera.nearClipPlane,
             Camera.MonoOrStereoscopicEye.Mono, nearCorners);
         for (int i = 0; i < nearCorners.Length; i++)
         {
             Vector3 point = camera.transform.position + camera.transform.TransformDirection(nearCorners[i]);
             waterContact |= TouchesWater(point, margin);
-            fullySubmerged &= TouchesWater(point, -SurfaceMargin);
+            fullySubmerged &= IsStrictlySubmerged(point);
         }
 
         // A wave crest can pass through the middle while all four corners are dry.
         Vector3 center = camera.transform.position + camera.transform.forward * camera.nearClipPlane;
         waterContact |= TouchesWater(center, margin);
-        fullySubmerged &= TouchesWater(center, -SurfaceMargin);
+        fullySubmerged &= IsStrictlySubmerged(center);
+        // Include edge midpoints, particularly the top edge between the corners.
+        // Frustum-corner order is bottom-left, top-left, top-right, bottom-right.
+        for (int i = 0; i < nearCorners.Length; i++)
+        {
+            Vector3 midpoint = (nearCorners[i] + nearCorners[(i + 1) % nearCorners.Length]) * 0.5f;
+            Vector3 point = camera.transform.position + camera.transform.TransformDirection(midpoint);
+            waterContact |= TouchesWater(point, margin);
+            fullySubmerged &= IsStrictlySubmerged(point);
+        }
 
-        float depthBlend = deepWater != null ? Mathf.Clamp01(deepWater.VisibilityBlend) : 0f;
+        // Match the existing deep-water palette, sampled beneath the viewing
+        // camera rather than DeepOceanWaterRuntime's player-based wave driver.
+        var expansion = IslandExpansionWorld.Active;
+        float depthBlend = 0f;
+        if (oceanWater != null && expansion != null && expansion.Ready)
+        {
+            float waterDepth = Mathf.Max(0f, oceanWater.BaseWaterLevel - expansion.Height(camera.transform.position));
+            depthBlend = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(3.5f, 32f, waterDepth));
+        }
         deepVisualBlend = Mathf.MoveTowards(deepVisualBlend, depthBlend, transitionSpeed * Time.deltaTime);
         // A full-screen UI tint also colors the sky and emerged geometry. The depth
         // pass now supplies the tint only to submerged pixels instead.
@@ -155,6 +174,14 @@ public class UnderwaterVisuals : MonoBehaviour
         if (renderingUnderwater && fogPass != null) renderer.EnqueuePass(fogPass);
     }
 
+    private bool IsStrictlySubmerged(Vector3 point)
+    {
+        // No base-plane bridge or overlap here: they are only for the visual fade.
+        // The render cap requires the actual wave surface above every sample.
+        return oceanWater != null && ShopWaterVolume.TrySurface(point, oceanWater, out float surface)
+            && point.y < surface - SurfaceMargin;
+    }
+
     private bool TouchesWater(Vector3 point, float margin)
     {
         if (oceanWater == null || !ShopWaterVolume.TrySurface(point, oceanWater, out float surface)) return false;
@@ -174,13 +201,11 @@ public class UnderwaterVisuals : MonoBehaviour
         distantOcean = null;
         oceanWater = water;
         underwaterOverlay = overlay;
-        deepWater = oceanWater != null ? oceanWater.GetComponent<DeepOceanWaterRuntime>() : null;
     }
 
     private void ResolveWater()
     {
         if (oceanWater == null) oceanWater = FindFirstObjectByType<OceanWater>();
-        if (deepWater == null && oceanWater != null) deepWater = oceanWater.GetComponent<DeepOceanWaterRuntime>();
         if (distantOcean == null && oceanWater != null) distantOcean = oceanWater.GetComponent<DistantOceanRuntime>();
     }
 

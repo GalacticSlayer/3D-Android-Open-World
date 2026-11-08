@@ -218,6 +218,14 @@ public sealed class FishingThirdPersonView : MonoBehaviour
         position = pivot + offset.normalized * distance;
     }
 
+    // Camera effects must sample the displayed eye even if their render callback
+    // was subscribed before this component. BeginRender is idempotent per render.
+    public static void PrepareViewingCamera(Camera camera)
+    {
+        var perspective = camera != null ? camera.GetComponentInParent<FishingThirdPersonView>() : null;
+        if (perspective != null && perspective.isActiveAndEnabled) perspective.BeginRender(camera);
+    }
+
     private void BeginSRP(ScriptableRenderContext context, Camera camera) => BeginRender(camera);
     private void EndSRP(ScriptableRenderContext context, Camera camera) { if (camera == view) RestoreRenderPose(); }
     private void BeginBuiltin(Camera camera) { if (GraphicsSettings.currentRenderPipeline == null) BeginRender(camera); }
