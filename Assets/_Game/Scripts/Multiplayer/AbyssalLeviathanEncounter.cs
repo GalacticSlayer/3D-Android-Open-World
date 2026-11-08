@@ -204,7 +204,7 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
         if (active && inWorld && !NavigationArrived)
         {
             Vector3 offset = transform.position - RegionCenter; offset.y = 0;
-            if (offset.magnitude <= CatchRegionRadius + 100f) NavigationArrived = true;
+            if (offset.sqrMagnitude <= 5f * 5f) NavigationArrived = true;
         }
         hudRoot.SetActive(active && NavigationArrived && inWorld && !ShopWorldHUD.MenuOpen &&
             (fishing==null || (!fishing.HasHookedFish && !fishing.IsFishPosing)));
@@ -306,6 +306,10 @@ public sealed class AbyssalLeviathanEncounter : MonoBehaviour
         healthTitle=Label(hudRoot.transform,25);
         healthTitle.text="ABYSSAL LEVIATHAN";healthTitle.fontStyle=FontStyle.Bold;
         healthTitle.color=new Color(1f,.22f,.26f);
+        var titleOutline=healthTitle.gameObject.AddComponent<Outline>();
+        titleOutline.effectColor=Color.black;
+        titleOutline.effectDistance=new Vector2(1.5f,-1.5f);
+        titleOutline.useGraphicAlpha=true;
         healthTitle.rectTransform.anchorMin=new Vector2(0,.60f);
         var track=Panel(hudRoot.transform,"Health track",new Vector2(806,48),60,Color.white);
         FishingHudTheme.Panel(track,3);

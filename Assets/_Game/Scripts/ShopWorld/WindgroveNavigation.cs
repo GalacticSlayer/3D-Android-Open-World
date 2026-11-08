@@ -11,6 +11,7 @@ public sealed class WindgroveNavigation : MonoBehaviour
     private GameObject badge, surface, announcement, menu;
     private RectTransform strip, marker;
     private Text distance, destinationTitle;
+    private Outline bossTitleOutline;
     private GameObject shortcutBorder;
     private AbyssalLeviathanEncounter boss;
     private FishingHUD fishingHud;
@@ -80,6 +81,7 @@ public sealed class WindgroveNavigation : MonoBehaviour
         surface.SetActive(show);
         if (fishingHud != null) fishingHud.SetNavigationCovered(show);
         if (!show) return;
+        bossTitleOutline.enabled = guideBoss;
         destinationTitle.text = guideBoss ? "ABYSSAL LEVIATHAN" : "WINDGROVE SHOAL";
         destinationTitle.color = guideBoss ? new Color(1f,.16f,.20f) : FishingHudTheme.Cyan;
         announcement.SetActive(!guideBoss && Time.unscaledTime < announcementUntil);
@@ -105,7 +107,7 @@ public sealed class WindgroveNavigation : MonoBehaviour
         float relative = Mathf.DeltaAngle(yaw, bearing);
         marker.anchoredPosition = new Vector2(Mathf.Clamp(relative, -78f, 78f) / 180f * width, 0);
         string arrow = relative < -78f ? "◀ " : relative > 78f ? "▶ " : "";
-        float meters = guideBoss ? Mathf.Max(0, offset.magnitude - AbyssalLeviathanEncounter.CatchRegionRadius) : offset.magnitude;
+        float meters = offset.magnitude;
         distance.text = arrow + Mathf.RoundToInt(meters) + "m";
     }
 
@@ -121,6 +123,11 @@ public sealed class WindgroveNavigation : MonoBehaviour
         layout.offsetMax = new Vector2(0, -26);
         var title = Panel(surface.transform, "Destination", new Vector2(.5f, 1), new Vector2(0, -28), new Vector2(320, 56));
         destinationTitle = Label(title, "WINDGROVE SHOAL", 25, FishingHudTheme.Cyan, Vector2.zero, new Vector2(310, 50));
+        bossTitleOutline = destinationTitle.gameObject.AddComponent<Outline>();
+        bossTitleOutline.effectColor = Color.black;
+        bossTitleOutline.effectDistance = new Vector2(1.5f, -1.5f);
+        bossTitleOutline.useGraphicAlpha = true;
+        bossTitleOutline.enabled = false;
         Line(surface.transform, new Vector2(.15f, 1), new Vector2(0, -28), new Vector2(120, 2), FishingHudTheme.Cyan);
         Line(surface.transform, new Vector2(.85f, 1), new Vector2(0, -28), new Vector2(120, 2), FishingHudTheme.Cyan);
         strip = Panel(surface.transform, "Compass", new Vector2(.5f, 1), new Vector2(0, -100), new Vector2(0, 74));
