@@ -152,6 +152,10 @@ public static class SuncrestMainRockCollision
         return count < Overlaps.Length;
     }
 
+    public static bool IsRock(Collider collider) =>
+        (Ensure() && collider != null && RockSet.Contains(collider)) ||
+        SuncrestPlacedRockCollision.IsRock(collider);
+
     public static bool AmbientPointClear(Vector3 p, float r)
     {
         return PointClear(p,r) && SuncrestPlacedRockCollision.AmbientPointClear(p,r);
@@ -199,3 +203,4 @@ public static class SuncrestMainRockCollision
         return true;
     }
 }
+

@@ -201,7 +201,7 @@ public sealed class ShopProgress : MonoBehaviour
         CanManage && Commit(Data.PlaceAquarium(key,localX,localY,localZ,yaw));
     public bool StoreAquarium(string key) =>
         CanManage && Commit(Data.StoreAquarium(key));
-    public bool Sell(CaughtFishRecord fish) => CanTrade && ShopDimensionManager.Instance.Near("market") && Commit(Data.Sell(fish,FishCatalog.GetSellValue(fish.speciesId,fish.weightKg,fish.biomeId)));
+    public bool Sell(CaughtFishRecord fish) => CanTrade && ShopDimensionManager.Instance.Near("market") && Commit(Data.Sell(fish,FishCatalog.GetSellValue(fish.speciesId,fish.weightKg,fish.biomeId,fish.offshoreNapoleon)));
     public bool CanManage => !ReadOnly && ShopDimensionManager.Instance!=null &&
         ShopDimensionManager.Instance.InHome &&
         (HomeDirectoryClient.Instance==null || !HomeDirectoryClient.Instance.IsVisiting);
@@ -230,4 +230,5 @@ public sealed class ShopProgress : MonoBehaviour
         return id;
     }
 }
+
 

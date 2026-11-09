@@ -9,6 +9,8 @@ public class CaughtFishRecord
     public float weightKg;
     // Save-safe biome ID: null/empty on old catches, which retain global value.
     public string biomeId;
+    // Frozen catch origin, not inferred from weight after charm/depth modifiers.
+    public bool offshoreNapoleon;
     public long caughtUtcTicks;
 }
 
@@ -45,7 +47,7 @@ public class FishingInventory : MonoBehaviour
 
     public int AddFish(
         int speciesId,
-        float weightKg, bool countAsCatch=false,string biomeId=null)
+        float weightKg, bool countAsCatch=false,string biomeId=null,bool offshoreNapoleon=false)
     {
         if(IsFull || (shop!=null && shop.ReadOnly)) return -1;
         CaughtFishRecord record =
@@ -54,6 +56,7 @@ public class FishingInventory : MonoBehaviour
                 speciesId = FishCatalog.CanonicalId(speciesId),
                 weightKg = weightKg,
                 biomeId = biomeId,
+                offshoreNapoleon = offshoreNapoleon,
                 caughtUtcTicks =
                     DateTime.UtcNow.Ticks
             };
@@ -152,3 +155,4 @@ public class FishingInventory : MonoBehaviour
         Changed?.Invoke();
     }
 }
+

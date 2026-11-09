@@ -661,7 +661,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
         {
             case 1:fish=fish.OrderByDescending(f=>f.weightKg).ThenByDescending(f=>f.caughtUtcTicks);break;
             case 2:fish=fish.OrderBy(f=>f.weightKg).ThenByDescending(f=>f.caughtUtcTicks);break;
-            case 3:fish=fish.OrderByDescending(f=>FishCatalog.GetSellValue(f.speciesId,f.weightKg,f.biomeId));break;
+            case 3:fish=fish.OrderByDescending(f=>FishCatalog.GetSellValue(f.speciesId,f.weightKg,f.biomeId,f.offshoreNapoleon));break;
             case 4:fish=fish.OrderBy(f=>FishCatalog.Get(f.speciesId).Name).ThenByDescending(f=>f.weightKg);break;
             default:fish=fish.OrderByDescending(f=>f.caughtUtcTicks);break;
         }
@@ -673,7 +673,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
         if(progress.Data.bag.Count==0) {Row("No catches yet","Your infinite worms are always available. Travel to the island and cast.","TRAVEL",()=>Open("travel"));return;}
         foreach(var record in SortedBagFish())
         {
-            var f=record;Row(FishCatalog.Get(f.speciesId).Name,$"{FishCatalog.FormatWeight(f.weightKg)} / {ShopCatalog.FishLength(f.speciesId,f.weightKg):0.00} m / value {FishCatalog.GetSellValue(f.speciesId,f.weightKg,f.biomeId)} coins",fishing.IsHolding(f)?"PUT AWAY":"HOLD",()=>{Close();int index=progress.Data.bag.IndexOf(f);if(index>=0)fishing.HoldFish(index);},fish:f);
+            var f=record;Row(FishCatalog.Get(f.speciesId).Name,$"{FishCatalog.FormatWeight(f.weightKg)} / {ShopCatalog.FishLength(f.speciesId,f.weightKg):0.00} m / value {FishCatalog.GetSellValue(f.speciesId,f.weightKg,f.biomeId,f.offshoreNapoleon)} coins",fishing.IsHolding(f)?"PUT AWAY":"HOLD",()=>{Close();int index=progress.Data.bag.IndexOf(f);if(index>=0)fishing.HoldFish(index);},fish:f);
         }
     }
     private void EquipmentPage(bool shop)
@@ -741,19 +741,19 @@ public sealed class ShopWorldHUD : MonoBehaviour
         if(BagSortAndFilterControls())return;
         foreach(var fish in SortedBagFish().ToList())
         {
-            var f=fish; int value=FishCatalog.GetSellValue(f.speciesId,f.weightKg,f.biomeId);
+            var f=fish; int value=FishCatalog.GetSellValue(f.speciesId,f.weightKg,f.biomeId,f.offshoreNapoleon);
             Row(FishCatalog.Get(f.speciesId).Name,$"{FishCatalog.FormatWeight(f.weightKg)} / {ShopCatalog.FishLength(f.speciesId,f.weightKg):0.00} m",$"SELL {value}",()=>{bool sold=progress.Sell(f);if(sold)PlaySaleSound();Result(sold,$"Sold for {value} coins.");},!progress.ReadOnly,fish:f);
         }
     }
     private void SellConfirmation()
     {
-        long total=0; foreach(var f in progress.Data.bag) total+=FishCatalog.GetSellValue(f.speciesId,f.weightKg,f.biomeId);
+        long total=0; foreach(var f in progress.Data.bag) total+=FishCatalog.GetSellValue(f.speciesId,f.weightKg,f.biomeId,f.offshoreNapoleon);
         Row($"Sell {progress.Data.bag.Count} fish for {total:N0} coins?","This empties your fish bag. Habitat residents stay where they are.","CONFIRM SALE",()=>
         {
             if(!travel.Near("market") || progress.ReadOnly) return;
             bool soldAny=false;
             foreach(var f in new List<CaughtFishRecord>(progress.Data.bag))
-                soldAny |= progress.Data.Sell(f,FishCatalog.GetSellValue(f.speciesId,f.weightKg,f.biomeId));
+                soldAny |= progress.Data.Sell(f,FishCatalog.GetSellValue(f.speciesId,f.weightKg,f.biomeId,f.offshoreNapoleon));
             progress.Save(); if(soldAny)PlaySaleSound(); message="Fish sold."; Open("market");
         },!progress.ReadOnly && total<=int.MaxValue-progress.Data.coins);
         Row("Keep your catches","Return to individual fish sales.","BACK",()=>Open("market"));
@@ -939,7 +939,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
         {
             case 1:fish=fish.OrderByDescending(f=>f.weightKg).ThenByDescending(f=>f.caughtUtcTicks);break;
             case 2:fish=fish.OrderBy(f=>f.weightKg).ThenByDescending(f=>f.caughtUtcTicks);break;
-            case 3:fish=fish.OrderByDescending(f=>FishCatalog.GetSellValue(f.speciesId,f.weightKg,f.biomeId));break;
+            case 3:fish=fish.OrderByDescending(f=>FishCatalog.GetSellValue(f.speciesId,f.weightKg,f.biomeId,f.offshoreNapoleon));break;
             case 4:fish=fish.OrderBy(f=>FishCatalog.Get(f.speciesId).Name).ThenByDescending(f=>f.weightKg);break;
             default:fish=fish.OrderByDescending(f=>f.caughtUtcTicks);break;
         }
@@ -1114,4 +1114,5 @@ public sealed class ShopWorldHUD : MonoBehaviour
     private static void Rect(RectTransform r,Vector2 min,Vector2 max,Vector2 pivot,Vector2 pos,Vector2 size) {r.anchorMin=min;r.anchorMax=max;r.pivot=pivot;r.sizeDelta=size;r.anchoredPosition=pos;}
     private static void Anchor(RectTransform r,float x0,float y0,float x1,float y1,float l,float b,float right,float top) { r.anchorMin=new Vector2(x0,y0);r.anchorMax=new Vector2(x1,y1);r.offsetMin=new Vector2(l,b);r.offsetMax=new Vector2(right,top); }
 }
+
 

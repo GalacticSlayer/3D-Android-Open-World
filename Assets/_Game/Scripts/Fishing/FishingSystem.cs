@@ -1071,6 +1071,7 @@ public class FishingSystem : MonoBehaviour
 
     private int activeLureVariant;
     private int fightBiome;
+    private bool hookedOffshoreNapoleon;
     private int RollBaitSpecies() => ReefCatalog.Roll(Random.value,activeBait,fightBiome);
 
     private void BeginLureRetrieve()
@@ -1131,6 +1132,18 @@ public class FishingSystem : MonoBehaviour
             {
                 var range=FishCatalog.Get(hookedSpeciesId);
                 hookedWeightKg=Mathf.Lerp(ReefCatalog.MinimumWeight(hookedSpeciesId,1),ReefCatalog.MaximumWeight(hookedSpeciesId,1),Mathf.InverseLerp(range.MinWeightKg,range.MaxWeightKg,hookedWeightKg));
+            }
+            // Select once at the actual bite position, after the legacy biome
+            // remap so it cannot clamp the larger roll back to the inshore range.
+            hookedOffshoreNapoleon=false;
+            bool offshoreSpecies=(fightBiome==1 && hookedSpeciesId==FishCatalog.RoughtailStingrayId) ||
+                (fightBiome==0 && hookedSpeciesId==FishCatalog.NapoleonWrasseId);
+            if(!pondCast && offshoreSpecies && WorldTerrain.AtLeastThirtyMetresFromShore(castPoint,oceanWater))
+            {
+                hookedOffshoreNapoleon=hookedSpeciesId==FishCatalog.NapoleonWrasseId;
+                hookedWeightKg=hookedOffshoreNapoleon
+                    ? FishingTuning.WeightAtPercentile(35f,160f,Random.value)
+                    : FishingTuning.WeightAtPercentile(85f,360f,Random.value);
             }
             if(pondCast)
             {
@@ -1220,6 +1233,12 @@ public class FishingSystem : MonoBehaviour
         // The quality runtime used to shrink adults after variant selection.
         var castQuality = GetComponent<FishingCastQualityRuntime>();
         if (castQuality != null && hookedSpeciesId!=FishCatalog.AbyssalLeviathanId) castQuality.PrepareHookedFish();
+        if(hookedOffshoreNapoleon && hookedSpeciesId==FishCatalog.NapoleonWrasseId)
+        {
+            fishMaxHealth=Mathf.RoundToInt(FishingTuning.QuadraticByWeight(hookedWeightKg,35f,160f,25000f,60000f));
+            fishHealthPoints=fishMaxHealth;
+            fishHealth=1f;
+        }
         hookedSpeciesId=FishCatalog.ResolveSizeVariant(hookedSpeciesId,hookedWeightKg);
         damageFraction=0;pendingDamage=0;damageDisplayTimer=0;
         pendingDamageHardened=false;
@@ -1672,7 +1691,7 @@ public class FishingSystem : MonoBehaviour
         int newIndex =
             inventory.AddFish(
                 hookedSpeciesId,
-                hookedWeightKg, true, pondCast?null:FishingTuning.BiomeId(fightBiome)
+                hookedWeightKg, true, pondCast?null:FishingTuning.BiomeId(fightBiome),hookedOffshoreNapoleon
             );
 
         if(newIndex<0) { FailFishing("FISH BAG FULL (50). Fish released. Sell or house fish to make room."); return; }
@@ -3006,6 +3025,7 @@ public class FishingSystem : MonoBehaviour
 
     private void ResetLine()
     {
+        hookedOffshoreNapoleon=false;
         GetComponent<AbyssalLeviathanEncounter>()?.Release();
         bossClaimPending=bossLandingPending=bossLandingApproved=false;
         skillStunUntil = 0f;
@@ -4354,6 +4374,7 @@ public class FishingSystem : MonoBehaviour
         return material;
     }
 }
+
 
 
 

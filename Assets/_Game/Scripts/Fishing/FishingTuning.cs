@@ -182,7 +182,7 @@ public static class FishingTuning
         return "Record Class Specimen";
     }
 
-    private static float WeightAtPercentile(float minimum,float maximum,float percentile)
+    public static float WeightAtPercentile(float minimum,float maximum,float percentile)
     {
         float range=maximum-minimum;
         if(range<=0f)return minimum;
@@ -624,4 +624,5 @@ public static class FishingTuning
         return false;
     }
 }
+
 

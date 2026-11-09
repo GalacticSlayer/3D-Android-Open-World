@@ -184,8 +184,10 @@ public static class FishCatalog
 
     // biomeId is frozen when a fish is caught so selling it from another
     // location never changes its catch reward. Older saves default to global.
-    public static int GetSellValue(int speciesId,float weightKg,string biomeId=null)
+    public static int GetSellValue(int speciesId,float weightKg,string biomeId=null,bool offshoreNapoleon=false)
     {
+        if(offshoreNapoleon && CanonicalId(speciesId)==NapoleonWrasseId)
+            return Mathf.RoundToInt(FishingTuning.QuadraticByWeight(weightKg,35f,160f,15000f,25000f));
         // Boss reward is a fixed amount, not scaled by ordinary CSV, weight or biome.
         if(CanonicalId(speciesId)==AbyssalLeviathanId)return AbyssalLeviathanSellCoins;
         int configured;
@@ -207,5 +209,6 @@ public static class FishCatalog
 
     public static float GetVisualScale(int speciesId,float weightKg)=>FishSizeTable.LengthMetres(speciesId,weightKg);
 }
+
 
 

@@ -590,7 +590,7 @@ public class EconomyHUD : MonoBehaviour
             int price =
                 FishCatalog.GetSellValue(
                     record.speciesId,
-                    record.weightKg
+                    record.weightKg, record.biomeId, record.offshoreNapoleon
                 );
 
             int captured =
@@ -641,7 +641,7 @@ public class EconomyHUD : MonoBehaviour
         int value =
             FishCatalog.GetSellValue(
                 record.speciesId,
-                record.weightKg
+                record.weightKg, record.biomeId, record.offshoreNapoleon
             );
 
         CaughtFishRecord removed =
@@ -675,7 +675,7 @@ public class EconomyHUD : MonoBehaviour
             total +=
                 FishCatalog.GetSellValue(
                     record.speciesId,
-                    record.weightKg
+                    record.weightKg, record.biomeId, record.offshoreNapoleon
                 );
 
             inventory.RemoveFishAt(i);
@@ -1219,3 +1219,4 @@ public class EconomyHUD : MonoBehaviour
             Vector2.zero;
     }
 }
+
