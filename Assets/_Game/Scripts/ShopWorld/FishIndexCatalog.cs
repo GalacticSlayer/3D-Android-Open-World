@@ -12,11 +12,12 @@ public static class FishIndexCatalog
         new[] { 0,9,10,3,13,8,5,15,19 },
         new[] { 0,9,3,13,8,5 },
         new[] { 16,30,1,17,21,38,22,23,18 },
-        new[] { FishCatalog.BlackMarlinId }
+        new[] { FishCatalog.BlackMarlinId, FishCatalog.MahiMahiId }
     };
 
     private static readonly int[][] VariantFamilies = {
         new[] { FishCatalog.MakoSharkId, FishCatalog.BattleScarredMakoSharkId },
+        new[] { FishCatalog.MahiMahiId, FishCatalog.BlueMahiMahiId },
         new[] { FishCatalog.EmperorAngelfishId, FishCatalog.JuvenileEmperorAngelfishId }
     };
 
@@ -95,9 +96,14 @@ public static class FishIndexCatalog
         if(species==FishCatalog.BattleScarredMakoSharkId)
             return FishingTuning.TryGetChance(FishCatalog.MakoSharkId,key,biome,out float combinedOdds)
                 ?combinedOdds*FishCatalog.BattleScarredMakoVariantChance:-1f;
+        if(species==FishCatalog.BlueMahiMahiId)
+            return FishingTuning.TryGetChance(FishCatalog.MahiMahiId,key,biome,out float combinedMahiOdds)
+                ?combinedMahiOdds*FishCatalog.BlueMahiMahiVariantChance:-1f;
         if(!FishingTuning.TryGetChance(species,key,biome,out float odds))return -1f;
-        return species==FishCatalog.MakoSharkId
-            ?odds*(1f-FishCatalog.BattleScarredMakoVariantChance):odds;
+        if(species==FishCatalog.MakoSharkId)
+            return odds*(1f-FishCatalog.BattleScarredMakoVariantChance);
+        return species==FishCatalog.MahiMahiId
+            ?odds*(1f-FishCatalog.BlueMahiMahiVariantChance):odds;
     }
 
     public static List<BaitOption> PreferredOptions(int species,int biome,bool discovered)

@@ -49,7 +49,9 @@ public static class FishSizeTable
         BlueTangCurve(), // Paracanthurus hepatus
         DussumieriTangCurve(), // Acanthurus dussumieri
         GameplayCurve(8f,70), // ID 43 Abyssal Leviathan uses its dedicated override
-        GameplayCurve(7.46f,93) // ID 44 Black marlin: ~60 kg at 2 m, ~750 kg at 4.65 m
+        GameplayCurve(7.46f,93), // ID 44 Black marlin: ~60 kg at 2 m, ~750 kg at 4.65 m
+        GameplayCurve(4.32f,43), // ID 45 Mahi Mahi: ~4.32 kg at 1 m, ~40 kg at 2.1 m
+        GameplayCurve(4.32f,43) // ID 46 blue color variant: identical length for identical weight
     };
 
     // Edwards et al. (2011), Rodrigues lagoon measurements, n=17 (14-27 cm TL).

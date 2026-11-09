@@ -68,7 +68,16 @@ public static class FishCatalog
     public const int DussumieriTangId=42;
     public const int AbyssalLeviathanId=43;
     public const int AbyssalLeviathanSellCoins=200000;
-    public const int BlackMarlinId=44; // Stable new species ID; never reassign saved catch IDs.
+    public const int BlackMarlinId=44; // Stable IDs; never reassign saved catch IDs.
+    public const int MahiMahiId=45;
+    public const int BlueMahiMahiId=46;
+    // A single Mahi Mahi bite is split 90/10 without changing overall bait odds.
+    public const float BlueMahiMahiVariantChance=.10f;
+    public static int RollMahiMahiVariant(int speciesId,float random01)
+    {
+        return speciesId==MahiMahiId && random01<BlueMahiMahiVariantChance
+            ?BlueMahiMahiId:speciesId;
+    }
     // Positive Unity yaw is clockwise viewed from above. Keep pitch/roll and mouth pinning unchanged.
     public static float HeldYaw(int id)=>id==RoughtailStingrayId || id==LeopardStingrayId || id==WhiteSkateId ? 16f : IsFlatfish(id) ? -4f : 86f;
     public static bool IsFlatfish(int id)=>id==WinterFlounderId || id==RoughtailStingrayId || id==LeopardStingrayId || id==WhiteSkateId;
@@ -121,11 +130,13 @@ public static class FishCatalog
         new FishSpeciesDefinition("Blue Tang",new Color(.03f,.2f,.9f),new Color(1f,.85f,.05f),0.02f,1f,0.42f,0f,40),
         new FishSpeciesDefinition("Dussumieri Tang",new Color(.3f,.45f,.55f),new Color(.95f,.8f,.1f),0.1f,5.5f,1.05f,0f,170),
         new FishSpeciesDefinition("Abyssal Leviathan",new Color(.04f,.1f,.16f),Color.cyan,400f,440f,2.1f,0f,AbyssalLeviathanSellCoins),
-        new FishSpeciesDefinition("Black Marlin",new Color(.04f,.09f,.18f),new Color(.28f,.57f,.72f),60f,750f,2.20f,0f,2600)
+        new FishSpeciesDefinition("Black Marlin",new Color(.04f,.09f,.18f),new Color(.28f,.57f,.72f),60f,750f,2.20f,0f,2600),
+        new FishSpeciesDefinition("Mahi Mahi",new Color(.11f,.72f,.48f),new Color(.98f,.82f,.10f),2f,40f,2.20f,0f,2600),
+        new FishSpeciesDefinition("Blue Mahi Mahi",new Color(.04f,.40f,.94f),new Color(.65f,.87f,1f),2f,40f,2.20f,0f,2600)
     };
 
     public static int Count=>Species.Length;
-    public static readonly int[] ActiveIds={0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44};
+    public static readonly int[] ActiveIds={0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46};
     public static int CanonicalId(int id)=>id==4?YellowfinTunaId:id;
 
     // Tournament identity is deliberately separate from save/render identity.
@@ -134,6 +145,7 @@ public static class FishCatalog
         switch(CanonicalId(id))
         {
             case BattleScarredMakoSharkId:return MakoSharkId;
+            case BlueMahiMahiId:return MahiMahiId;
             case GreatBarracudaId:return BlackfinBarracudaId;
             case GiantTrevallyId:return BluefinTrevallyId;
             case LeopardStingrayId:return RoughtailStingrayId;

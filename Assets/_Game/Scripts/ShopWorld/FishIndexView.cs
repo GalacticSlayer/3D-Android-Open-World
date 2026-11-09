@@ -180,6 +180,7 @@ public sealed class FishIndexView : MonoBehaviour
         TextRow(known?"Preferred Lures & Baits":"Top 3 Lures & Baits",27,cyan,44,TextAnchor.MiddleLeft);
         bool emperorFamily=family==FishCatalog.EmperorAngelfishId;
         bool makoFamily=family==FishCatalog.MakoSharkId;
+        bool mahiFamily=family==FishCatalog.MahiMahiId;
         int baitSpecies=emperorFamily?FishCatalog.EmperorAngelfishId:variant;
         if(!known)
             TextRow("Catch and register this fish to reveal its percentages.",21,muted,60);
@@ -189,6 +190,8 @@ public sealed class FishIndexView : MonoBehaviour
                 TextRow("Juveniles are the smallest 30% of the 10–50 cm range (22 cm or less).",18,muted,60,TextAnchor.MiddleLeft);
             if(makoFamily)
                 TextRow("Mako sharks: 80% normal, 20% battle-scarred. The overall bite rate stays the same.",18,muted,60,TextAnchor.MiddleLeft);
+            if(mahiFamily)
+                TextRow("Mahi Mahi: 90% normal, 10% blue. Worms only in Windgrove Shoal.",18,muted,60,TextAnchor.MiddleLeft);
             TextRow((emperorFamily?"Combined chance for both variants in ":"Chance in ")+ReefCatalog.Zones[biome].name+" when a fish bites.",18,muted,emperorFamily?60:46,TextAnchor.MiddleLeft);
         }
         var options=FishIndexCatalog.PreferredOptions(baitSpecies,biome,known);

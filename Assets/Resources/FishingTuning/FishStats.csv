@@ -45,4 +45,5 @@ speciesId,speciesName,minWeightKg,maxWeightKg,minHealth,maxHealth,minCostCoins,m
 41,Blue Tang,0.02,1,115,342,40,300,3.152
 42,Dussumieri Tang,0.1,5.5,330,1100,170,1300,3.5
 44,Black Marlin,60,750,21500,36000,2600,28000,6.5
-
+45,Mahi Mahi,2,40,21500,36000,2600,28000,6.5
+46,Blue Mahi Mahi,2,40,21500,36000,2600,28000,6.5

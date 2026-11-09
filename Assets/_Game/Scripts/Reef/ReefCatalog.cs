@@ -37,7 +37,7 @@ public static class ReefCatalog
         new Zone(SnapperIslandGeometry.Id,SnapperIslandGeometry.Name,"A dedicated snapper island directly south of Suncrest. Snappers, blackfin and great barracuda, and Blacktip Reef Sharks bite within 100 m of its three cave rocks. Land here to unlock travel.",false,
             new float[]{0,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,37,13,2,0,0,10,4,2}),
         new Zone(WindgroveShoalZone.Id,WindgroveShoalZone.Name,
-            "Remote wind-farm waters within 150 m of any of the nine turbines. Black Marlin live only here. Approach a turbine to unlock travel.",false,
+            "Remote wind-farm waters within 150 m of any turbine. Black Marlin and Mahi Mahi live only here. Approach a turbine to unlock travel.",false,
             new float[]{})
     };
 
@@ -77,9 +77,12 @@ public static class ReefCatalog
     {
         if (biome == WindgroveShoalZone.BiomeId)
         {
-            // Inherit the retired offshore-rig catch rules: only Black Marlin.
+            // If editable tuning is invalid, preserve Windgrove-only species
+            // and the worms-only Mahi Mahi rule. Variant selection is separate.
             var offshore = new float[FishCatalog.Count];
-            offshore[FishCatalog.BlackMarlinId] = 100f;
+            bool worms = bait==0 || bait==1;
+            offshore[FishCatalog.BlackMarlinId] = worms ? 40f : 100f;
+            if(worms)offshore[FishCatalog.MahiMahiId] = 60f;
             return offshore;
         }
         if(biome==SnapperBiomeId)
