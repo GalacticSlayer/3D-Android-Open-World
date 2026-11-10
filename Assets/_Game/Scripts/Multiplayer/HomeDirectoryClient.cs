@@ -28,6 +28,7 @@ public sealed class HomeDirectoryClient : MonoBehaviour
     [Serializable] public sealed class Reply
     {
         public bool ok,more;
+        [NonSerialized] public bool transportUnavailable;
         public string error,code,ownerKey,name,visibility;
         public int version,page,total,aquariums,fish;
         public long updatedAt;
@@ -74,6 +75,8 @@ public sealed class HomeDirectoryClient : MonoBehaviour
     private bool dirty=true,sending,visitEntered,wasAtOwnHome;
     private NetworkReachability lastReachability;
     private float nextSync, nextVisitPoll, retrySeconds=10f;
+    private float retryNotBefore;
+    private string lastOwnerFailure;
     // Aquarium/fish refresh must work independently of the optional live
     // avatar heartbeat. 2s /check requests are tiny; /get is only fetched
     // when the owner's published version actually changes.
@@ -177,7 +180,7 @@ public sealed class HomeDirectoryClient : MonoBehaviour
         {
             OwnerSyncStatus="Could not recover a Home from the saved owner key. "+
                 (resolved!=null?resolved.error:"Oracle unavailable.");
-            Debug.LogError("[HOME OWNER] "+OwnerSyncStatus);
+            LogOwnerFailure(resolved!=null && resolved.transportUnavailable);
             Changed?.Invoke();
             done(false);
         }
@@ -357,13 +360,14 @@ public sealed class HomeDirectoryClient : MonoBehaviour
             if(dirty && reachability!=NetworkReachability.NotReachable)
             {
                 nextSync=Time.unscaledTime;
+                retryNotBefore=0f;
                 retrySeconds=3f;
             }
         }
         // A damaged, read-only local save must NEVER overwrite a valid
         // previously published Home with the fallback empty ledger.
         if(progress!=null && !progress.ReadOnly && dirty && !sending &&
-           Time.unscaledTime>=nextSync)
+           Time.unscaledTime>=nextSync && Time.unscaledTime>=retryNotBefore)
             StartCoroutine(Synchronize());
         if(VisitingHome==null || travel==null)return;
         if(travel.InHome && !travel.Traveling)visitEntered=true;
@@ -395,8 +399,7 @@ public sealed class HomeDirectoryClient : MonoBehaviour
             OwnerSyncStatus="HOME OWNER KEY MISSING/INVALID for "+DisplayHomeCode+
                 ". Existing Home preserved; cloud upload blocked.";
             Status=OwnerSyncStatus;
-            Debug.LogError("[HOME OWNER] "+OwnerSyncStatus+
-                " Never uninstall/reset game data while recovering.");
+            LogOwnerFailure(false);
             Retry();yield break;
         }
         if(hasKey && !ValidHomeIdentity(OwnerCode,ownerKey))
@@ -416,6 +419,7 @@ public sealed class HomeDirectoryClient : MonoBehaviour
             {
                 Status=registered!=null?registered.error:"Home registration is unavailable.";
                 OwnerSyncStatus="HOME REGISTRATION FAILED: "+Status;
+                LogOwnerFailure(registered!=null && registered.transportUnavailable);
                 Retry();yield break;
             }
             ownerKey=registered.ownerKey;
@@ -459,8 +463,7 @@ public sealed class HomeDirectoryClient : MonoBehaviour
             OwnerSyncStatus="UPLOAD FAILED for "+DisplayHomeCode+": "+Status;
             // A stale Home can still be visited even though owner-only
             // writes fail. Log code and error, never the private owner key.
-            Debug.LogError("[HOME OWNER] "+OwnerSyncStatus+
-                ". Local fish and placement changes are still saved.");
+            LogOwnerFailure(answer!=null && answer.transportUnavailable);
             Retry();yield break;
         }
         lastUploaded=fingerprint;
@@ -473,16 +476,31 @@ public sealed class HomeDirectoryClient : MonoBehaviour
         BackUpVerifiedHomeIdentity();
         // A save during an in-flight upload remains pending.
         dirty=JsonUtility.ToJson(CurrentUpload())!=fingerprint;
-        retrySeconds=10f;sending=false;
+        retrySeconds=10f;retryNotBefore=0f;lastOwnerFailure=null;sending=false;
         Status="Home published • "+DisplayHomeCode;
         Changed?.Invoke();
         if(dirty)nextSync=Time.unscaledTime+
             (travel!=null && travel.InHome && !IsVisiting?0.1f:2.5f);
     }
+    private void LogOwnerFailure(bool transportUnavailable)
+    {
+        // A temporary outage is expected during offline/mobile play. Keep the
+        // cloud status visible, but do not reopen the development error console
+        // on every automatic retry. Genuine server rejections stay errors.
+        string failure=transportUnavailable?"transport unavailable":OwnerSyncStatus;
+        if(lastOwnerFailure==failure)return;
+        lastOwnerFailure=failure;
+        string message="[HOME OWNER] "+OwnerSyncStatus+
+            ". Local fish and placement changes are still saved; upload will retry automatically.";
+        if(transportUnavailable)Debug.LogWarning(message);
+        else Debug.LogError(message);
+    }
     private void Retry()
     {
         sending=false;dirty=true;
-        nextSync=Time.unscaledTime+retrySeconds;
+        retryNotBefore=Time.unscaledTime+retrySeconds;
+        nextSync=retryNotBefore;
+        // Save events may debounce nextSync, but cannot bypass this retry floor.
         // When the owner is standing in Home, recover quickly after mobile
         // connectivity returns. Outside Home keep the existing low-traffic
         // background retry behavior.
@@ -667,7 +685,9 @@ public sealed class HomeDirectoryClient : MonoBehaviour
                 try{answer=JsonUtility.FromJson<Reply>(request.downloadHandler.text);}
                 catch(ArgumentException){}
             if(answer==null || (request.result!=UnityWebRequest.Result.Success && answer.ok))
-                answer=new Reply{ok=false,error="Cannot contact the Home directory server."};
+                answer=new Reply{ok=false,transportUnavailable=true,
+                    error="Cannot contact the Home directory server ("+request.result+
+                        (request.responseCode>0?", HTTP "+request.responseCode:"")+")."};
             if(!answer.ok && string.IsNullOrEmpty(answer.error))
                 answer.error="Home directory request failed.";
             done(answer);
