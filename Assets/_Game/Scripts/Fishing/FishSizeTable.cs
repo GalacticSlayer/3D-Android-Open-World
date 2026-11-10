@@ -51,7 +51,8 @@ public static class FishSizeTable
         GameplayCurve(8f,70), // ID 43 Abyssal Leviathan uses its dedicated override
         GameplayCurve(7.46f,93), // ID 44 Black marlin: ~60 kg at 2 m, ~750 kg at 4.65 m
         GameplayCurve(4.32f,43), // ID 45 Mahi Mahi: ~4.32 kg at 1 m, ~40 kg at 2.1 m
-        GameplayCurve(4.32f,43) // ID 46 blue color variant: identical length for identical weight
+        GameplayCurve(4.32f,43), // ID 46 blue color variant: identical length for identical weight
+        RoosterfishCurve() // ID 47 Nematistius pectoralis: species-specific measured-model length curve
     };
 
     // Edwards et al. (2011), Rodrigues lagoon measurements, n=17 (14-27 cm TL).
@@ -140,6 +141,18 @@ public static class FishSizeTable
     {
         var row=new float[11];
         for(int i=0;i<row.Length;i++)row[i]=(float)(0.02951*Math.Pow((i+1)*5.0,2.95)/1000.0);
+        return row;
+    }
+
+    // FishBase Bayesian length-weight W(g)=0.01072*TL(cm)^3.02.
+    // 2.5 kg is approximately 0.60 m; 50 kg is approximately 1.62 m.
+    // Body length excludes the high dorsal fin filaments.
+    // https://fishbase.org/summary/3550
+    private static float[] RoosterfishCurve()
+    {
+        var row=new float[33]; // every 5 cm, from 5 cm to 165 cm
+        for(int i=0;i<row.Length;i++)
+            row[i]=(float)(0.01072*Math.Pow((i+1)*5.0,3.02)/1000.0);
         return row;
     }
 

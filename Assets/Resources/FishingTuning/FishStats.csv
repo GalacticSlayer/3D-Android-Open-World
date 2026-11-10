@@ -47,3 +47,4 @@ speciesId,speciesName,minWeightKg,maxWeightKg,minHealth,maxHealth,minCostCoins,m
 44,Black Marlin,60,750,21500,36000,2600,28000,6.5
 45,Mahi Mahi,2,40,21500,36000,2600,28000,6.5
 46,Blue Mahi Mahi,2,40,21500,36000,2600,28000,6.5
+47,Roosterfish,2.5,50,21500,36000,2600,28000,6.5
