@@ -52,7 +52,8 @@ public static class FishSizeTable
         GameplayCurve(7.46f,93), // ID 44 Black marlin: ~60 kg at 2 m, ~750 kg at 4.65 m
         GameplayCurve(4.32f,43), // ID 45 Mahi Mahi: ~4.32 kg at 1 m, ~40 kg at 2.1 m
         GameplayCurve(4.32f,43), // ID 46 blue color variant: identical length for identical weight
-        RoosterfishCurve() // ID 47 Nematistius pectoralis: species-specific measured-model length curve
+        RoosterfishCurve(), // ID 47 Nematistius pectoralis: species-specific measured-model length curve
+        RainbowRunnerCurve() // ID 48 Elagatis bipinnulata: FishBase species-specific length-weight model
     };
 
     // Edwards et al. (2011), Rodrigues lagoon measurements, n=17 (14-27 cm TL).
@@ -153,6 +154,18 @@ public static class FishSizeTable
         var row=new float[33]; // every 5 cm, from 5 cm to 165 cm
         for(int i=0;i<row.Length;i++)
             row[i]=(float)(0.01072*Math.Pow((i+1)*5.0,3.02)/1000.0);
+        return row;
+    }
+
+    // Elagatis bipinnulata FishBase Bayesian species/subfamily LWR estimate.
+    // W(g)=0.00977*TL(cm)^2.84 (Ref 93245; fishbase.se/summary/412).
+    // 0.5–17.05 kg => approximately 0.46–1.58 metres total length.
+    // IGFA reported record ~17.1 kg; maximum reported total length 1.80 m.
+    private static float[] RainbowRunnerCurve()
+    {
+        var row=new float[36]; // 5–180 cm in 5 cm increments
+        for(int i=0;i<row.Length;i++)
+            row[i]=(float)(0.00977*Math.Pow((i+1)*5.0,2.84)/1000.0);
         return row;
     }
 

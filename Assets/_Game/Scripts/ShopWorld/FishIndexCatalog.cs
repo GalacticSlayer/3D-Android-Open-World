@@ -12,7 +12,7 @@ public static class FishIndexCatalog
         new[] { 0,9,10,3,13,8,5,15,19 },
         new[] { 0,9,3,13,8,5 },
         new[] { 16,30,1,17,21,38,22,23,18 },
-        new[] { FishCatalog.BlackMarlinId, FishCatalog.MahiMahiId, FishCatalog.RoosterfishId }
+        new[] { FishCatalog.BlackMarlinId, FishCatalog.MahiMahiId, FishCatalog.RoosterfishId, FishCatalog.RainbowRunnerId }
     };
 
     private static readonly int[][] VariantFamilies = {

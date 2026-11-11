@@ -37,7 +37,7 @@ public static class ReefCatalog
         new Zone(SnapperIslandGeometry.Id,SnapperIslandGeometry.Name,"A dedicated snapper island directly south of Suncrest. Snappers, blackfin and great barracuda, and Blacktip Reef Sharks bite within 100 m of its three cave rocks. Land here to unlock travel.",false,
             new float[]{0,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,37,13,2,0,0,10,4,2}),
         new Zone(WindgroveShoalZone.Id,WindgroveShoalZone.Name,
-            "Remote wind-farm waters within 150 m of any turbine. Black Marlin, Mahi Mahi and Roosterfish live only here. Approach a turbine to unlock travel.",false,
+            "Remote wind-farm waters within 150 m of any turbine. Black Marlin, Mahi Mahi, Roosterfish and Rainbow Runner live only here. Approach a turbine to unlock travel.",false,
             new float[]{})
     };
 
@@ -77,13 +77,18 @@ public static class ReefCatalog
     {
         if (biome == WindgroveShoalZone.BiomeId)
         {
-            // If editable tuning is invalid, preserve Windgrove-only species
-            // and the worms-only Mahi Mahi rule. Variant selection is separate.
+            // Editable tuning is authoritative. The fallback preserves the same
+            // Windgrove-only bait restrictions if a CSV becomes unavailable.
+            // Ambient fish have a separate species roll independent of bait.
             var offshore = new float[FishCatalog.Count];
             bool worms = bait==0 || bait==1;
             bool shrimp = bait==2;
-            offshore[FishCatalog.BlackMarlinId] = worms || shrimp ? 40f : 100f;
-            if(worms)offshore[FishCatalog.MahiMahiId] = 60f;
+            offshore[FishCatalog.BlackMarlinId] = worms ? 28f : shrimp ? 40f : 100f;
+            if(worms)
+            {
+                offshore[FishCatalog.MahiMahiId] = 42f;
+                offshore[FishCatalog.RainbowRunnerId] = 30f;
+            }
             if(shrimp)offshore[FishCatalog.RoosterfishId] = 60f;
             return offshore;
         }
