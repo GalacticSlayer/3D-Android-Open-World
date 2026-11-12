@@ -30,7 +30,7 @@ public class AmbientFishManager : MonoBehaviour
         replacing=false;
     }
     // Windgrove ambience must represent local wildlife, not the worms bait table.
-    // The four species families are equally likely; blue Mahi Mahi is a 10%
+    // The five species families are equally likely; blue Mahi Mahi is a 10%
     // visual variant of its family. Actual hooked catches still use bait odds.
     private static int RollAmbientSpecies(int biome)
     {
@@ -38,11 +38,12 @@ public class AmbientFishManager : MonoBehaviour
             return ReefCatalog.Roll(Random.value,0,biome);
         FishingTuning.RememberBiome(biome);
         float sample=Random.value;
-        if(sample<.25f)return FishCatalog.BlackMarlinId;
-        if(sample<.50f)
+        if(sample<.20f)return FishCatalog.BlackMarlinId;
+        if(sample<.40f)
             return FishCatalog.RollMahiMahiVariant(FishCatalog.MahiMahiId,Random.value);
-        if(sample<.75f)return FishCatalog.RoosterfishId;
-        return FishCatalog.RainbowRunnerId;
+        if(sample<.60f)return FishCatalog.RoosterfishId;
+        if(sample<.80f)return FishCatalog.RainbowRunnerId;
+        return FishCatalog.QueenfishId;
     }
     private AmbientFishAgent CreateFish(int i,int biome)
     {

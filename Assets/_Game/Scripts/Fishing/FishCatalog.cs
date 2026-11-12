@@ -73,6 +73,7 @@ public static class FishCatalog
     public const int BlueMahiMahiId=46;
     public const int RoosterfishId=47; // Stable species ID; never reuse an existing catch ID.
     public const int RainbowRunnerId=48; // Stable species ID; append without renumbering saves.
+    public const int QueenfishId=49; // Talang queenfish; append-only catch ID.
     // A single Mahi Mahi bite is split 90/10 without changing overall bait odds.
     public const float BlueMahiMahiVariantChance=.10f;
     public static int RollMahiMahiVariant(int speciesId,float random01)
@@ -136,11 +137,12 @@ public static class FishCatalog
         new FishSpeciesDefinition("Mahi Mahi",new Color(.11f,.72f,.48f),new Color(.98f,.82f,.10f),2f,40f,2.20f,0f,2600),
         new FishSpeciesDefinition("Blue Mahi Mahi",new Color(.04f,.40f,.94f),new Color(.65f,.87f,1f),2f,40f,2.20f,0f,2600),
         new FishSpeciesDefinition("Roosterfish",new Color(.14f,.35f,.53f),new Color(.86f,.89f,.87f),2.5f,50f,2.20f,0f,2600),
-        new FishSpeciesDefinition("Rainbow Runner",new Color(.20f,.39f,.46f),new Color(.22f,.80f,1f),.5f,17.05f,2.20f,0f,2600)
+        new FishSpeciesDefinition("Rainbow Runner",new Color(.20f,.39f,.46f),new Color(.22f,.80f,1f),.5f,17.05f,2.20f,0f,2600),
+        new FishSpeciesDefinition("Queenfish",new Color(.40f,.57f,.68f),new Color(.84f,.89f,.91f),1f,16f,2.20f,0f,2600)
     };
 
     public static int Count=>Species.Length;
-    public static readonly int[] ActiveIds={0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48};
+    public static readonly int[] ActiveIds={0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49};
     public static int CanonicalId(int id)=>id==4?YellowfinTunaId:id;
 
     // Tournament identity is deliberately separate from save/render identity.

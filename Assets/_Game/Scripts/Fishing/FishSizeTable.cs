@@ -53,7 +53,8 @@ public static class FishSizeTable
         GameplayCurve(4.32f,43), // ID 45 Mahi Mahi: ~4.32 kg at 1 m, ~40 kg at 2.1 m
         GameplayCurve(4.32f,43), // ID 46 blue color variant: identical length for identical weight
         RoosterfishCurve(), // ID 47 Nematistius pectoralis: species-specific measured-model length curve
-        RainbowRunnerCurve() // ID 48 Elagatis bipinnulata: FishBase species-specific length-weight model
+        RainbowRunnerCurve(), // ID 48 Elagatis bipinnulata: FishBase species-specific length-weight model
+        QueenfishCurve() // ID 49 Scomberoides commersonnianus: FishBase-derived model
     };
 
     // Edwards et al. (2011), Rodrigues lagoon measurements, n=17 (14-27 cm TL).
@@ -166,6 +167,20 @@ public static class FishSizeTable
         var row=new float[36]; // 5–180 cm in 5 cm increments
         for(int i=0;i<row.Length;i++)
             row[i]=(float)(0.00977*Math.Pow((i+1)*5.0,2.84)/1000.0);
+        return row;
+    }
+
+    // Talang queenfish (Scomberoides commersonnianus).
+    // FishBase Bayesian LWR W(g)=a*TL(cm)^b with b=2.92, a=0.01096
+    // (95% CI for a: 0.00730-0.01646). Use a=0.01358034, within the
+    // reported range, to anchor the published 16 kg / 120 cm upper size.
+    // Thus 1 kg ~= 0.46 m and 16 kg ~= 1.20 m total body length.
+    // Source: https://www.fishbase.org/summary/1950
+    private static float[] QueenfishCurve()
+    {
+        var row=new float[24]; // 5-120 cm TL in 5 cm increments
+        for(int i=0;i<row.Length;i++)
+            row[i]=(float)(0.0135803431594*Math.Pow((i+1)*5.0,2.92)/1000.0);
         return row;
     }
 
