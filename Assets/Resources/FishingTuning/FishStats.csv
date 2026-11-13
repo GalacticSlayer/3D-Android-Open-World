@@ -50,3 +50,4 @@ speciesId,speciesName,minWeightKg,maxWeightKg,minHealth,maxHealth,minCostCoins,m
 47,Roosterfish,2.5,50,21500,36000,2600,28000,6.5
 48,Rainbow Runner,0.5,17.05,21500,36000,2600,28000,6.5
 49,Queenfish,1,16,21500,36000,2600,28000,6.5
+50,Spanish Mackerel,0.5,5.89,21500,36000,2600,28000,6.5

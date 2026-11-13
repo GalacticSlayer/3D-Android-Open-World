@@ -275,5 +275,19 @@ export const tournamentIslands = [
         "maxKg": 27.0
       }
     ]
+  },
+  {
+    // For map-wide catch validation. Windgrove is not a standalone tournament destination.
+    "id": 5,
+    "name": "Windgrove Shoal",
+    "fish": [
+      {"id": 44, "name": "Black Marlin", "maxKg": 1125},
+      {"id": 45, "name": "Mahi Mahi", "maxKg": 60},
+      {"id": 46, "name": "Blue Mahi Mahi", "maxKg": 60},
+      {"id": 47, "name": "Roosterfish", "maxKg": 75},
+      {"id": 48, "name": "Rainbow Runner", "maxKg": 25.575},
+      {"id": 49, "name": "Queenfish", "maxKg": 24},
+      {"id": 50, "name": "Spanish Mackerel", "maxKg": 8.835}
+    ]
   }
 ];

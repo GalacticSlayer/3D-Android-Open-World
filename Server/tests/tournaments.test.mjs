@@ -367,3 +367,20 @@ test('Dussumieri Tang target and total-weight catches are Suncrest-only with bon
   assert.throws(()=>catchFish(f,f.host,1,12,{island:1,species:42}),/does not match/);
  }
 });
+
+test('Windgrove Spanish Mackerel scores only from Windgrove in map-wide tournaments',()=>{
+ const windgrove=tournamentIslands[5];
+ const spanish=windgrove.fish.find(f=>f.id===50);
+ assert.equal(spanish.name,'Spanish Mackerel');
+ assert(Math.abs(spanish.maxKg-5.89*1.5)<1e-9);
+ const f=setup();
+ assert.throws(()=>f.game.action(f.host,{...f.create,island:5}),/Choose a fishing biome/);
+ f.game.action(f.host,{...f.create,mode:'weight'});
+ f.game.action(f.guest,f.joinGuest);
+ f.setTime(6000);f.game.tick(f.room);
+ for(const island of tournamentIslands.filter(i=>i.id!==5))
+  assert.throws(()=>catchFish(f,f.guest,1,11,{island:island.id,species:50}),/does not match/);
+ const view=catchFish(f,f.guest,spanish.maxKg*2,11,{island:5,species:50});
+ assert.equal(view.entries.find(e=>e.id==='guest').catches,1);
+ assert.throws(()=>catchFish(f,f.guest,spanish.maxKg*2+.02,12,{island:5,species:50}),/Invalid tournament catch/);
+});

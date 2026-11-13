@@ -19,6 +19,7 @@ Generic names are resolved as game-design assumptions: Sea Bass = European sea b
 | 10 | Centropristis striata (Black Sea Bass) | 0.01148 | 3.04 | 0.70 m | Existing checked-in curve |
 | 11 | Morone saxatilis (Striped Bass) | 0.00893 | 3.065 | 2.00 m | New species curve sampled every 5 cm; large-fish range intentionally retained |
 | 12 | Paralabrax maculatofasciatus (Spotted Sand Bass) | 0.01164 | 3.044 | 0.60 m | New species curve sampled every 5 cm |
+| 50 | Scomberomorus maculatus (Atlantic Spanish Mackerel) | 5.4935e-9 (kg, mm) | 3.0025 | 1.05 m | [SEDAR 28, Table 2.7](https://sedarweb.org/documents/pw7-13-sedar-28-south-atlantic-spanish-mackerel-stock-assessment-report/), regions and sexes combined, total length. The normal 0.5–5.89 kg range uses the [published maximum weight](https://fishbase.se/FieldGuide/FieldGuideSummary.php?c_code=840&genusname=Scomberomorus&speciesname=maculatus) and gives about 0.45–1.02 m. The largest lengths are a short extrapolation from the study's 978 mm sample maximum. |
 
 Striped Bass is intentionally allowed to grow far beyond the existing Sea Bass while sharing Sea Bass fight tuning at the same weight. Spotted Sand Bass shares Black Sea Bass fight tuning. Their normal coastal min/max weights are configured in `FishCatalog`; far-offshore scaling can exceed those coastal maxima without shrinking or changing near-shore fish.
 

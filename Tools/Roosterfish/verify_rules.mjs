@@ -14,7 +14,7 @@ for(const row of rows){
  const shrimp=c[0]==="windgrove-shoal"&&c[1]==="shrimp";
  assert.equal(Number(c[idx]),shrimp?60:0);
  if(shrimp){assert.equal(Number(c[marlin]),40);assert.equal(Number(c[mahi]),0);}
- if(c[0]==="windgrove-shoal"&&["worms","worms-legacy"].includes(c[1]))assert.equal(Number(c[mahi]),60);
+ if(c[0]==="windgrove-shoal"&&["worms","worms-legacy"].includes(c[1]))assert.equal(Number(c[mahi]),42);
  assert.equal(Number(c[blue]),0);
 }
 const weight=get("Assets/Resources/FishingTuning/BiomeFishWeights.csv");

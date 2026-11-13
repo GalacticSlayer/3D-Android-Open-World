@@ -17,9 +17,9 @@ for(const row of odds.slice(1)){
  const isWind=parts[0]==="windgrove-shoal";
  const worms=parts[1]==="worms"||parts[1]==="worms-legacy";
  assert.equal(Number(parts[blue]),0);
- assert.equal(Number(parts[mahi]),isWind&&worms?60:0);
+ assert.equal(Number(parts[mahi]),isWind&&worms?42:0);
  assert.equal(parts.slice(2).reduce((sum,v)=>sum+Number(v),0),100);
- if(isWind)assert.equal(Number(parts[marlin]),worms?40:100);
+ if(isWind)assert.equal(Number(parts[marlin]),worms?28:["shrimp","squid"].includes(parts[1])?40:100);
 }
 const weights=read("Assets/Resources/FishingTuning/BiomeFishWeights.csv");
 for(const id of [45,46]) for(const biome of ["suncrest-reef","brinebreak-isle","deep-ocean","bluewater-cay","snapper-island","windgrove-shoal"])

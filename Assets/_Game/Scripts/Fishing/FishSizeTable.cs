@@ -54,7 +54,8 @@ public static class FishSizeTable
         GameplayCurve(4.32f,43), // ID 46 blue color variant: identical length for identical weight
         RoosterfishCurve(), // ID 47 Nematistius pectoralis: species-specific measured-model length curve
         RainbowRunnerCurve(), // ID 48 Elagatis bipinnulata: FishBase species-specific length-weight model
-        QueenfishCurve() // ID 49 Scomberoides commersonnianus: FishBase-derived model
+        QueenfishCurve(), // ID 49 Scomberoides commersonnianus: FishBase-derived model
+        SpanishMackerelCurve() // ID 50 Scomberomorus maculatus: SEDAR total-length fit
     };
 
     // Edwards et al. (2011), Rodrigues lagoon measurements, n=17 (14-27 cm TL).
@@ -181,6 +182,17 @@ public static class FishSizeTable
         var row=new float[24]; // 5-120 cm TL in 5 cm increments
         for(int i=0;i<row.Length;i++)
             row[i]=(float)(0.0135803431594*Math.Pow((i+1)*5.0,2.92)/1000.0);
+        return row;
+    }
+
+    // SEDAR 28, Table 2.7, sexes and regions combined:
+    // W(kg) = 5.4935e-9 * TL(mm)^3.0025. Use total length, not fork length.
+    // Normal 0.5–5.89 kg catches are about 0.45–1.02 m.
+    private static float[] SpanishMackerelCurve()
+    {
+        var row=new float[21]; // 5–105 cm, covering the normal catch range
+        for(int i=0;i<row.Length;i++)
+            row[i]=(float)(5.4935e-9*Math.Pow((i+1)*50.0,3.0025));
         return row;
     }
 

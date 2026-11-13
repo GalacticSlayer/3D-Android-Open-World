@@ -37,7 +37,7 @@ public static class ReefCatalog
         new Zone(SnapperIslandGeometry.Id,SnapperIslandGeometry.Name,"A dedicated snapper island directly south of Suncrest. Snappers, blackfin and great barracuda, and Blacktip Reef Sharks bite within 100 m of its three cave rocks. Land here to unlock travel.",false,
             new float[]{0,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,37,13,2,0,0,10,4,2}),
         new Zone(WindgroveShoalZone.Id,WindgroveShoalZone.Name,
-            "Remote wind-farm waters within 150 m of any turbine. Black Marlin, Mahi Mahi, Roosterfish, Rainbow Runner and Queenfish live only here. Approach a turbine to unlock travel.",false,
+            "Remote wind-farm waters within 150 m of any turbine. Black Marlin, Mahi Mahi, Roosterfish, Rainbow Runner, Queenfish and Spanish Mackerel live only here. Approach a turbine to unlock travel.",false,
             new float[]{})
     };
 
@@ -91,7 +91,11 @@ public static class ReefCatalog
                 offshore[FishCatalog.RainbowRunnerId] = 30f;
             }
             if(shrimp)offshore[FishCatalog.RoosterfishId] = 60f;
-            if(squid)offshore[FishCatalog.QueenfishId] = 60f;
+            if(squid)
+            {
+                offshore[FishCatalog.QueenfishId] = 30f;
+                offshore[FishCatalog.SpanishMackerelId] = 30f;
+            }
             return offshore;
         }
         if(biome==SnapperBiomeId)
