@@ -17,7 +17,7 @@ const id='50';
 const col=species=>header.findIndex(key=>key.startsWith(species+'_'));
 const catalog=read(scripts+'Fishing/FishCatalog.cs');
 assert.match(catalog,/public const int SpanishMackerelId=50/);
-assert.match(catalog,/ActiveIds=\{[^}]*,49,SpanishMackerelId\}/);
+assert.match(catalog,/ActiveIds=\{[^}]*,49,SpanishMackerelId,GoldenPompanoId\}/);
 assert.match(catalog,/new FishSpeciesDefinition\("Spanish Mackerel"[^\n]+\.5f,5\.89f,2\.20f,0f,2600\)/);
 assert.deepEqual(stats.find(row=>row[0]===id).slice(2,4),['0.5','5.89']);
 assert.deepEqual(stats.find(row=>row[0]===id).slice(4),stats.find(row=>row[0]==='44').slice(4));
@@ -27,7 +27,7 @@ assert.equal(weights.filter(row=>row[1]===id).length,6);
 for (const row of weights.filter(row=>row[1]===id))
     assert.deepEqual(row.slice(3),row[0]===wind?['0.5','5.89']:['0','0']);
 
-assert.equal(header.at(-1),'50_spanish_mackerel');
+assert.equal(header[col(50)],'50_spanish_mackerel');
 assert.equal(chances.length,54);
 assert.equal(new Set(chances.map(row=>row.slice(0,2).join(','))).size,54);
 const [marlin,mahi,rooster,rainbow,queen,mackerel]=[44,45,47,48,49,50].map(col);
@@ -37,22 +37,22 @@ for (const row of chances) {
     assert(row.slice(2).every(v=>/^\d+$/.test(v)));
     assert.equal(row.slice(2).reduce((sum,v)=>sum+Number(v),0),100);
     const [biome,bait]=row;
-    assert.equal(+row[mackerel],biome===wind&&bait==='squid'?30:0);
+    assert.equal(+row[mackerel],biome===wind&&bait==='squid'?20:0);
     if (biome!==wind) continue;
-    const expected=bait==='squid'?[40,0,0,0,30,30]:
+    const expected=bait==='squid'?[40,0,0,0,20,20]:
         bait==='shrimp'?[40,0,60,0,0,0]:
         ['worms','worms-legacy'].includes(bait)?[28,42,0,30,0,0]:[100,0,0,0,0,0];
     assert.deepEqual([marlin,mahi,rooster,rainbow,queen,mackerel].map(c=>+row[c]),expected);
 }
 const reef=read(scripts+'Reef/ReefCatalog.cs');
-assert.match(reef,/if\(squid\)\s*\{\s*offshore\[FishCatalog\.QueenfishId\] = 30f;\s*offshore\[FishCatalog\.SpanishMackerelId\] = 30f;/);
+assert.match(reef,/if\(squid\)\s*\{\s*offshore\[FishCatalog\.QueenfishId\] = 20f;\s*offshore\[FishCatalog\.SpanishMackerelId\] = 20f;/);
 assert.match(read(scripts+'ShopWorld/FishIndexCatalog.cs'),/FishCatalog\.QueenfishId, FishCatalog\.SpanishMackerelId/);
 assert.match(read(scripts+'Fishing/FishVisualFactory.cs'),/case FishCatalog\.SpanishMackerelId:return "Fishing\/SpanishMackerel";/);
 assert.match(read(scripts+'Fishing/AmbientFishManager.cs'),
-    /if\(sample<5f\/6f\)return FishCatalog\.QueenfishId;\s*return FishCatalog\.SpanishMackerelId;/);
+    /if\(sample<5f\/7f\)return FishCatalog\.QueenfishId;\s*if\(sample<6f\/7f\)return FishCatalog\.SpanishMackerelId;/);
 
 const size=read(scripts+'Fishing/FishSizeTable.cs');
-assert.match(size,/SpanishMackerelCurve\(\) \/\/ ID 50/);
+assert.match(size,/SpanishMackerelCurve\(\), \/\/ ID 50/);
 const curve=size.match(/private static float\[\] SpanishMackerelCurve\(\)[\s\S]*?new float\[(\d+)\][\s\S]*?row\[i\]=\(float\)\(([\d.e-]+)\*Math\.Pow\(\(i\+1\)\*([\d.]+),([\d.]+)\)\)/);
 assert(curve);
 const [samples,a,step,b]=curve.slice(1).map(Number);

@@ -10,7 +10,7 @@ public static class SeaBassImporter
     private const string Folder="Assets/_Game/Reef/Source";
     public const string PrefabPath="Assets/Resources/Fishing/SeaBass.prefab";
     public static void Install() => InstallModel("SeaBass",PrefabPath);
-    public static void InstallModel(string assetName,string prefabPath,string sourceFolder=null,string texturePath=null,bool preserveWorldUp=false,bool importHeldStruggle=false,bool useIndexedSwimAndStruggle=false,string swimTakeContains=null)
+    public static void InstallModel(string assetName,string prefabPath,string sourceFolder=null,string texturePath=null,bool preserveWorldUp=false,bool importHeldStruggle=false,bool useIndexedSwimAndStruggle=false,string swimTakeContains=null,bool discardEmptyRenderers=false)
     {
         string folder=sourceFolder??Folder;
         string fbx=folder+"/"+assetName+".fbx", png=texturePath??(folder+"/"+assetName+"Texture.png");
@@ -82,6 +82,20 @@ public static class SeaBassImporter
             model.name="AuthoredModel";
             if(PrefabUtility.IsPartOfPrefabInstance(model))
                 PrefabUtility.UnpackPrefabInstance(model,PrefabUnpackMode.Completely,InteractionMode.AutomatedAction);
+            // Some authored FBXs contain empty mesh placeholders. Keep the
+            // hierarchy/animation paths, but exclude them from bounds and skin checks.
+            if(discardEmptyRenderers)
+            {
+                foreach(var skin in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+                    if(skin.sharedMesh==null || skin.sharedMesh.vertexCount==0)
+                        UnityEngine.Object.DestroyImmediate(skin);
+                foreach(var meshRenderer in model.GetComponentsInChildren<MeshRenderer>(true))
+                {
+                    var filter=meshRenderer.GetComponent<MeshFilter>();
+                    if(filter==null || filter.sharedMesh==null || filter.sharedMesh.vertexCount==0)
+                        UnityEngine.Object.DestroyImmediate(meshRenderer);
+                }
+            }
             foreach(var renderer in model.GetComponentsInChildren<Renderer>(true))
                 renderer.sharedMaterials=Enumerable.Repeat(material,Mathf.Max(1,renderer.sharedMaterials.Length)).ToArray();
             var animator=model.GetComponent<Animator>();if(animator==null)animator=model.AddComponent<Animator>();

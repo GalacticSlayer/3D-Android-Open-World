@@ -384,3 +384,18 @@ test('Windgrove Spanish Mackerel scores only from Windgrove in map-wide tourname
  assert.equal(view.entries.find(e=>e.id==='guest').catches,1);
  assert.throws(()=>catchFish(f,f.guest,spanish.maxKg*2+.02,12,{island:5,species:50}),/Invalid tournament catch/);
 });
+
+test('Golden Pompano scores only from Windgrove in map-wide tournaments',()=>{
+ const f=setup();
+ const fish=tournamentIslands[5].fish.find(s=>s.id===51);
+ assert.equal(fish.name,'Golden Pompano');
+ assert(Math.abs(fish.maxKg-2.9*1.5)<1e-9);
+ f.game.action(f.host,{...f.create,mode:'weight'});
+ f.game.action(f.guest,f.joinGuest);
+ f.setTime(6000);f.game.tick(f.room);
+ for(const island of tournamentIslands.filter(i=>i.id!==5))
+  assert.throws(()=>catchFish(f,f.guest,1,11,{island:island.id,species:51}),/does not match/);
+ const view=catchFish(f,f.guest,fish.maxKg*2,11,{island:5,species:51});
+ assert.equal(view.entries.find(e=>e.id==='guest').points,870);
+ assert.throws(()=>catchFish(f,f.guest,fish.maxKg*2+.02,12,{island:5,species:51}),/Invalid tournament catch/);
+});

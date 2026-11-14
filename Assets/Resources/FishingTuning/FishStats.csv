@@ -51,3 +51,4 @@ speciesId,speciesName,minWeightKg,maxWeightKg,minHealth,maxHealth,minCostCoins,m
 48,Rainbow Runner,0.5,17.05,21500,36000,2600,28000,6.5
 49,Queenfish,1,16,21500,36000,2600,28000,6.5
 50,Spanish Mackerel,0.5,5.89,21500,36000,2600,28000,6.5
+51,Golden Pompano,0.25,2.9,21500,36000,2600,28000,6.5
