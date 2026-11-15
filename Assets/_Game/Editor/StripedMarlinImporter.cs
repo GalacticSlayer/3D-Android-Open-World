@@ -16,6 +16,7 @@ public static class StripedMarlinImporter
     const string SourceModel = Source + "/" + Name + ".fbx";
     const string SourceTexture = Source + "/" + Name + "Texture.png";
     const string PrefabPath = "Assets/Resources/Fishing/StripedMarlin.prefab";
+    const string PrefabRevision = "2"; // Rebuild existing prefabs for the separate held-line anchor.
 
     static StripedMarlinImporter()
     {
@@ -58,11 +59,11 @@ public static class StripedMarlinImporter
         SeaBassImporter.InstallModel(Name, PrefabPath, Source, preserveWorldUp: true,
             swimTakeContains: "ArmatureAction", discardEmptyRenderers: true);
 
+        PlaceMouthBehindBill();
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
         if (!Ready(prefab))
             throw new InvalidDataException("Striped Marlin prefab is missing its rig, moving swim clip, UV texture or mouth anchor.");
 
-        PlaceMouthBehindBill();
         FishingTuning.Reload();
         if (!FishingTuning.IsValid) throw new InvalidDataException(FishingTuning.ValidationError);
 
@@ -77,9 +78,8 @@ public static class StripedMarlinImporter
         Debug.Log("[STRIPED MARLIN] Authored rig, UV atlas, swim animation and held-fish mouth anchor installed.");
     }
 
-    // The shared importer finds the tip of the bill. On the authored mesh,
-    // the mouth opening sits about 0.15 m back and 0.025 m below that point
-    // at the shared 0.92 m prefab scale. Keep the anchor parented to the head.
+    // The shared importer finds the tip of the bill. Keep the original hold
+    // pivot, but put the line between the lips at the same distance behind the tip.
     static void PlaceMouthBehindBill()
     {
         var root = PrefabUtility.LoadPrefabContents(PrefabPath);
@@ -87,10 +87,14 @@ public static class StripedMarlinImporter
         {
             var mouth = root.GetComponentsInChildren<Transform>(true)
                 .First(t => t.name == "AuthoredMouthAnchor");
-            var local = root.transform.InverseTransformPoint(mouth.position);
-            local.z -= .15f;
-            local.y -= .025f;
-            mouth.position = root.transform.TransformPoint(local);
+            var bill = root.transform.InverseTransformPoint(mouth.position);
+            bill.z -= .15f;
+            mouth.position = root.transform.TransformPoint(bill - new Vector3(0f, .025f, 0f));
+
+            var lineAnchor = new GameObject("AuthoredHeldLineAnchor").transform;
+            lineAnchor.SetParent(mouth.parent, false);
+            // Measured midpoint of the lip gap at this slice of the 0.92 m prefab.
+            lineAnchor.position = root.transform.TransformPoint(bill - new Vector3(0f, .0164f, 0f));
             if (PrefabUtility.SaveAsPrefabAsset(root, PrefabPath) == null)
                 throw new InvalidDataException("Could not save the Striped Marlin mouth anchor.");
         }
@@ -105,14 +109,15 @@ public static class StripedMarlinImporter
         using (var sha = SHA256.Create())
         using (var model = File.OpenRead(SourceModel))
         using (var texture = File.OpenRead(SourceTexture))
-            return "StripedMarlin:" + Convert.ToBase64String(sha.ComputeHash(model)) + ":" +
+            return "StripedMarlin:" + PrefabRevision + ":" + Convert.ToBase64String(sha.ComputeHash(model)) + ":" +
                 Convert.ToBase64String(sha.ComputeHash(texture));
     }
 
     static bool Ready(GameObject prefab)
     {
         if (prefab == null || prefab.GetComponent<RedSnapperPresentation>() == null ||
-            !prefab.GetComponentsInChildren<Transform>(true).Any(t => t.name == "AuthoredMouthAnchor"))
+            !prefab.GetComponentsInChildren<Transform>(true).Any(t => t.name == "AuthoredMouthAnchor") ||
+            !prefab.GetComponentsInChildren<Transform>(true).Any(t => t.name == "AuthoredHeldLineAnchor"))
             return false;
 
         var animator = prefab.GetComponentInChildren<Animator>(true);

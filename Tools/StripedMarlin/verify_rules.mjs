@@ -75,6 +75,13 @@ assert.equal(readFileSync('ArtSources/StripedMarlin/Striped Marlin.blend').subar
 const importer=read('Assets/_Game/Editor/StripedMarlinImporter.cs');
 assert.match(importer,/swimTakeContains: "ArmatureAction", discardEmptyRenderers: true/);
 assert.match(importer,/PlaceMouthBehindBill\(\);/);
+assert.match(importer,/bill\.z -= \.15f;\s*mouth\.position = root\.transform\.TransformPoint\(bill - new Vector3\(0f, \.025f, 0f\)\);/);
+assert.match(importer,/lineAnchor\.SetParent\(mouth\.parent, false\);[\s\S]*?lineAnchor\.position = root\.transform\.TransformPoint\(bill - new Vector3\(0f, \.0164f, 0f\)\);/);
+assert.match(importer,/"StripedMarlin:" \+ PrefabRevision/);
+const holding=read(scripts+'Fishing/FishingSystem.cs');
+assert.match(holding,/heldFishLineAnchor = FindDeepChildByName\(heldFishVisual\.transform, "AuthoredHeldLineAnchor"\);/);
+assert.match(holding,/\(heldFishLineAnchor != null \? heldFishLineAnchor : heldFishMouthMarker\)\.position/);
+assert.match(holding,/heldFishVisual\.transform\.position \+=\s*desiredMouthWorld -\s*heldFishMouthMarker\.position/);
 assert.match(importer,/IPreprocessBuildWithReport/);
 const fish=tournamentIslands.find(i=>i.id===5).fish.find(f=>f.id===52);
 assert.deepEqual(fish,{id:52,name:'Striped Marlin',maxKg:180});

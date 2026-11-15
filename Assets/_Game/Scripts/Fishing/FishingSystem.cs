@@ -86,6 +86,7 @@ public class FishingSystem : MonoBehaviour
     private GameObject heldHookVisual;
     private Transform heldHookPoint;
     private Transform heldFishMouthMarker;
+    private Transform heldFishLineAnchor;
     private LineRenderer heldCatchLine;
     private float heldCatchLineTopViewportX = 0.75f;
     private Vector3 heldMouthRestLocalPosition;
@@ -3430,7 +3431,7 @@ public class FishingSystem : MonoBehaviour
             GetHeldCatchLineTop();
 
         Vector3 mouth =
-            heldFishMouthMarker.position;
+            (heldFishLineAnchor != null ? heldFishLineAnchor : heldFishMouthMarker).position;
 
         // Follow the animated mouth, with a short overlap to hide the lip gap.
         Vector3 lineEnd = mouth + (mouth - top).normalized * 0.025f;
@@ -3581,6 +3582,9 @@ public class FishingSystem : MonoBehaviour
 
         heldFishMouthMarker =
             marker.transform;
+
+        // An authored line endpoint can differ from the hold pivot without moving the fish.
+        heldFishLineAnchor = FindDeepChildByName(heldFishVisual.transform, "AuthoredHeldLineAnchor");
 
         Vector3 desiredMouthWorld =
             GetHeldCatchMouthTargetWorld();
@@ -4105,6 +4109,7 @@ public class FishingSystem : MonoBehaviour
 
         heldHookPoint = null;
         heldFishMouthMarker = null;
+        heldFishLineAnchor = null;
     }
 
     private void EnsureUnconsciousFishVisual()
