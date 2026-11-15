@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
@@ -12,6 +13,8 @@ public static class GoldenPompanoImporter
 {
     const string Name = "GoldenPompano";
     const string Source = "Assets/_Game/Reef/Source";
+    const string SourceModel = Source + "/" + Name + ".fbx";
+    const string SourceTexture = Source + "/" + Name + "Texture.png";
     const string PrefabPath = "Assets/Resources/Fishing/GoldenPompano.prefab";
 
     static GoldenPompanoImporter()
@@ -39,7 +42,10 @@ public static class GoldenPompanoImporter
 
     public static void EnsureInstalled()
     {
-        if (!Ready(AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath))) Install();
+        var importer = AssetImporter.GetAtPath(PrefabPath);
+        if (importer == null || importer.userData != SourceSignature() ||
+            !Ready(AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath)))
+            Install();
     }
 
     [MenuItem("Tools/Open World/Import Golden Pompano (One Click)")]
@@ -48,10 +54,7 @@ public static class GoldenPompanoImporter
         if (EditorApplication.isPlaying)
             throw new InvalidOperationException("Exit Play Mode before importing Golden Pompano.");
 
-        if (!File.Exists(Source + "/" + Name + ".fbx") ||
-            !File.Exists(Source + "/" + Name + "Texture.png"))
-            throw new FileNotFoundException("Golden Pompano FBX or PNG is missing. Pull the complete update.");
-
+        var signature = SourceSignature();
         SeaBassImporter.InstallModel(Name, PrefabPath, Source, preserveWorldUp: true,
             swimTakeContains: "ArmatureAction", discardEmptyRenderers: true);
 
@@ -61,7 +64,28 @@ public static class GoldenPompanoImporter
 
         FishingTuning.Reload();
         if (!FishingTuning.IsValid) throw new InvalidDataException(FishingTuning.ValidationError);
+
+        // The generated prefab unpacks the FBX, and its atlas is a copy of the PNG.
+        // A valid older prefab can therefore survive a source reimport and needs rebuilding.
+        var importer = AssetImporter.GetAtPath(PrefabPath);
+        if (importer.userData != signature)
+        {
+            importer.userData = signature;
+            importer.SaveAndReimport();
+        }
         Debug.Log("[GOLDEN POMPANO] Authored rig, UV atlas, swim animation and held-fish mouth anchor installed.");
+    }
+
+    static string SourceSignature()
+    {
+        if (!File.Exists(SourceModel) || !File.Exists(SourceTexture))
+            throw new FileNotFoundException("Golden Pompano FBX or PNG is missing. Pull the complete update.");
+
+        using (var sha = SHA256.Create())
+        using (var model = File.OpenRead(SourceModel))
+        using (var texture = File.OpenRead(SourceTexture))
+            return "GoldenPompano:" + Convert.ToBase64String(sha.ComputeHash(model)) + ":" +
+                Convert.ToBase64String(sha.ComputeHash(texture));
     }
 
     static bool Ready(GameObject prefab)
