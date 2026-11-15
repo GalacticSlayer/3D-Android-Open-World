@@ -41,7 +41,7 @@ for (const row of chances) {
     if (biome!==wind) continue;
     const expected=bait==='squid'?[40,0,0,0,20,20]:
         bait==='shrimp'?[40,0,30,0,0,0]:
-        ['worms','worms-legacy'].includes(bait)?[28,42,0,30,0,0]:[100,0,0,0,0,0];
+        ['worms','worms-legacy'].includes(bait)?[28,42,0,30,0,0]:[bait==='lure:0'?40:100,0,0,0,0,0];
     assert.deepEqual([marlin,mahi,rooster,rainbow,queen,mackerel].map(c=>+row[c]),expected);
 }
 const reef=read(scripts+'Reef/ReefCatalog.cs');
@@ -49,7 +49,7 @@ assert.match(reef,/if\(squid\)\s*\{\s*offshore\[FishCatalog\.QueenfishId\] = 20f
 assert.match(read(scripts+'ShopWorld/FishIndexCatalog.cs'),/FishCatalog\.QueenfishId, FishCatalog\.SpanishMackerelId/);
 assert.match(read(scripts+'Fishing/FishVisualFactory.cs'),/case FishCatalog\.SpanishMackerelId:return "Fishing\/SpanishMackerel";/);
 assert.match(read(scripts+'Fishing/AmbientFishManager.cs'),
-    /if\(sample<5f\/8f\)return FishCatalog\.QueenfishId;\s*if\(sample<6f\/8f\)return FishCatalog\.SpanishMackerelId;/);
+    /if\(sample<5f\/9f\)return FishCatalog\.QueenfishId;\s*if\(sample<6f\/9f\)return FishCatalog\.SpanishMackerelId;/);
 
 const size=read(scripts+'Fishing/FishSizeTable.cs');
 assert.match(size,/SpanishMackerelCurve\(\), \/\/ ID 50/);

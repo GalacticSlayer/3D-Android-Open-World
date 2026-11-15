@@ -57,7 +57,8 @@ public static class FishSizeTable
         QueenfishCurve(), // ID 49 Scomberoides commersonnianus: FishBase-derived model
         SpanishMackerelCurve(), // ID 50 Scomberomorus maculatus: SEDAR total-length fit
         GoldenPompanoCurve(), // ID 51 Trachinotus anak: measured total-length fit
-        StripedMarlinCurve() // ID 52 Kajikia audax: measured total-length conversion
+        StripedMarlinCurve(), // ID 52 Kajikia audax: measured total-length conversion
+        QueenslandGrouperCurve() // ID 53 Epinephelus lanceolatus: FishBase Bayesian estimate
     };
 
     // Edwards et al. (2011), Rodrigues lagoon measurements, n=17 (14-27 cm TL).
@@ -222,6 +223,15 @@ public static class FishSizeTable
             double femaleKg=Math.Pow(10,-5.756)*Math.Pow(femaleLjfl,3.267);
             row[i]=(float)((maleKg+femaleKg)*0.5);
         }
+        return row;
+    }
+
+    // FishBase Bayesian genus/body-shape estimate: W(g) = 0.01148 * TL(cm)^3.04.
+    private static float[] QueenslandGrouperCurve()
+    {
+        var row=new float[54]; // 5–270 cm, including the standard Windgrove weight bonus.
+        for(int i=0;i<row.Length;i++)
+            row[i]=(float)(0.01148*Math.Pow((i+1)*5.0,3.04)/1000.0);
         return row;
     }
 

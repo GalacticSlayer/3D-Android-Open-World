@@ -43,10 +43,10 @@ assert.match(read(scripts+'ShopWorld/FishIndexCatalog.cs'),/FishCatalog\.GoldenP
 assert.match(read(scripts+'Reef/ReefCatalog.cs'),
     /if\(shrimp\)\s*\{\s*offshore\[FishCatalog\.RoosterfishId\] = 30f;\s*offshore\[FishCatalog\.StripedMarlinId\] = 30f;/);
 assert.match(read(scripts+'Fishing/AmbientFishManager.cs'),
-    /if\(biome!=WindgroveShoalZone\.BiomeId\)\s*return ReefCatalog\.Roll[\s\S]*?if\(sample<7f\/8f\)return FishCatalog\.GoldenPompanoId;\s*return FishCatalog\.StripedMarlinId;/);
+    /if\(biome!=WindgroveShoalZone\.BiomeId\)\s*return ReefCatalog\.Roll[\s\S]*?if\(sample<7f\/9f\)return FishCatalog\.GoldenPompanoId;\s*if\(sample<8f\/9f\)return FishCatalog\.StripedMarlinId;/);
 
 const size=read(scripts+'Fishing/FishSizeTable.cs');
-assert.match(size,/StripedMarlinCurve\(\) \/\/ ID 52/);
+assert.match(size,/StripedMarlinCurve\(\),? \/\/ ID 52/);
 const curve=size.match(/private static float\[\] StripedMarlinCurve\(\)[\s\S]*?new float\[(\d+)\][\s\S]*?double cm=\(i\+1\)\*([\d.]+);[\s\S]*?\(cm-([\d.]+)\)\/([\d.]+)\);[\s\S]*?\(cm\+([\d.]+)\)\/([\d.]+)\);[\s\S]*?Math\.Pow\(10,([-\d.]+)\)\*Math\.Pow\(maleLjfl,([\d.]+)\);[\s\S]*?Math\.Pow\(10,([-\d.]+)\)\*Math\.Pow\(femaleLjfl,([\d.]+)\);[\s\S]*?\(maleKg\+femaleKg\)\*0\.5/);
 assert(curve);
 const [samples,step,ma,mb,fa,fb,mlog,mp,flog,fp]=curve.slice(1).map(Number);

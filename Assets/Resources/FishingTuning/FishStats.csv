@@ -53,3 +53,4 @@ speciesId,speciesName,minWeightKg,maxWeightKg,minHealth,maxHealth,minCostCoins,m
 50,Spanish Mackerel,0.5,5.89,21500,36000,2600,28000,6.5
 51,Golden Pompano,0.25,2.9,21500,36000,2600,28000,6.5
 52,Striped Marlin,30,120,21500,36000,2600,28000,6.5
+53,Queensland Grouper,30,180,21500,36000,2600,28000,6.5

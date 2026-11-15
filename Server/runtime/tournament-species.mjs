@@ -289,7 +289,8 @@ export const tournamentIslands = [
       {"id": 49, "name": "Queenfish", "maxKg": 24},
       {"id": 50, "name": "Spanish Mackerel", "maxKg": 8.835},
       {"id": 51, "name": "Golden Pompano", "maxKg": 4.35},
-      {"id": 52, "name": "Striped Marlin", "maxKg": 180}
+      {"id": 52, "name": "Striped Marlin", "maxKg": 180},
+      {"id": 53, "name": "Queensland Grouper", "maxKg": 270}
     ]
   }
 ];
