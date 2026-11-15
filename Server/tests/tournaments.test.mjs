@@ -399,3 +399,19 @@ test('Golden Pompano scores only from Windgrove in map-wide tournaments',()=>{
  assert.equal(view.entries.find(e=>e.id==='guest').points,870);
  assert.throws(()=>catchFish(f,f.guest,fish.maxKg*2+.02,12,{island:5,species:51}),/Invalid tournament catch/);
 });
+
+test('Striped Marlin is scored as its own species and only from Windgrove',()=>{
+ const f=setup();
+ const fish=tournamentIslands[5].fish.find(s=>s.id===52);
+ assert.equal(fish.name,'Striped Marlin');
+ assert.equal(fish.maxKg,120*1.5);
+ f.game.action(f.host,{...f.create,mode:'weight'});
+ f.game.action(f.guest,f.joinGuest);
+ f.setTime(6000);f.game.tick(f.room);
+ for(const island of tournamentIslands.filter(i=>i.id!==5))
+  assert.throws(()=>catchFish(f,f.guest,30,11,{island:island.id,species:52}),/does not match/);
+ const view=catchFish(f,f.guest,fish.maxKg*2,11,{island:5,species:52});
+ assert.equal(view.entries.find(e=>e.id==='guest').points,36000);
+ assert.equal(view.biggestSpecies,52);
+ assert.throws(()=>catchFish(f,f.guest,fish.maxKg*2+.02,12,{island:5,species:52}),/Invalid tournament catch/);
+});

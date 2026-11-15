@@ -30,15 +30,15 @@ assert.deepEqual(stats.find(row=>row[0]===id).slice(2,4),['0.25','2.9']);
 assert.deepEqual(stats.find(row=>row[0]===id).slice(4),stats.find(row=>row[0]==='44').slice(4));
 const biomeStats=csv('BiomeFishStats').filter(row=>row[0]===wind);
 assert.deepEqual(biomeStats.find(row=>row[1]===id).slice(3),biomeStats.find(row=>row[1]==='44').slice(3));
-assert.match(read(scripts+'Fishing/FishCatalog.cs'),/const int GoldenPompanoId=51[\s\S]*?"Golden Pompano"[^\n]+\.25f,2\.9f,2\.20f[\s\S]*?ActiveIds=\{[^}]+,GoldenPompanoId\}/);
+assert.match(read(scripts+'Fishing/FishCatalog.cs'),/const int GoldenPompanoId=51[\s\S]*?"Golden Pompano"[^\n]+\.25f,2\.9f,2\.20f[\s\S]*?ActiveIds=\{[^}]+,GoldenPompanoId(?:,|\})/);
 assert.match(read(scripts+'Fishing/FishVisualFactory.cs'),/case FishCatalog\.GoldenPompanoId:return "Fishing\/GoldenPompano";/);
 assert.match(read(scripts+'ShopWorld/FishIndexCatalog.cs'),/FishCatalog\.SpanishMackerelId, FishCatalog\.GoldenPompanoId/);
 assert.match(read(scripts+'Reef/ReefCatalog.cs'),/if\(squid\)\s*\{\s*offshore\[FishCatalog\.QueenfishId\] = 20f;\s*offshore\[FishCatalog\.SpanishMackerelId\] = 20f;\s*offshore\[FishCatalog\.GoldenPompanoId\] = 20f;/);
 assert.match(read(scripts+'Fishing/AmbientFishManager.cs'),
-    /if\(biome!=WindgroveShoalZone\.BiomeId\)\s*return ReefCatalog\.Roll[\s\S]*?if\(sample<6f\/7f\)return FishCatalog\.SpanishMackerelId;\s*return FishCatalog\.GoldenPompanoId;/);
+    /if\(biome!=WindgroveShoalZone\.BiomeId\)\s*return ReefCatalog\.Roll[\s\S]*?if\(sample<7f\/8f\)return FishCatalog\.GoldenPompanoId;/);
 
 const size=read(scripts+'Fishing/FishSizeTable.cs');
-assert.match(size,/GoldenPompanoCurve\(\) \/\/ ID 51/);
+assert.match(size,/GoldenPompanoCurve\(\), \/\/ ID 51/);
 const curve=size.match(/private static float\[\] GoldenPompanoCurve\(\)[\s\S]*?new float\[(\d+)\][\s\S]*?row\[i\]=\(float\)\(([\d.]+)\*Math\.Pow\(\(i\+1\)\*([\d.]+),([\d.]+)\)\/1000\.0\)/);
 assert(curve);
 const [samples,a,step,b]=curve.slice(1).map(Number);

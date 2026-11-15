@@ -12,7 +12,7 @@ for(const row of rows){
  assert.equal(c.length,head.length);
  assert.equal(c.slice(2).reduce((sum,n)=>sum+Number(n),0),100);
  const shrimp=c[0]==="windgrove-shoal"&&c[1]==="shrimp";
- assert.equal(Number(c[idx]),shrimp?60:0);
+ assert.equal(Number(c[idx]),shrimp?30:0);
  if(shrimp){assert.equal(Number(c[marlin]),40);assert.equal(Number(c[mahi]),0);}
  if(c[0]==="windgrove-shoal"&&["worms","worms-legacy"].includes(c[1]))assert.equal(Number(c[mahi]),42);
  assert.equal(Number(c[blue]),0);

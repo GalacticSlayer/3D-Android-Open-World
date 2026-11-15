@@ -30,7 +30,7 @@ for(const line of odds) {
         assert.equal(Number(cells[mahi]),42);
     }
     if(shrimp) {
-        assert.equal(Number(cells[rooster]),60);
+        assert.equal(Number(cells[rooster]),30);
         assert.equal(Number(cells[marlin]),40);
     }
     assert.equal(Number(cells[blue]),0);

@@ -85,6 +85,7 @@ public static class FishVisualFactory
             case FishCatalog.QueenfishId:return "Fishing/Queenfish";
             case FishCatalog.SpanishMackerelId:return "Fishing/SpanishMackerel";
             case FishCatalog.GoldenPompanoId:return "Fishing/GoldenPompano";
+            case FishCatalog.StripedMarlinId:return "Fishing/StripedMarlin";
             case FishCatalog.AbyssalLeviathanId:return "Fishing/AbyssalLeviathan";
             case FishCatalog.BattleScarredMakoSharkId:return "Fishing/BattleScarredMakoShark";
             case FishCatalog.BlacktipSharkId:return "Fishing/BlacktipShark";

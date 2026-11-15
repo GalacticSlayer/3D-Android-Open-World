@@ -56,7 +56,8 @@ public static class FishSizeTable
         RainbowRunnerCurve(), // ID 48 Elagatis bipinnulata: FishBase species-specific length-weight model
         QueenfishCurve(), // ID 49 Scomberoides commersonnianus: FishBase-derived model
         SpanishMackerelCurve(), // ID 50 Scomberomorus maculatus: SEDAR total-length fit
-        GoldenPompanoCurve() // ID 51 Trachinotus anak: measured total-length fit
+        GoldenPompanoCurve(), // ID 51 Trachinotus anak: measured total-length fit
+        StripedMarlinCurve() // ID 52 Kajikia audax: measured total-length conversion
     };
 
     // Edwards et al. (2011), Rodrigues lagoon measurements, n=17 (14-27 cm TL).
@@ -204,6 +205,23 @@ public static class FishSizeTable
         var row=new float[12]; // 5–60 cm; the standard extrapolation handles catch bonuses.
         for(int i=0;i<row.Length;i++)
             row[i]=(float)(0.2097*Math.Pow((i+1)*5.0,2.3385)/1000.0);
+        return row;
+    }
+
+    // Chiang et al. (ISC, Table 1): invert each sex's total-length conversion,
+    // then average the two round-weight predictions at that total length.
+    private static float[] StripedMarlinCurve()
+    {
+        var row=new float[65]; // 5–325 cm (normal 30–120 kg); shared bonus extrapolation applies.
+        for(int i=0;i<row.Length;i++)
+        {
+            double cm=(i+1)*5.0;
+            double maleLjfl=Math.Max(1.0,(cm-6.084)/1.257);
+            double femaleLjfl=Math.Max(1.0,(cm+2.93)/1.294);
+            double maleKg=Math.Pow(10,-5.696)*Math.Pow(maleLjfl,3.233);
+            double femaleKg=Math.Pow(10,-5.756)*Math.Pow(femaleLjfl,3.267);
+            row[i]=(float)((maleKg+femaleKg)*0.5);
+        }
         return row;
     }
 
