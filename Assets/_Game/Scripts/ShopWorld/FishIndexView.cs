@@ -191,7 +191,7 @@ public sealed class FishIndexView : MonoBehaviour
             if(makoFamily)
                 TextRow("Mako sharks: 80% normal, 20% battle-scarred. The overall bite rate stays the same.",18,muted,60,TextAnchor.MiddleLeft);
             if(mahiFamily)
-                TextRow("Mahi Mahi: 90% normal, 10% blue. Worms only in Windgrove Shoal.",18,muted,60,TextAnchor.MiddleLeft);
+                TextRow("Mahi Mahi bites are 90% normal and 10% blue. Either variant can bite the same tackle.",18,muted,60,TextAnchor.MiddleLeft);
             TextRow((emperorFamily?"Combined chance for both variants in ":"Chance in ")+ReefCatalog.Zones[biome].name+" when a fish bites.",18,muted,emperorFamily?60:46,TextAnchor.MiddleLeft);
         }
         var options=FishIndexCatalog.PreferredOptions(baitSpecies,biome,known);

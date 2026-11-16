@@ -48,7 +48,10 @@ public sealed class ShopHabitat : MonoBehaviour
             label.text=d.name.ToUpperInvariant()+
                 (purchased && !d.pond?"  ["+instanceKey.ToUpperInvariant()+"]":"")+"\n"+
                 (purchased?$"OWNED  |  {owned.fish.Count}/{d.fishLimit} FISH  |  {kg:0.0}/{d.totalKg:0} KG":offer)+
-                $"\nMAX {d.maxFishKg:0.0} KG EACH";
+                (d.id=="grand"
+                    ? $"\nMAX {d.maxFishKg:0.##} KG PER FISH" +
+                        (purchased ? "" : $"  |  {d.totalKg:0.##} KG TOTAL")
+                    : $"\nMAX {d.maxFishKg:0.0} KG EACH");
         }
         var sign=label!=null?label.GetComponent<ShopSign>():null; if(sign!=null)sign.Fit();
         if(signature==fishSignature) return;

@@ -130,14 +130,12 @@ public static class ShopCatalog
         }
     }
 
-    // Individual-fish and total-weight capacities are intentionally 3x the
-    // original values. Aquarium fish-count slots are now doubled; pond slots,
-    // physical dimensions, and weight limits are unchanged.
+    // Counts, individual-fish limits and total weight limits are per habitat.
     public static readonly HabitatDefinition[] Habitats = {
         new HabitatDefinition("nano", "Tidepool Cabinet", 250, 6, 2.4f, 5.4f, 2.2f, 1.2f, 1.4f),
         new HabitatDefinition("reef", "Reef Gallery", 700, 12, 12f, 42f, 4.8f, 2.2f, 2.8f),
         new HabitatDefinition("lagoon", "Lagoon Suite", 2000, 20, 36f, 165f, 8f, 3.6f, 5f, false, true),
-        new HabitatDefinition("grand", "Grand Ocean Gallery", 6500, 40, 105f, 660f, 14f, 5f, 9f, false, true),
+        new HabitatDefinition("grand", "Grand Ocean Gallery", 6500, 40, 250f, 1200f, 14f, 5f, 9f, false, true),
         new HabitatDefinition("ocean", "Oceanarium", 18000, 80, 1000f, 3000f, 26f, 7f, 16f, false, true),
         new HabitatDefinition("pond", "Courtyard Pond", 1400, 12, 24f, 135f, 10f, 2.8f, 8f, true, true),
         new HabitatDefinition("garden", "Garden Lagoon", 5000, 25, 105f, 720f, 18f, 4f, 14f, true, true),

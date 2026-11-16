@@ -1,4 +1,5 @@
 // Run from the repository root: node Tools/GoldenPompano/verify_rules.mjs
+// Current Windgrove balance is covered by Tools/WindgroveShoal/verify_balance.mjs.
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {tournamentIslands} from '../../Server/runtime/tournament-species.mjs';
@@ -7,33 +8,14 @@ const read=path=>readFileSync(path,'utf8');
 const csv=name=>read('Assets/Resources/FishingTuning/'+name+'.csv')
     .split(/\r?\n/).filter(s=>s&&!s.startsWith('#')).map(s=>s.split(','));
 const scripts='Assets/_Game/Scripts/';
-const [head,...odds]=csv('BiomeBaitSpeciesChance');
 const wind='windgrove-shoal', id='51';
-const col=id=>head.findIndex(name=>name.startsWith(id+'_'));
-assert.equal(head[col(id)],'51_golden_pompano');
-assert.equal(odds.length,54);
-for(const row of odds) {
-    assert.equal(row.length,head.length);
-    assert(row.slice(2).every(v=>/^\d+$/.test(v)));
-    assert.equal(row.slice(2).reduce((sum,v)=>sum+Number(v),0),100);
-    const eligible=row[0]===wind&&row[1]==='squid';
-    assert.equal(Number(row[col(id)]),eligible?20:0);
-    if(eligible) assert.deepEqual([44,49,50,51].map(id=>Number(row[col(id)])),[40,20,20,20]);
-}
 const weights=csv('BiomeFishWeights').filter(row=>row[1]===id);
 assert.equal(weights.length,6);
 assert.equal(new Set(weights.map(row=>row[0])).size,6);
 for(const row of weights) assert.deepEqual(row.slice(3),row[0]===wind?['0.25','2.9']:['0','0']);
 assert.equal(weights.filter(row=>row[0]===wind).length,1);
-const stats=csv('FishStats');
-assert.deepEqual(stats.find(row=>row[0]===id).slice(2,4),['0.25','2.9']);
-assert.deepEqual(stats.find(row=>row[0]===id).slice(4),stats.find(row=>row[0]==='44').slice(4));
-const biomeStats=csv('BiomeFishStats').filter(row=>row[0]===wind);
-assert.deepEqual(biomeStats.find(row=>row[1]===id).slice(3),biomeStats.find(row=>row[1]==='44').slice(3));
-assert.match(read(scripts+'Fishing/FishCatalog.cs'),/const int GoldenPompanoId=51[\s\S]*?"Golden Pompano"[^\n]+\.25f,2\.9f,2\.20f[\s\S]*?ActiveIds=\{[^}]+,GoldenPompanoId(?:,|\})/);
+assert.match(read(scripts+'Fishing/FishCatalog.cs'),/const int GoldenPompanoId=51[\s\S]*?ActiveIds=\{[^}]+,GoldenPompanoId(?:,|\})/);
 assert.match(read(scripts+'Fishing/FishVisualFactory.cs'),/case FishCatalog\.GoldenPompanoId:return "Fishing\/GoldenPompano";/);
-assert.match(read(scripts+'ShopWorld/FishIndexCatalog.cs'),/FishCatalog\.SpanishMackerelId, FishCatalog\.GoldenPompanoId/);
-assert.match(read(scripts+'Reef/ReefCatalog.cs'),/if\(squid\)\s*\{\s*offshore\[FishCatalog\.QueenfishId\] = 20f;\s*offshore\[FishCatalog\.SpanishMackerelId\] = 20f;\s*offshore\[FishCatalog\.GoldenPompanoId\] = 20f;/);
 assert.match(read(scripts+'Fishing/AmbientFishManager.cs'),
     /if\(biome!=WindgroveShoalZone\.BiomeId\)\s*return ReefCatalog\.Roll[\s\S]*?if\(sample<7f\/10f\)return FishCatalog\.GoldenPompanoId;/);
 
@@ -66,4 +48,4 @@ const windFish=tournamentIslands.find(i=>i.id===5).fish.find(f=>f.id===51);
 assert.equal(windFish.name,'Golden Pompano');
 assert(Math.abs(windFish.maxKg-2.9*1.5)<1e-9);
 assert(tournamentIslands.filter(i=>i.id!==5).every(i=>!i.fish.some(f=>f.id===51)));
-console.log('Golden Pompano: Windgrove-only Squid odds, Marlin stats, size curve, fish index, authored assets and tournament rules PASS');
+console.log('Golden Pompano: Windgrove availability, sizing, authored assets and tournament validation PASS');

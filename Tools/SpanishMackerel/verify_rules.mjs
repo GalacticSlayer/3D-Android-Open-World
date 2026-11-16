@@ -1,4 +1,5 @@
 // Run from the repository root: node Tools/SpanishMackerel/verify_rules.mjs
+// Current Windgrove balance is covered by Tools/WindgroveShoal/verify_balance.mjs.
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {tournamentIslands} from '../../Server/runtime/tournament-species.mjs';
@@ -8,45 +9,16 @@ const scripts='Assets/_Game/Scripts/';
 const read=path=>readFileSync(path,'utf8');
 const rows=file=>read(tuning+file).trim().split(/\r?\n/)
     .filter(row=>row&&!row.startsWith('#')).map(row=>row.split(','));
-const [, ...stats]=rows('FishStats.csv');
-const [, ...biomeStats]=rows('BiomeFishStats.csv');
 const [, ...weights]=rows('BiomeFishWeights.csv');
-const [header,...chances]=rows('BiomeBaitSpeciesChance.csv');
 const wind='windgrove-shoal';
 const id='50';
-const col=species=>header.findIndex(key=>key.startsWith(species+'_'));
 const catalog=read(scripts+'Fishing/FishCatalog.cs');
 assert.match(catalog,/public const int SpanishMackerelId=50/);
 assert.match(catalog,/ActiveIds=\{[^}]*,49,SpanishMackerelId,GoldenPompanoId(?:,|\})/);
-assert.match(catalog,/new FishSpeciesDefinition\("Spanish Mackerel"[^\n]+\.5f,5\.89f,2\.20f,0f,2600\)/);
-assert.deepEqual(stats.find(row=>row[0]===id).slice(2,4),['0.5','5.89']);
-assert.deepEqual(stats.find(row=>row[0]===id).slice(4),stats.find(row=>row[0]==='44').slice(4));
-assert.deepEqual(biomeStats.find(row=>row[0]===wind&&row[1]===id).slice(3),
-    biomeStats.find(row=>row[0]===wind&&row[1]==='44').slice(3));
 assert.equal(weights.filter(row=>row[1]===id).length,6);
 for (const row of weights.filter(row=>row[1]===id))
     assert.deepEqual(row.slice(3),row[0]===wind?['0.5','5.89']:['0','0']);
 
-assert.equal(header[col(50)],'50_spanish_mackerel');
-assert.equal(chances.length,54);
-assert.equal(new Set(chances.map(row=>row.slice(0,2).join(','))).size,54);
-const [marlin,mahi,rooster,rainbow,queen,mackerel]=[44,45,47,48,49,50].map(col);
-assert([marlin,mahi,rooster,rainbow,queen,mackerel].every(c=>c>1));
-for (const row of chances) {
-    assert.equal(row.length,header.length);
-    assert(row.slice(2).every(v=>/^\d+$/.test(v)));
-    assert.equal(row.slice(2).reduce((sum,v)=>sum+Number(v),0),100);
-    const [biome,bait]=row;
-    assert.equal(+row[mackerel],biome===wind&&bait==='squid'?20:0);
-    if (biome!==wind) continue;
-    const expected=bait==='squid'?[40,0,0,0,20,20]:
-        bait==='shrimp'?[40,0,30,0,0,0]:
-        ['worms','worms-legacy'].includes(bait)?[28,42,0,30,0,0]:[bait==='lure:0'?40:100,0,0,0,0,0];
-    assert.deepEqual([marlin,mahi,rooster,rainbow,queen,mackerel].map(c=>+row[c]),expected);
-}
-const reef=read(scripts+'Reef/ReefCatalog.cs');
-assert.match(reef,/if\(squid\)\s*\{\s*offshore\[FishCatalog\.QueenfishId\] = 20f;\s*offshore\[FishCatalog\.SpanishMackerelId\] = 20f;/);
-assert.match(read(scripts+'ShopWorld/FishIndexCatalog.cs'),/FishCatalog\.QueenfishId, FishCatalog\.SpanishMackerelId/);
 assert.match(read(scripts+'Fishing/FishVisualFactory.cs'),/case FishCatalog\.SpanishMackerelId:return "Fishing\/SpanishMackerel";/);
 assert.match(read(scripts+'Fishing/AmbientFishManager.cs'),
     /if\(sample<5f\/10f\)return FishCatalog\.QueenfishId;\s*if\(sample<6f\/10f\)return FishCatalog\.SpanishMackerelId;/);
@@ -86,4 +58,4 @@ for (const row of weights.filter(row=>row[0]===wind&&+row[4]>0)) {
     assert.equal(fish.name,row[2]);
     assert(Math.abs(fish.maxKg-Number(row[4])*1.5)<1e-9);
 }
-console.log('Spanish Mackerel: Windgrove-only Squid odds, Marlin stats, size curve, index, ambient pool, authored assets, tournament table PASS');
+console.log('Spanish Mackerel: Windgrove availability, sizing, authored assets and tournament validation PASS');

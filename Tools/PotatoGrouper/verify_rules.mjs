@@ -1,4 +1,5 @@
 // Run from the repository root: node Tools/PotatoGrouper/verify_rules.mjs [upload-directory]
+// Current Windgrove balance is covered by Tools/WindgroveShoal/verify_balance.mjs.
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
@@ -8,42 +9,13 @@ const read=path=>readFileSync(path,'utf8');
 const csv=name=>read('Assets/Resources/FishingTuning/'+name+'.csv')
     .split(/\r?\n/).filter(row=>row&&!row.startsWith('#')).map(row=>row.split(','));
 const scripts='Assets/_Game/Scripts/';
-const wind='windgrove-shoal', id='54', black='44', queensland='53';
-const [header,...odds]=csv('BiomeBaitSpeciesChance');
-const column=id=>header.findIndex(name=>name.startsWith(id+'_'));
-assert.equal(header[column(id)],'54_potato_grouper');
-assert.equal(odds.length,54);
-assert.equal(new Set(odds.map(row=>row.slice(0,2).join(','))).size,odds.length);
-for(const row of odds) {
-    assert.equal(row.length,header.length);
-    assert(row.slice(2).every(v=>/^\d+$/.test(v)));
-    assert.equal(row.slice(2).reduce((sum,v)=>sum+Number(v),0),100);
-    const eligible=row[0]===wind && row[1]==='lure:0';
-    assert.equal(+row[column(id)],eligible?30:0);
-    assert.equal(+row[column(queensland)],eligible?30:0);
-    if(eligible) assert.equal(+row[column(black)],40);
-}
+const wind='windgrove-shoal', id='54';
 const weights=csv('BiomeFishWeights').filter(row=>row[1]===id);
-assert.deepEqual(weights.map(row=>row[0]).sort(),[...new Set(odds.map(row=>row[0]))].sort());
+assert.deepEqual(weights.map(row=>row[0]).sort(),['bluewater-cay','brinebreak-isle','deep-ocean','snapper-island','suncrest-reef',wind]);
 assert(weights.some(row=>row[0]===wind));
 for(const row of weights) assert.deepEqual(row.slice(3),row[0]===wind?['15','110']:['0','0']);
-const stats=csv('FishStats');
-const biomeStats=csv('BiomeFishStats').filter(row=>row[1]===id);
-assert.deepEqual(stats.find(row=>row[0]===id).slice(1,4),['Potato Grouper','15','110']);
-assert.deepEqual(stats.find(row=>row[0]===id).slice(4),stats.find(row=>row[0]===black).slice(4));
-assert.deepEqual(biomeStats,[[wind,id,'Potato Grouper',
-    ...csv('BiomeFishStats').find(row=>row[0]===wind&&row[1]===black).slice(3)]]);
-const catalog=read(scripts+'Fishing/FishCatalog.cs');
-assert.match(catalog,/public const int PotatoGrouperId=54;/);
-assert.match(catalog,/ActiveIds=\{[^}]+,PotatoGrouperId\}/);
-const definition=name=>catalog.split('\n').find(line=>line.includes('new FishSpeciesDefinition("'+name+'"'));
-assert.match(definition('Potato Grouper'),/,15f,110f,2\.20f,0f,2600\)/);
-assert.equal(definition('Potato Grouper').match(/,2\.20f,0f,2600\)/)[0],
-    definition('Black Marlin').match(/,2\.20f,0f,2600\)/)[0]);
+assert.match(read(scripts+'Fishing/FishCatalog.cs'),/const int PotatoGrouperId=54[\s\S]*?ActiveIds=\{[^}]+,PotatoGrouperId(?:,|\})/);
 assert.match(read(scripts+'Fishing/FishVisualFactory.cs'),/case FishCatalog\.PotatoGrouperId:return "Fishing\/PotatoGrouper";/);
-assert.match(read(scripts+'ShopWorld/FishIndexCatalog.cs'),/FishCatalog\.QueenslandGrouperId, FishCatalog\.PotatoGrouperId \}/);
-const reef=read(scripts+'Reef/ReefCatalog.cs');
-assert.match(reef,/if\s*\(biome == WindgroveShoalZone\.BiomeId\)[\s\S]*?bool heavyJig = bait==ShopCatalog\.StarterLure && ShopCatalog\.ActiveLureVariant==0;[\s\S]*?if\(heavyJig\)\s*\{\s*offshore\[FishCatalog\.QueenslandGrouperId\] = 30f;\s*offshore\[FishCatalog\.PotatoGrouperId\] = 30f;\s*\}/);
 assert.match(read(scripts+'Fishing/AmbientFishManager.cs'),
     /if\(biome!=WindgroveShoalZone\.BiomeId\)\s*return ReefCatalog\.Roll[\s\S]*?if\(sample<9f\/10f\)return FishCatalog\.QueenslandGrouperId;\s*return FishCatalog\.PotatoGrouperId;/);
 
@@ -81,4 +53,4 @@ assert(tournamentIslands.filter(i=>i.id!==5).every(i=>!i.fish.some(f=>f.id===54)
 if(process.argv[2])
     for(const [bytes,file] of [[fbx,'Potato Grouper.fbx'],[png,'Potato Grouper Texture.png'],[blend,'Potato Grouper.blend']])
         assert(bytes.equals(readFileSync(join(process.argv[2],file))),file+' differs from the upload');
-console.log('Potato Grouper: Windgrove Heavy Jig odds, Black Marlin fight tuning, sizing, Fish Index, authored assets and tournaments PASS');
+console.log('Potato Grouper: Windgrove availability, sizing, authored assets and tournament validation PASS');

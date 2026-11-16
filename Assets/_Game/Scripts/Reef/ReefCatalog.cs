@@ -73,41 +73,36 @@ public static class ReefCatalog
         return bait==2?ShrimpOdds:bait==3?SquidOdds:Starter.weights;
     }
 
+    // Emergency fallback only. FishIndexCatalog has its own display order.
+    // Column order here is stable species ID; rows are the three baits, then lure variants 0–4.
+    private static readonly int[] WindgroveFallbackIds = {
+        FishCatalog.BlackMarlinId, FishCatalog.MahiMahiId, FishCatalog.RoosterfishId,
+        FishCatalog.RainbowRunnerId, FishCatalog.QueenfishId, FishCatalog.SpanishMackerelId,
+        FishCatalog.GoldenPompanoId, FishCatalog.StripedMarlinId, FishCatalog.QueenslandGrouperId,
+        FishCatalog.PotatoGrouperId
+    };
+    private static readonly int[,] WindgroveFallbackOdds = {
+        { 0, 1, 2, 5, 19, 21, 52, 0, 0, 0 },
+        { 0, 5, 5, 5, 21, 24, 38, 0, 1, 1 },
+        { 1, 5, 6, 6, 26, 22, 29, 1, 2, 2 },
+        { 1, 12, 10, 9, 9, 9, 9, 3, 19, 19 },
+        { 1, 14, 22, 11, 6, 10, 10, 1, 13, 12 },
+        { 0, 11, 10, 22, 13, 15, 26, 0, 1, 2 },
+        { 0, 15, 11, 12, 13, 20, 29, 0, 0, 0 },
+        { 11, 8, 10, 8, 8, 9, 10, 11, 13, 12 }
+    };
+
     private static float[] EquippedWeights(int bait,int biome)
     {
         if (biome == WindgroveShoalZone.BiomeId)
         {
-            // Editable tuning is authoritative. The fallback preserves the same
-            // Windgrove-only bait restrictions if a CSV becomes unavailable.
-            // Ambient fish have a separate species roll independent of bait.
+            // Editable tuning is authoritative. Use these odds only if it fails to load.
+            int row = bait==ShopCatalog.StarterLure
+                ? 3+Mathf.Clamp(ShopCatalog.ActiveLureVariant,0,ShopCatalog.LureVariantCount-1)
+                : bait==2 ? 1 : bait==3 ? 2 : 0;
             var offshore = new float[FishCatalog.Count];
-            bool worms = bait==0 || bait==1;
-            bool shrimp = bait==2;
-            bool squid = bait==3;
-            // Heavy Jig is shop lure variant 0, not bait slot 0 (worms).
-            bool heavyJig = bait==ShopCatalog.StarterLure && ShopCatalog.ActiveLureVariant==0;
-            offshore[FishCatalog.BlackMarlinId] = worms ? 28f : shrimp || squid || heavyJig ? 40f : 100f;
-            if(heavyJig)
-            {
-                offshore[FishCatalog.QueenslandGrouperId] = 30f;
-                offshore[FishCatalog.PotatoGrouperId] = 30f;
-            }
-            if(worms)
-            {
-                offshore[FishCatalog.MahiMahiId] = 42f;
-                offshore[FishCatalog.RainbowRunnerId] = 30f;
-            }
-            if(shrimp)
-            {
-                offshore[FishCatalog.RoosterfishId] = 30f;
-                offshore[FishCatalog.StripedMarlinId] = 30f;
-            }
-            if(squid)
-            {
-                offshore[FishCatalog.QueenfishId] = 20f;
-                offshore[FishCatalog.SpanishMackerelId] = 20f;
-                offshore[FishCatalog.GoldenPompanoId] = 20f;
-            }
+            for(int i=0;i<WindgroveFallbackIds.Length;i++)
+                offshore[WindgroveFallbackIds[i]]=WindgroveFallbackOdds[row,i];
             return offshore;
         }
         if(biome==SnapperBiomeId)

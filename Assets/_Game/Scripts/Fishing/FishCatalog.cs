@@ -138,17 +138,17 @@ public static class FishCatalog
         new FishSpeciesDefinition("Blue Tang",new Color(.03f,.2f,.9f),new Color(1f,.85f,.05f),0.02f,1f,0.42f,0f,40),
         new FishSpeciesDefinition("Dussumieri Tang",new Color(.3f,.45f,.55f),new Color(.95f,.8f,.1f),0.1f,5.5f,1.05f,0f,170),
         new FishSpeciesDefinition("Abyssal Leviathan",new Color(.04f,.1f,.16f),Color.cyan,400f,440f,2.1f,0f,AbyssalLeviathanSellCoins),
-        new FishSpeciesDefinition("Black Marlin",new Color(.04f,.09f,.18f),new Color(.28f,.57f,.72f),60f,750f,2.20f,0f,2600),
-        new FishSpeciesDefinition("Mahi Mahi",new Color(.11f,.72f,.48f),new Color(.98f,.82f,.10f),2f,40f,2.20f,0f,2600),
-        new FishSpeciesDefinition("Blue Mahi Mahi",new Color(.04f,.40f,.94f),new Color(.65f,.87f,1f),2f,40f,2.20f,0f,2600),
-        new FishSpeciesDefinition("Roosterfish",new Color(.14f,.35f,.53f),new Color(.86f,.89f,.87f),2.5f,50f,2.20f,0f,2600),
-        new FishSpeciesDefinition("Rainbow Runner",new Color(.20f,.39f,.46f),new Color(.22f,.80f,1f),.5f,17.05f,2.20f,0f,2600),
-        new FishSpeciesDefinition("Queenfish",new Color(.40f,.57f,.68f),new Color(.84f,.89f,.91f),1f,16f,2.20f,0f,2600),
-        new FishSpeciesDefinition("Spanish Mackerel",new Color(.19f,.42f,.56f),new Color(.86f,.69f,.30f),.5f,5.89f,2.20f,0f,2600),
-        new FishSpeciesDefinition("Golden Pompano",new Color(.39f,.46f,.38f),new Color(.95f,.72f,.15f),.25f,2.9f,2.20f,0f,2600),
-        new FishSpeciesDefinition("Striped Marlin",new Color(.06f,.13f,.30f),new Color(.30f,.62f,.86f),30f,120f,2.20f,0f,2600),
-        new FishSpeciesDefinition("Queensland Grouper",new Color(.45f,.31f,.15f),new Color(.91f,.68f,.31f),30f,180f,2.20f,0f,2600),
-        new FishSpeciesDefinition("Potato Grouper",new Color(.30f,.37f,.39f),new Color(.73f,.80f,.79f),15f,110f,2.20f,0f,2600)
+        new FishSpeciesDefinition("Black Marlin",new Color(.04f,.09f,.18f),new Color(.28f,.57f,.72f),20f,750f,3.3f,0f,150000),
+        new FishSpeciesDefinition("Mahi Mahi",new Color(.11f,.72f,.48f),new Color(.98f,.82f,.10f),2f,40f,2.6f,0f,18000),
+        new FishSpeciesDefinition("Blue Mahi Mahi",new Color(.04f,.40f,.94f),new Color(.65f,.87f,1f),2f,40f,2.7f,0f,30000),
+        new FishSpeciesDefinition("Roosterfish",new Color(.14f,.35f,.53f),new Color(.86f,.89f,.87f),2.5f,50f,2.5f,0f,18000),
+        new FishSpeciesDefinition("Rainbow Runner",new Color(.20f,.39f,.46f),new Color(.22f,.80f,1f),0.5f,17.05f,2.4f,0f,18000),
+        new FishSpeciesDefinition("Queenfish",new Color(.40f,.57f,.68f),new Color(.84f,.89f,.91f),1f,16f,2.4f,0f,16000),
+        new FishSpeciesDefinition("Spanish Mackerel",new Color(.19f,.42f,.56f),new Color(.86f,.69f,.30f),0.5f,5.89f,2.3f,0f,8000),
+        new FishSpeciesDefinition("Golden Pompano",new Color(.39f,.46f,.38f),new Color(.95f,.72f,.15f),0.25f,2.9f,2.2f,0f,5000),
+        new FishSpeciesDefinition("Striped Marlin",new Color(.06f,.13f,.30f),new Color(.30f,.62f,.86f),30f,120f,3f,0f,100000),
+        new FishSpeciesDefinition("Queensland Grouper",new Color(.45f,.31f,.15f),new Color(.91f,.68f,.31f),30f,180f,3.5f,0f,70000),
+        new FishSpeciesDefinition("Potato Grouper",new Color(.30f,.37f,.39f),new Color(.73f,.80f,.79f),15f,110f,3.5f,0f,60000)
     };
 
     public static int Count=>Species.Length;
