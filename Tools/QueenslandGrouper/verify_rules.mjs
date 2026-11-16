@@ -19,7 +19,7 @@ for(const row of odds) {
     assert(row.slice(2).every(v=>/^\d+$/.test(v)));
     assert.equal(row.slice(2).reduce((sum,v)=>sum+Number(v),0),100);
     const eligible=row[0]===wind&&row[1]==='lure:0';
-    assert.equal(+row[column(id)],eligible?60:0);
+    assert.equal(+row[column(id)],eligible?30:0);
     if(eligible) assert.equal(+row[column(black)],40);
 }
 const weights=csv('BiomeFishWeights').filter(row=>row[1]===id);
@@ -41,12 +41,12 @@ assert.equal(fight('Queensland Grouper'),fight('Black Marlin'));
 assert.match(read(scripts+'Fishing/FishVisualFactory.cs'),/case FishCatalog\.QueenslandGrouperId:return "Fishing\/QueenslandGrouper";/);
 assert.match(read(scripts+'ShopWorld/FishIndexCatalog.cs'),/FishCatalog\.StripedMarlinId, FishCatalog\.QueenslandGrouperId/);
 assert.match(read(scripts+'Reef/ReefCatalog.cs'),
-    /bool heavyJig = bait==ShopCatalog\.StarterLure && ShopCatalog\.ActiveLureVariant==0;[\s\S]*?if\(heavyJig\)offshore\[FishCatalog\.QueenslandGrouperId\] = 60f;/);
+    /bool heavyJig = bait==ShopCatalog\.StarterLure && ShopCatalog\.ActiveLureVariant==0;[\s\S]*?if\(heavyJig\)\s*\{\s*offshore\[FishCatalog\.QueenslandGrouperId\] = 30f;/);
 assert.match(read(scripts+'Fishing/AmbientFishManager.cs'),
-    /if\(biome!=WindgroveShoalZone\.BiomeId\)\s*return ReefCatalog\.Roll[\s\S]*?if\(sample<8f\/9f\)return FishCatalog\.StripedMarlinId;\s*return FishCatalog\.QueenslandGrouperId;/);
+    /if\(biome!=WindgroveShoalZone\.BiomeId\)\s*return ReefCatalog\.Roll[\s\S]*?if\(sample<8f\/10f\)return FishCatalog\.StripedMarlinId;\s*if\(sample<9f\/10f\)return FishCatalog\.QueenslandGrouperId;/);
 
 const size=read(scripts+'Fishing/FishSizeTable.cs');
-assert.match(size,/QueenslandGrouperCurve\(\) \/\/ ID 53/);
+assert.match(size,/QueenslandGrouperCurve\(\),? \/\/ ID 53/);
 const curve=size.match(/private static float\[\] QueenslandGrouperCurve\(\)[\s\S]*?new float\[(\d+)\][\s\S]*?\(([\d.]+)\*Math\.Pow\(\(i\+1\)\*([\d.]+),([\d.]+)\)\/([\d.]+)\)/);
 assert(curve);
 const [count,a,step,b,toKg]=curve.slice(1).map(Number);

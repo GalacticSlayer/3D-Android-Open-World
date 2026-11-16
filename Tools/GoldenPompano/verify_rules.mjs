@@ -35,7 +35,7 @@ assert.match(read(scripts+'Fishing/FishVisualFactory.cs'),/case FishCatalog\.Gol
 assert.match(read(scripts+'ShopWorld/FishIndexCatalog.cs'),/FishCatalog\.SpanishMackerelId, FishCatalog\.GoldenPompanoId/);
 assert.match(read(scripts+'Reef/ReefCatalog.cs'),/if\(squid\)\s*\{\s*offshore\[FishCatalog\.QueenfishId\] = 20f;\s*offshore\[FishCatalog\.SpanishMackerelId\] = 20f;\s*offshore\[FishCatalog\.GoldenPompanoId\] = 20f;/);
 assert.match(read(scripts+'Fishing/AmbientFishManager.cs'),
-    /if\(biome!=WindgroveShoalZone\.BiomeId\)\s*return ReefCatalog\.Roll[\s\S]*?if\(sample<7f\/9f\)return FishCatalog\.GoldenPompanoId;/);
+    /if\(biome!=WindgroveShoalZone\.BiomeId\)\s*return ReefCatalog\.Roll[\s\S]*?if\(sample<7f\/10f\)return FishCatalog\.GoldenPompanoId;/);
 
 const size=read(scripts+'Fishing/FishSizeTable.cs');
 assert.match(size,/GoldenPompanoCurve\(\), \/\/ ID 51/);

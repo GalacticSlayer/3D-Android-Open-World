@@ -58,7 +58,8 @@ public static class FishSizeTable
         SpanishMackerelCurve(), // ID 50 Scomberomorus maculatus: SEDAR total-length fit
         GoldenPompanoCurve(), // ID 51 Trachinotus anak: measured total-length fit
         StripedMarlinCurve(), // ID 52 Kajikia audax: measured total-length conversion
-        QueenslandGrouperCurve() // ID 53 Epinephelus lanceolatus: FishBase Bayesian estimate
+        QueenslandGrouperCurve(), // ID 53 Epinephelus lanceolatus: FishBase Bayesian estimate
+        PotatoGrouperCurve() // ID 54 Epinephelus tukula: Aldabra total-length fit
     };
 
     // Edwards et al. (2011), Rodrigues lagoon measurements, n=17 (14-27 cm TL).
@@ -232,6 +233,16 @@ public static class FishSizeTable
         var row=new float[54]; // 5–270 cm, including the standard Windgrove weight bonus.
         for(int i=0;i<row.Length;i++)
             row[i]=(float)(0.01148*Math.Pow((i+1)*5.0,3.04)/1000.0);
+        return row;
+    }
+
+    // Grandcourt (2005), Atoll Research Bulletin 539, Fig. 4d: W(kg) = 0.00001 * TL(cm)^3.07.
+    // Extrapolate the measured fit to the species' reported maximum and gameplay bonuses.
+    private static float[] PotatoGrouperCurve()
+    {
+        var row=new float[45]; // 5–225 cm, including the standard hotspot weight bonus.
+        for(int i=0;i<row.Length;i++)
+            row[i]=(float)(0.00001*Math.Pow((i+1)*5.0,3.07));
         return row;
     }
 

@@ -40,6 +40,6 @@ assert(read("Assets/Resources/FishingTuning/BiomeFishStats.csv")
     .includes("windgrove-shoal,49,Queenfish,21500,36000,2600,28000"));
 const ambient=read("Assets/_Game/Scripts/Fishing/AmbientFishManager.cs");
 assert(ambient.includes("return FishCatalog.QueenfishId;"));
-assert(ambient.includes("if(sample<5f/9f)return FishCatalog.QueenfishId;"));
+assert(ambient.includes("if(sample<5f/10f)return FishCatalog.QueenfishId;"));
 assert(ambient.includes("FishCatalog.RollMahiMahiVariant(FishCatalog.MahiMahiId,Random.value)"));
-console.log("Queenfish only in Windgrove on squid, one of nine ambient families, fish index, and CSV tuning: PASS");
+console.log("Queenfish only in Windgrove on squid, Windgrove ambient pool, fish index, and CSV tuning: PASS");

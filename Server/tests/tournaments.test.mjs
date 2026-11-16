@@ -430,3 +430,18 @@ test('Queensland Grouper scores only from Windgrove in map-wide tournaments',()=
  assert.equal(view.biggestSpecies,53);
  assert.throws(()=>catchFish(f,f.guest,fish.maxKg*2+.02,12,{island:5,species:53}),/Invalid tournament catch/);
 });
+
+test('Potato Grouper scores as its own species and only from Windgrove',()=>{
+ const f=setup();
+ const fish=tournamentIslands[5].fish.find(s=>s.id===54);
+ assert.deepEqual(fish,{id:54,name:'Potato Grouper',maxKg:165});
+ f.game.action(f.host,{...f.create,mode:'weight'});
+ f.game.action(f.guest,f.joinGuest);
+ f.setTime(6000);f.game.tick(f.room);
+ for(const island of tournamentIslands.filter(i=>i.id!==5))
+  assert.throws(()=>catchFish(f,f.guest,15,11,{island:island.id,species:54}),/does not match/);
+ const view=catchFish(f,f.guest,fish.maxKg*2,11,{island:5,species:54});
+ assert.equal(view.entries.find(e=>e.id==='guest').points,33000);
+ assert.equal(view.biggestSpecies,54);
+ assert.throws(()=>catchFish(f,f.guest,fish.maxKg*2+.02,12,{island:5,species:54}),/Invalid tournament catch/);
+});

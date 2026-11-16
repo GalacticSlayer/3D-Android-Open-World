@@ -49,7 +49,7 @@ assert.match(reef,/if\(squid\)\s*\{\s*offshore\[FishCatalog\.QueenfishId\] = 20f
 assert.match(read(scripts+'ShopWorld/FishIndexCatalog.cs'),/FishCatalog\.QueenfishId, FishCatalog\.SpanishMackerelId/);
 assert.match(read(scripts+'Fishing/FishVisualFactory.cs'),/case FishCatalog\.SpanishMackerelId:return "Fishing\/SpanishMackerel";/);
 assert.match(read(scripts+'Fishing/AmbientFishManager.cs'),
-    /if\(sample<5f\/9f\)return FishCatalog\.QueenfishId;\s*if\(sample<6f\/9f\)return FishCatalog\.SpanishMackerelId;/);
+    /if\(sample<5f\/10f\)return FishCatalog\.QueenfishId;\s*if\(sample<6f\/10f\)return FishCatalog\.SpanishMackerelId;/);
 
 const size=read(scripts+'Fishing/FishSizeTable.cs');
 assert.match(size,/SpanishMackerelCurve\(\), \/\/ ID 50/);

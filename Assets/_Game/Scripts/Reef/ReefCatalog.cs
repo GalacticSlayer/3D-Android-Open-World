@@ -37,7 +37,7 @@ public static class ReefCatalog
         new Zone(SnapperIslandGeometry.Id,SnapperIslandGeometry.Name,"A dedicated snapper island directly south of Suncrest. Snappers, blackfin and great barracuda, and Blacktip Reef Sharks bite within 100 m of its three cave rocks. Land here to unlock travel.",false,
             new float[]{0,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,37,13,2,0,0,10,4,2}),
         new Zone(WindgroveShoalZone.Id,WindgroveShoalZone.Name,
-            "Remote wind-farm waters within 150 m of any turbine. Black Marlin, Mahi Mahi, Roosterfish, Rainbow Runner, Queenfish, Spanish Mackerel, Golden Pompano, Striped Marlin and Queensland Grouper live only here. Approach a turbine to unlock travel.",false,
+            "Remote wind-farm waters within 150 m of any turbine. Black Marlin, Mahi Mahi, Roosterfish, Rainbow Runner, Queenfish, Spanish Mackerel, Golden Pompano, Striped Marlin, Queensland Grouper and Potato Grouper live only here. Approach a turbine to unlock travel.",false,
             new float[]{})
     };
 
@@ -87,7 +87,11 @@ public static class ReefCatalog
             // Heavy Jig is shop lure variant 0, not bait slot 0 (worms).
             bool heavyJig = bait==ShopCatalog.StarterLure && ShopCatalog.ActiveLureVariant==0;
             offshore[FishCatalog.BlackMarlinId] = worms ? 28f : shrimp || squid || heavyJig ? 40f : 100f;
-            if(heavyJig)offshore[FishCatalog.QueenslandGrouperId] = 60f;
+            if(heavyJig)
+            {
+                offshore[FishCatalog.QueenslandGrouperId] = 30f;
+                offshore[FishCatalog.PotatoGrouperId] = 30f;
+            }
             if(worms)
             {
                 offshore[FishCatalog.MahiMahiId] = 42f;
