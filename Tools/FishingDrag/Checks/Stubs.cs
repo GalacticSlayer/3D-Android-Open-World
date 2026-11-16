@@ -15,6 +15,7 @@ namespace UnityEngine {
  public static class Mathf {
   public static float Clamp01(float v)=>Math.Clamp(v,0,1);public static int Clamp(int v,int a,int b)=>Math.Clamp(v,a,b);public static float Clamp(float v,float a,float b)=>Math.Clamp(v,a,b);
   public static int Max(int a,int b)=>Math.Max(a,b);public static float Max(float a,float b)=>Math.Max(a,b);public static int Min(int a,int b)=>Math.Min(a,b);
+  public static int RoundToInt(float x)=>(int)MathF.Round(x);
   public static int FloorToInt(float x)=>(int)MathF.Floor(x);
  }
 }
@@ -24,11 +25,14 @@ public class FishingSystem:UnityEngine.MonoBehaviour {
  private float fishHealth=1,damageFraction,damageDisplayTimer;private bool fishUnconscious;
  private UnityEngine.GameObject bobber;private UnityEngine.Camera playerCamera;
  public int SkillFeedbacks;public void PlaySkillFeedback(){SkillFeedbacks++;}
+ public bool IsBossFight=>false;public int CurrentFishHealth=>fishHealthPoints;
+ public void RefreshHardenedScalesStatus(){}public void PlaySirensCallSound(){}
+ public int MitigateBossDamage(int damage,out bool hardened){hardened=false;return damage;}
  public int Stuns;public void ApplySkillStun(){Stuns++;}
  public int Presentations;private void EnsureUnconsciousFishVisual(){Presentations++;}
 }
 public class FishingHUD {public class Input {public bool IsHeld;}public Input ActionInput=new Input();public bool CombatInputVisible=true,FishingUiVisible=true;public int Damage;public float Charge;public bool Fighting,Live;
- public void ShowDamage(int n,UnityEngine.Vector3 p,bool lightning=false){Damage+=n;}
+ public void ShowDamage(int n,UnityEngine.Vector3 p,bool lightning=false,bool hardened=false){Damage+=n;}
  public void SetDragFightUI(bool fighting,bool live,int mode,float charge,float cooldown=0f){Fighting=fighting;Live=live;Charge=charge;}}
 public class ShopProgress {public class Ledger {public int rodEquipped;}public Ledger Data=new Ledger();}
 public class Level2FishingRodRuntime:UnityEngine.MonoBehaviour {}
@@ -38,3 +42,6 @@ public static class FishingDamagePresentation {public static void MarkCriticalHi
 
 
 public class FishingBurnVisuals:UnityEngine.MonoBehaviour {}
+
+public class AbyssalLeviathanEncounter:UnityEngine.MonoBehaviour {public void ReportDamage(int damage){}}
+public static class FishingThirdPersonView {public static UnityEngine.Vector3 WorldToScreenPoint(UnityEngine.Camera camera,UnityEngine.Vector3 point)=>camera.WorldToScreenPoint(point);}

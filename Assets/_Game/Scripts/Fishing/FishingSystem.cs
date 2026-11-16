@@ -67,12 +67,16 @@ public class FishingSystem : MonoBehaviour
     private Texture2D[] fishStatusTextures;
     private Texture2D stunnedStatusTexture;
     private float skillStunUntil;
+    // Keep combat and its countdown visuals on the same timing for the hooked zone.
+    private bool IsWindgroveFight => !pondCast && fightBiome == WindgroveShoalZone.BiomeId;
+    private float FragileWarningDuration => FishingDragRules.FragileWarningDuration(IsWindgroveFight);
+    private float SkillStunDuration => FishingDragRules.SkillStunDuration(IsWindgroveFight);
     public bool IsSkillStunned => state == FishingState.Fighting && !fishUnconscious && Time.time < skillStunUntil;
 
     public void ApplySkillStun()
     {
         if (state != FishingState.Fighting || fishUnconscious) return;
-        skillStunUntil = Time.time + FishingDragRules.SkillStunSeconds;
+        skillStunUntil = Time.time + SkillStunDuration;
         RefreshHardenedScalesStatus();
         surgeAmount = 0f;
         fragileBreakTimer = 0f;
@@ -159,7 +163,7 @@ public class FishingSystem : MonoBehaviour
     private bool FragileWarningActive => isActiveAndEnabled && rodEquipped && !shopMode &&
         !(ShopWorldHUD.MenuOpen || FishingTournament.ModalOpen) && state == FishingState.Fighting && !fishUnconscious && !IsSkillStunned &&
         ActiveTemperament == FishTemperament.Fragile && CurrentDrag != FishingDragRules.Low;
-    private bool FragileWarningFlashing => FragileWarningActive && fragileBreakTimer >= FishingDragRules.FragileWarningSeconds;
+    private bool FragileWarningFlashing => FragileWarningActive && fragileBreakTimer >= FragileWarningDuration;
     private bool FragileFlashOn => ((int)(Time.unscaledTime * 16f) & 1) != 0;
     private float initialEscapeBurstTimer;
     private bool fishUnconscious;
@@ -1378,7 +1382,7 @@ public class FishingSystem : MonoBehaviour
             float previousFragileTime = fragileBreakTimer;
             fragileBreakTimer=FishingDragRules.FragileTimer(fragileBreakTimer,
                 ActiveTemperament==FishTemperament.Fragile,CurrentDrag,Time.deltaTime);
-            float fragileTensionGain = FishingDragRules.FragileTensionGain(previousFragileTime, fragileBreakTimer);
+            float fragileTensionGain = FishingDragRules.FragileTensionGain(previousFragileTime, fragileBreakTimer, FragileWarningDuration);
 
             surgeTimer -=
                 Time.deltaTime;
@@ -1464,7 +1468,7 @@ public class FishingSystem : MonoBehaviour
                     fishHealth=fishHealthPoints/(float)fishMaxHealth;
                 }
             }
-            else if(CurrentDrag!=FishingDragRules.High && fragileBreakTimer<=FishingDragRules.FragileWarningSeconds)
+            else if(CurrentDrag!=FishingDragRules.High && fragileBreakTimer<=FragileWarningDuration)
             {
                 fightTension -=
                     Time.deltaTime *
@@ -2987,12 +2991,12 @@ public class FishingSystem : MonoBehaviour
         if (fragileOutline != null)
         {
             fragileOutline.Progress = IsSkillStunned ? 1f : FragileWarningActive
-                ? Mathf.Clamp01(fragileBreakTimer / FishingDragRules.FragileWarningSeconds) : 0f;
+                ? Mathf.Clamp01(fragileBreakTimer / FragileWarningDuration) : 0f;
             if (IsSkillStunned)
             {
-                float elapsed = Mathf.Clamp(FishingDragRules.SkillStunSeconds - (skillStunUntil - Time.time), 0f, FishingDragRules.SkillStunSeconds);
+                float elapsed = Mathf.Clamp(SkillStunDuration - (skillStunUntil - Time.time), 0f, SkillStunDuration);
                 // Integrated frequency rises smoothly from 2 Hz to 10 Hz.
-                float cycles = 2f * elapsed + 4f * elapsed * elapsed / FishingDragRules.SkillStunSeconds;
+                float cycles = 2f * elapsed + 4f * elapsed * elapsed / SkillStunDuration;
                 float alpha = Mathf.Sin(cycles * Mathf.PI * 2f) >= 0f ? 1f : 0.15f;
                 fragileOutline.color = new Color(1f, 1f, 1f, alpha);
             }

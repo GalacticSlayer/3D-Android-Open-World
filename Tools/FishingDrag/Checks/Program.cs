@@ -22,7 +22,7 @@ class Program {
   r.SelectDrag(0);Check(r.TrySkillLook(new Vector2(0,.1f)),"Tiny upward look activates full meter");Check(!r.TrySkillLook(new Vector2(400,0)),"One spend only");
   before=h.Damage;Tick(0);Check(h.Damage-before==60 && h.Charge==0,"20x base rod strike, no Low multiplier");
   Check(f.Stuns==1 && FishingDragRules.SkillStunSeconds==3f,"Surviving skill hit applies three-second stun");
-  Set(r,"skillCharge",1f);Set(r,"authoritativeHp",5);Check(r.TrySkillLook(new Vector2(400,0)),"Finisher queued");Tick(0);
+  Set(r,"skillCooldown",0f);Set(r,"skillCharge",1f);Set(r,"authoritativeHp",5);Check(r.TrySkillLook(new Vector2(400,0)),"Finisher queued");Tick(0);
   Check(Get<int>(f,"fishHealthPoints")==0 && Get<bool>(f,"fishUnconscious") && f.Presentations>0,"Skill KO uses existing presentation");
   Check(f.SkillFeedbacks==2,"Skill feedback once for both surviving and lethal hits");
   Check(f.Stuns==1,"Lethal skill does not replace KO with temporary stun");
@@ -44,10 +44,19 @@ class Program {
   float integrated=0f;for(int i=0;i<300;i++)integrated+=FishingDragRules.FragileTensionGain(i*.01f,(i+1)*.01f);
   Check(Math.Abs(integrated-FishingDragRules.FragileTensionGain(0,3f))<.001f,"Frame-independent tension ramp");
   Check(FishingDragRules.FragileTimer(danger,true,0,.1f)==0 && FishingDragRules.FragileTimer(danger,false,2,.1f)==0,"Low or mood exit clears countdown");
+  Check(FishingDragRules.FragileWarningDuration(false)==2f && FishingDragRules.SkillStunDuration(false)==3f,"Other zones retain default timing");
+  float windgroveGrace=FishingDragRules.FragileWarningDuration(true);
+  Check(windgroveGrace==1f && FishingDragRules.SkillStunDuration(true)==1.5f,"Windgrove halves warning and skill stun");
+  Check(FishingDragRules.FragileTensionGain(0,windgroveGrace,windgroveGrace)==0f,"Windgrove no extra tension before one second");
+  Check(Math.Abs(FishingDragRules.FragileTensionGain(.9f,1.1f,windgroveGrace)-.045f)<.0001f,"Windgrove counts only post-grace frame time");
+  Check(Math.Abs(FishingDragRules.FragileTensionGain(1f,2f,windgroveGrace)-.45f)<.0001f,"Windgrove retains purple tension rate");
+  Check(FishingDragRules.FragileTensionGain(2f,0f,windgroveGrace)==0f,"Windgrove Low drag stops extra tension");
+  integrated=0f;for(int i=0;i<300;i++)integrated+=FishingDragRules.FragileTensionGain(i*.01f,(i+1)*.01f,windgroveGrace);
+  Check(Math.Abs(integrated-FishingDragRules.FragileTensionGain(0,3f,windgroveGrace))<.001f,"Windgrove frame-independent tension ramp");
   foreach(var d in new[]{new Vector2(.1f,0),new Vector2(-.1f,0),new Vector2(0,.1f),new Vector2(0,-.1f)})
   {
-   Set(r,"skillCharge",1f);Check(r.TrySkillLook(d),"Any direction activates");Tick(0);
+   Set(r,"skillCooldown",0f);Set(r,"skillCharge",1f);Check(r.TrySkillLook(d),"Any direction activates");Tick(0);
   }
-  Console.WriteLine("PASS: live burst owner: Low/Medium/High damage, passive ticks, charge, swipe gates, one-shot consumption, skill KO, menu pause, fight reset.");
+  Console.WriteLine("PASS: live burst owner: Low/Medium/High damage, passive ticks, charge, swipe gates, one-shot consumption, skill KO, menu pause, fight reset, Windgrove warning/stun timing and tension ramp.");
  }
 }
