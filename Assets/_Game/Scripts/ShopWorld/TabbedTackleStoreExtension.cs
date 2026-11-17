@@ -342,7 +342,7 @@ public sealed class TabbedTackleStoreExtension : MonoBehaviour
         }
         else if(kind==GearKind.Reel)
         {
-            detail=((Level2FishingReelRuntime.ReelMultiplier(tier)-1f)*100f).ToString("0")+"% faster reeling";
+            detail=((Level2FishingReelRuntime.ReelMultiplier(tier)-1f)*100f).ToString("0")+"% faster reeling"+ShopCatalog.ReelEscapeDescription(tier);
             previewKey="Reel"+tier;
         }
         else

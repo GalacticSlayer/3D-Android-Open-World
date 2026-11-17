@@ -2297,6 +2297,10 @@ public class FishingSystem : MonoBehaviour
         // surges or the initial escape burst.
         if(ActiveTemperament==FishTemperament.Fragile)
             outwardSpeed=FishingTuning.YellowSpeed(hookedSpeciesId,effectiveDifficulty,hookedWeightKg)*.2f;
+        // Apply after the purple override so every escape state gets the bonus.
+        // Scale only fish movement, leaving the separate retrieval gain unchanged.
+        outwardSpeed *= ShopCatalog.ReelEscapeMultiplier(
+            shopProgress != null ? shopProgress.Data.reelEquipped : 0);
         Vector3 velocity =
             outwardDirection *
             outwardSpeed;

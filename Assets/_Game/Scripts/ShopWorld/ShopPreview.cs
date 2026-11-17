@@ -81,13 +81,11 @@ public sealed class ShopPreview : MonoBehaviour
                 if(reelBackground!=null)target.rectTransform.anchoredPosition=reelBackground.anchoredPosition;
                 target.color=Color.white;
             }
-            // Level 7 uses the user's exact transparent Rod6.png, facing
-            // bottom-left to top-right. Keep the existing blue-water background
-            // separately, just like the reel and line previews. Do not load
-            // the old generated Rod6Card (which baked in the wrong artwork).
-            if(resolvedGear=="Rod6")
+            // Supplied Level 7 rod art and model-rendered Level 8 gear use
+            // transparent icons over the existing separate water background.
+            if(resolvedGear=="Rod6" || resolvedGear=="Rod7" || resolvedGear=="Reel7")
             {
-                Texture2D supplied=Resources.Load<Texture2D>("Fishing/ItemIcons/Rod6");
+                Texture2D supplied=Resources.Load<Texture2D>("Fishing/ItemIcons/"+resolvedGear);
                 if(supplied!=null)
                 {
                     if(SetWaterBackground(target))

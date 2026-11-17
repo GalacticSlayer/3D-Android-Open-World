@@ -113,7 +113,8 @@ public sealed class FishingMultiplayer : MonoBehaviour
                 fishing!=null && fishing.IsRodEquipped,
                 forLocalPresentation ? ShopCatalog.MaxRodTier : serverMaximumRodTier),
             reelTier=equipment!=null && equipment.Data!=null
-                ? Mathf.Clamp(equipment.Data.Equipped(GearKind.Reel),0,ShopCatalog.MaxReelTier) : 0,
+                ? Mathf.Clamp(equipment.Data.Equipped(GearKind.Reel),0,
+                    forLocalPresentation ? ShopCatalog.MaxReelTier : serverMaximumRodTier) : 0,
             castSequence=fishing!=null ? fishing.CastSequence : 0,
             castAge=fishing!=null ? fishing.NetworkCastAge : -1f,
             castDuration=fishing!=null ? fishing.NetworkCastDuration : .72f};

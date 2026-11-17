@@ -612,7 +612,7 @@ with open(out_path,'w',encoding='utf-8') as f:
             "Assets/Resources/Fishing/ItemIcons/Rod6.png")!=null;
         good &= AssetDatabase.LoadAssetAtPath<Texture2D>(
             "Assets/Resources/Fishing/ItemIcons/Rod6Card.png")!=null;
-        good &= ShopCatalog.MaxRodTier==6 && ShopCatalog.MaxReelTier==6;
+        good &= ShopCatalog.MaxRodTier>=6 && ShopCatalog.MaxReelTier>=6;
         good &= FishingBurstDamageRuntime.NormalMinimumForTier(6)==55 &&
                 FishingBurstDamageRuntime.NormalMaximumForTier(6)==75 &&
                 Mathf.Approximately(Level2FishingReelRuntime.ReelMultiplier(6),2.20f);

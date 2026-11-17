@@ -4,10 +4,10 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Runtime support for all seven fishing reels. Reel upgrades keep the starter
+/// Runtime support for all eight fishing reels. Reel upgrades keep the starter
 /// reel's mechanics, hierarchy and authored animation; only the visible five reel
 /// meshes/materials and the reeling-speed multiplier change.
-/// Starter = 1.00x, Level 2 = 1.20x, Level 3 = 1.40x, Level 4 = 1.60x, Level 5 = 1.80x, Level 6 = 2.00x, Level 7 = 2.20x.
+/// Starter = 1.00x, Level 2 = 1.20x, Level 3 = 1.40x, Level 4 = 1.60x, Level 5 = 1.80x, Level 6 = 2.00x, Level 7 = 2.20x, Level 8 = 2.40x.
 /// </summary>
 [DefaultExecutionOrder(-420)]
 public sealed class Level2FishingReelRuntime : MonoBehaviour
@@ -75,6 +75,7 @@ public sealed class Level2FishingReelRuntime : MonoBehaviour
 
     public static float ReelMultiplier(int tier)
     {
+        if(tier>=7)return 2.40f;
         if(tier>=6)return 2.20f;
         if(tier>=5)return 2.00f;
         if(tier==4)return 1.80f;
