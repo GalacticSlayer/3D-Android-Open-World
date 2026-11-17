@@ -53,4 +53,11 @@ for kind in ['Rod','Reel']:
     im=Image.open(icon)
     assert im.mode=='RGBA' and im.getchannel('A').getextrema()==(0,255)
     assert Path(str(icon)+'.meta').exists()
+    if kind=='Reel':
+        alpha=im.getchannel('A')
+        width,height=im.size
+        left,top,right,bottom=alpha.point(lambda a: 255 if a>=128 else 0).getbbox()
+        assert alpha.histogram()[255]>=width*height*.08, 'reel silhouette is blank or too small'
+        assert abs(left+right-width)<=width*.04 and abs(top+bottom-height)<=height*.04, 'reel silhouette is off-center'
+        assert .75<=max((right-left)/width,(bottom-top)/height)<=.90, 'reel does not fit inside its card'
 print('PASS: slowdown after purple override, independent retrieval, 2.4x reel bonus, transparent icons.')

@@ -88,7 +88,8 @@ public sealed class ShopPreview : MonoBehaviour
                 Texture2D supplied=Resources.Load<Texture2D>("Fishing/ItemIcons/"+resolvedGear);
                 if(supplied!=null)
                 {
-                    if(SetWaterBackground(target))
+                    // Reels have already installed and aligned their backdrop above.
+                    if(!reel && SetWaterBackground(target))
                     {
                         RectTransform backing=target.transform.parent.Find(
                             "FishingItemWaterBackground") as RectTransform;
@@ -395,7 +396,12 @@ public sealed class ShopPreview : MonoBehaviour
         image.color=Color.white;
         image.uvRect=new Rect(0f,0f,1f,1f);
         image.raycastTarget=false;
-        background.transform.SetSiblingIndex(target.transform.GetSiblingIndex());
+        // Moving a sibling down to the target's current index puts it AFTER
+        // the target once Unity shifts the other siblings. Keep the backdrop
+        // immediately behind the icon even when Attach reuses the same frame.
+        int targetIndex=target.transform.GetSiblingIndex();
+        if(background.transform.GetSiblingIndex()<targetIndex)targetIndex--;
+        background.transform.SetSiblingIndex(targetIndex);
 
         // Existing shop/equipment cards already have a rounded Image frame.
         // Use its exact alpha silhouette to clip both the water and the item.

@@ -8,6 +8,8 @@ The uploaded Blender geometry and corner UVs are preserved. Six native Unity mes
 
 Regenerate with Blender 5: run export_geometry.py, then build_unity_assets.py (optionally supplying the uploaded texture directory), then render_icons.py. Run python3 Tools/Level8Gear/validate_assets.py and dotnet run --project Tools/Level8Gear/Checks.
 
+To redraw just the shop/equipment reel icon from the prepared mesh, run `blender -b --python Tools/Level8Gear/render_icons.py -- Reel`. Its orientation follows the runtime reel cards' opposite-face view and 60° counterclockwise roll. The UI draws the water backdrop separately, behind the icon.
+
 Server/runtime/sessions.mjs now accepts and advertises tier 7. Until that server update is deployed, outgoing room poses use the advertised maximum for both gear tiers; local gameplay and third-person visuals still use Level 8. Older observers do not have the new model. Server deployment is separate from the repository push.
 
 Validation: native mesh indices/normals/UVs and unchanged transforms/animations; transparent icons; actual C# catalog, ledger and burst damage tests including save round trips; fishing drag regression harness; 26 Node session tests. Unity/Android Play validation remains pending.
