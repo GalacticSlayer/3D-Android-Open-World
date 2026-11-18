@@ -35,6 +35,12 @@ public static class AbyssalGemView
         go.SetActive(false);
         var button=go.AddComponent<Button>();button.targetGraphic=go.GetComponent<Image>();
         button.interactable=interactable;
+        if(!interactable)
+        {
+            var colors=button.colors;
+            colors.disabledColor=new Color(.45f,.45f,.45f,.8f);
+            button.colors=colors;
+        }
         button.onClick.AddListener(()=>action());
         Label(go.transform,title,25,.04f,.06f,.96f,.94f,Color.white,TextAnchor.MiddleCenter);
         go.SetActive(true);
@@ -115,9 +121,9 @@ public static class AbyssalGemView
         var footer=Panel(root.transform,"Gem progression",0,0,1,.16f);
         Label(footer.transform,"LEVEL "+gem.level+" / 15\n"+(gem.level==15?"MAX LEVEL":"Scale Piercer +0.05× and one random attribute"),24,.02f,.05f,.45f,.95f,Color.white);
         bool canUpgrade=progress.CanManageGems && gem.level<15 && progress.Data.gems.dust>=AbyssalGemCollection.UpgradeCost(gem.level);
-        Button(footer.transform,gem.level==15?"MAX LEVEL":"LEVEL UP GEM\n"+AbyssalGemCollection.UpgradeCost(gem.level)+" Crystal Dust",.70f,.06f,.99f,.94f,upgrade,canUpgrade?1:3,canUpgrade);
-        Picture(footer.transform,"CrystalDust",.46f,.1f,.54f,.9f);
-        Label(footer.transform,progress.Data.gems.dust.ToString("N0"),30,.54f,.12f,.69f,.88f,new Color(1f,.86f,.28f));
+        Button(footer.transform,gem.level==15?"MAX LEVEL":"LEVEL UP GEM\n"+AbyssalGemCollection.UpgradeCost(gem.level)+" Crystal Dust",.70f,.06f,.99f,.94f,upgrade,1,canUpgrade);
+        Picture(footer.transform,"CrystalDust",.53f,.1f,.61f,.9f);
+        Label(footer.transform,progress.Data.gems.dust.ToString("N0"),30,.61f,.12f,.69f,.88f,new Color(1f,.86f,.28f));
         return root;
     }
     // Built outside the detail view so a save-driven refresh cannot remove the result.
