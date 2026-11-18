@@ -25,7 +25,7 @@ public class FishingSystem:UnityEngine.MonoBehaviour {
  private float fishHealth=1,damageFraction,damageDisplayTimer;private bool fishUnconscious;
  private UnityEngine.GameObject bobber;private UnityEngine.Camera playerCamera;
  public int SkillFeedbacks;public void PlaySkillFeedback(){SkillFeedbacks++;}
- public bool IsBossFight=>false;public int CurrentFishHealth=>fishHealthPoints;
+ public bool GemAngryState;public bool IsBossFight=>false;public int CurrentFishHealth=>fishHealthPoints;
  public void RefreshHardenedScalesStatus(){}public void PlaySirensCallSound(){}
  public int MitigateBossDamage(int damage,out bool hardened){hardened=false;return damage;}
  public int Stuns;public void ApplySkillStun(){Stuns++;}
@@ -34,7 +34,7 @@ public class FishingSystem:UnityEngine.MonoBehaviour {
 public class FishingHUD {public class Input {public bool IsHeld;}public Input ActionInput=new Input();public bool CombatInputVisible=true,FishingUiVisible=true;public int Damage;public float Charge;public bool Fighting,Live;
  public void ShowDamage(int n,UnityEngine.Vector3 p,bool lightning=false,bool hardened=false){Damage+=n;}
  public void SetDragFightUI(bool fighting,bool live,int mode,float charge,float cooldown=0f){Fighting=fighting;Live=live;Charge=charge;}}
-public class ShopProgress {public class Ledger {public int rodEquipped;}public Ledger Data=new Ledger();}
+public class ShopProgress {public class Ledger {public AbyssalGemCollection gems=new AbyssalGemCollection();public int rodEquipped;}public Ledger Data=new Ledger();}
 public class Level2FishingRodRuntime:UnityEngine.MonoBehaviour {}
 public static class ShopCatalog {public const int MaxRodTier=4;}
 public static class ShopWorldHUD {public static bool MenuOpen;}

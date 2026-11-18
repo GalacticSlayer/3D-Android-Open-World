@@ -911,6 +911,7 @@ public class FishingHUD : MonoBehaviour
                 new Vector2(-4f, -3f);
 
             if(i==1)system.GetComponent<BoatSystem>()?.BindSlot(slot);
+            if(i==2)slot.AddComponent<AbyssalGemHotbar>().Initialize(system.GetComponent<ShopProgress>());
             if (i == 0)
             {
                 rodSlotImage =

@@ -56,7 +56,7 @@ public sealed class ShopAndIndexBackdropRepairRuntime : MonoBehaviour
         GameObject modalObject = ModalField.GetValue(hud) as GameObject;
         bool visible = modalObject != null && modalObject.activeInHierarchy;
         bool tackle = visible && page == "gear";
-        bool index = visible && (page == "islands" || page == "reef-fish" || page == "stats");
+        bool index = visible && (page == "islands" || page == "reef-fish" || page == "stats" || page == "gem");
         bool market = visible && (page == "market" || page == "sell-confirm" || page == "bait" || page == "bag" || page == "equipment" || page == "multiplayer" || page == "travel");
 
         if (!tackle && !index && !market)
@@ -85,7 +85,7 @@ public sealed class ShopAndIndexBackdropRepairRuntime : MonoBehaviour
             StyleIndexChrome(modalObject.transform);
             // The new fish view owns its card selection, silhouettes, and text.
             // Keep the supplied backdrop/CLOSE styling without restyling its tree.
-            if(page=="reef-fish" || page=="stats"){wasThemed=true;return;}
+            if(page=="reef-fish" || page=="stats" || page=="gem"){wasThemed=true;return;}
             if(page=="travel"){wasThemed=true;return;}
             StyleIndexRows();
             StyleIndexText(modalObject.transform, heading);
@@ -136,7 +136,7 @@ public sealed class ShopAndIndexBackdropRepairRuntime : MonoBehaviour
         for (int i = 0; i < rows.childCount; i++)
         {
             Transform child = rows.GetChild(i);
-            if (child == null || !child.gameObject.activeInHierarchy) continue;
+            if (child == null || !child.gameObject.activeInHierarchy || child.name=="Abyssal Gem inventory item") continue;
 
             if (child.name.StartsWith("BiomeCard_", StringComparison.Ordinal))
                 DropIslandCardText(child);

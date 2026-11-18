@@ -20,6 +20,7 @@ using System.Collections.Generic;
 
 [Serializable] public sealed class ShopLedger
 {
+    public AbyssalGemCollection gems=new AbyssalGemCollection();
     public int version = 1, coins;
     public string playerName;
     // Local backup of Home identity after a verified owner upload.

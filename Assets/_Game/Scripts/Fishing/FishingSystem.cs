@@ -172,6 +172,7 @@ public class FishingSystem : MonoBehaviour
     private const float CatchDistance = 1.15f;
 
     private bool bossClaimPending,bossLandingPending,bossLandingApproved;
+    public bool HasActiveCast => state!=FishingState.Idle;
     public bool HasHookedFish => state==FishingState.Fighting;
     public bool IsBossFight => HasHookedFish && hookedSpeciesId==FishCatalog.AbyssalLeviathanId;
     public int CurrentFishHealth => fishHealthPoints;
@@ -254,6 +255,7 @@ public class FishingSystem : MonoBehaviour
     // Siren's Call is a genuine temporary fish temperament, not an image
     // painted over whichever random status happens to be underneath.
     // The underlying temperament is preserved until Siren's Call expires.
+    public bool GemAngryState => ActiveTemperament==FishTemperament.Angry;
     private FishTemperament ActiveTemperament => state == FishingState.Fighting &&
         !fishUnconscious && IsSirenCalling ? FishTemperament.SirensCall : hookedTemperament;
     public float ProgressDifficulty => GetEffectiveFightDifficulty(FishCatalog.Get(hookedSpeciesId), hookedWeightKg);
@@ -269,10 +271,10 @@ public class FishingSystem : MonoBehaviour
         rodPower=1f; // Rod tension control is applied once to the total tension gain below.
         reelPower=Level2FishingReelRuntime.ReelMultiplier(gear.reelEquipped);
         lineGuard=1f+gear.lineEquipped*0.12f;
-        float extension=0f; // Cast envelope stays 5–30 m and line stays 40 m for every loadout.
+        float extension=0f; // Cast envelope stays 5–30 m; line tiers and Extra Line extend the line only.
         maximumCastDistance=baseCastRange+extension;
         preferredCastDistance=basePreferredRange+extension*0.6f;
-        maximumLineDistance=baseLineRange+extension;
+        maximumLineDistance=40f+gear.lineEquipped*5f+(gear.gems.Equipped?.Value(6)??0);
         // Authored rod/reel materials own their colours. Save notifications (including
         // lure hooks) must never write placeholder tint property blocks to this model.
     }
@@ -1548,9 +1550,11 @@ public class FishingSystem : MonoBehaviour
         if(fightTension > tensionBefore)
         {
             float tensionControl=(Progression != null ? Progression.Multiplier(3) : 1f) *
-                ShopCatalog.RodTensionControlMultiplier(shopProgress != null ? shopProgress.Data.rodEquipped : 0);
+                ShopCatalog.RodTensionControlMultiplier(shopProgress != null ? shopProgress.Data.rodEquipped : 0) *
+                (1f+(shopProgress?.Data.gems.Bonus(0)??0f));
             fightTension = tensionBefore + (fightTension - tensionBefore) / tensionControl;
         }
+        if(fightTension<tensionBefore)fightTension=tensionBefore-(tensionBefore-fightTension)*(1f+(shopProgress?.Data.gems.Bonus(1)??0f));
         fightTension =
             Mathf.Clamp01(
                 fightTension
@@ -1695,10 +1699,11 @@ public class FishingSystem : MonoBehaviour
                 hookedWeightKg>data.personalBestKg[species];
         }
 
+        int dustBefore=shopProgress!=null?shopProgress.Data.gems.dust:0;
         int newIndex =
             inventory.AddFish(
                 hookedSpeciesId,
-                hookedWeightKg, true, pondCast?null:FishingTuning.BiomeId(fightBiome),hookedOffshoreNapoleon
+                hookedWeightKg, true, pondCast?null:FishingTuning.BiomeId(fightBiome),hookedOffshoreNapoleon,fishMaxHealth
             );
 
         if(newIndex<0) { FailFishing("FISH BAG FULL (50). Fish released. Sell or house fish to make room."); return; }
@@ -1707,10 +1712,13 @@ public class FishingSystem : MonoBehaviour
             inventory.Fish[newIndex];
         if(!pondCast)GetComponent<FishingTournament>()?.ReportCatch(record,CastBiome,CastSequence);
 
+        int dustEarned=shopProgress!=null?shopProgress.Data.gems.dust-dustBefore:0;
         int oldLevel = Progression != null ? Progression.level : 1;
         int earnedXp = shopProgress != null ? shopProgress.AwardFishingXp(fishMaxHealth, ProgressDifficulty) : 0;
         string xpCaption = earnedXp > 0 ? "  +" + earnedXp + " XP" : "";
         if(Progression != null && Progression.level > oldLevel) xpCaption += "  LEVEL " + Progression.level + "!";
+        if(dustEarned>0)xpCaption+="  +"+dustEarned+" Crystal Dust";
+        if(hookedSpeciesId==FishCatalog.AbyssalLeviathanId)xpCaption+="  +1 Abyssal Gem";
         ResetLine();
 
         state = FishingState.Idle;
@@ -1731,6 +1739,9 @@ public class FishingSystem : MonoBehaviour
     private void SnapLine(string message)
     {
         PlayFishingSound(lineSnapSound);
+        bool saved=shopProgress!=null && shopProgress.Data.lureFightPending &&
+            UnityEngine.Random.value<Mathf.Clamp01(shopProgress.Data.gems.Bonus(7));
+        if(saved){shopProgress.ResolveLureFight(true);message+=" Lure saved!";}
         FailFishing(message);
     }
 

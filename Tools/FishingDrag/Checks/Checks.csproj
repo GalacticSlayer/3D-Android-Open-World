@@ -5,5 +5,5 @@
     <Compile Include="../../../Assets/_Game/Scripts/Fishing/AnglerProgression.cs"/>
     <Compile Include="../../../Assets/_Game/Scripts/Fishing/FishingDragRules.cs"/>
     <Compile Include="../../../Assets/_Game/Scripts/Fishing/FishingBurstDamageRuntime.cs"/>
-  </ItemGroup>
+  <Compile Include="../../../Assets/_Game/Scripts/Fishing/AbyssalGemData.cs"/></ItemGroup>
 </Project>

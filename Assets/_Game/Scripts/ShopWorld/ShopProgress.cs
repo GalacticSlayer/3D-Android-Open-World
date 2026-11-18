@@ -27,6 +27,8 @@ public sealed class ShopProgress : MonoBehaviour
                 catch { Data=Read(PlayerPrefs.GetString(SaveKey+".backup")); Notice="Recovered the previous shop save."; }
             }
             else Migrate();
+            if(Data.gems==null)Data.gems=new AbyssalGemCollection();
+            Data.gems.Validate();
             bool migrated=Data.EnsureCatchStats();
             if(Data.angler==null){Data.angler=new AnglerProgression();migrated=true;}
             migrated|=Data.angler.Normalize();
@@ -184,6 +186,17 @@ public sealed class ShopProgress : MonoBehaviour
         Data.playerName=name;
         try{Save();return true;}
         catch(Exception ex){Data.playerName=previous;Debug.LogError("Could not save player name: "+ex.Message);return false;}
+    }
+    public event Action<int> CrystalDustAwarded;
+    public void NotifyCrystalDust(int amount){if(amount>0)CrystalDustAwarded?.Invoke(amount);}
+    public bool CanManageGems => !ReadOnly && (GetComponent<FishingSystem>()==null || !GetComponent<FishingSystem>().HasActiveCast);
+    public bool EquipGem(string id)=>CanManageGems && Commit(Data.gems.Equip(id));
+    public bool BreakDownGem(string id)=>CanManageGems && Commit(Data.gems.BreakDown(id));
+    public bool UpgradeGem(string id,out int slot,out int increase)
+    {
+        slot=-1;increase=0;
+        if(!CanManageGems)return false;
+        return Commit(Data.gems.Upgrade(id,UnityEngine.Random.Range,out slot,out increase));
     }
     public bool Commit(bool changed) { if(changed) Save(); return changed; }
     public bool CanTrade => !ReadOnly && ShopDimensionManager.Instance!=null && ShopDimensionManager.Instance.InShop;

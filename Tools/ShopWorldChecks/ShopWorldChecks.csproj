@@ -8,5 +8,5 @@
     <Compile Include="../../Assets/_Game/Scripts/ShopWorld/ShopCatalog.cs" Link="ShopCatalog.cs" />
     <Compile Include="../../Assets/_Game/Scripts/ShopWorld/ShopLedger.cs" Link="ShopLedger.cs" />
     <Compile Include="../../Assets/_Game/Scripts/Fishing/FishSizeTable.cs" Link="FishSizeTable.cs" />
-  </ItemGroup>
+  <Compile Include="../../Assets/_Game/Scripts/Fishing/AbyssalGemData.cs"/></ItemGroup>
 </Project>

@@ -130,6 +130,7 @@ public sealed class FishingBurstDamageRuntime : MonoBehaviour
         int maximumHp=Mathf.Max(1,(int)MaxHpField.GetValue(fishing));
         burnTotalDamage=Mathf.Min(2000,Mathf.Max(1,
             Mathf.RoundToInt(maximumHp*fishing.Progression.BurningTotalFraction)));
+        burnTotalDamage=Mathf.RoundToInt(burnTotalDamage*GemSkillMultiplier());
         var sequence = new LightningSequence { total = burnTotalDamage };
         lightningSequences.Add(sequence);
         burnSeconds=4f;
@@ -168,7 +169,10 @@ public sealed class FishingBurstDamageRuntime : MonoBehaviour
     private int BoostDamage(int damage, bool critical=false)
     {
         var stats=fishing.Progression;
-        return stats==null?damage:Mathf.RoundToInt((damage+stats.Value(0)*(critical?2:1))*stats.Multiplier(1));
+        float result=stats==null?damage:(damage+stats.Value(0)*(critical?2:1))*stats.Multiplier(1);
+        result*=1f+(progress?.Data.gems.Bonus(2)??0f);
+        if(critical)result*=1f+(progress?.Data.gems.Bonus(4)??0f)/2f;
+        return Mathf.RoundToInt(result);
     }
     public int SelectedDrag {get;private set;}=FishingDragRules.Medium;
 
@@ -358,7 +362,7 @@ public sealed class FishingBurstDamageRuntime : MonoBehaviour
                 abilityUsed[0] = true;
                 StartBurn();
             }
-            DealDamage(Mathf.RoundToInt(FishingDragRules.SkillDamage(RollNormalDamage()) * (fishing.Progression != null ? fishing.Progression.Multiplier(4) : 1f)),maxHp,true);
+            DealDamage(Mathf.RoundToInt(FishingDragRules.SkillDamage(RollNormalDamage()) * (fishing.Progression != null ? fishing.Progression.Multiplier(4) : 1f)*GemSkillMultiplier()),maxHp,true);
             if (authoritativeHp > 0) fishing.ApplySkillStun();
         }
         else if (skillCooldown <= 0f)
@@ -399,6 +403,11 @@ public sealed class FishingBurstDamageRuntime : MonoBehaviour
         if(hud!=null)hud.SetDragFightUI(true,authoritativeHp>0,SelectedDrag,skillCharge,skillCooldown);
     }
 
+    private float GemSkillMultiplier()
+    {
+        var gem=progress?.Data.gems.Equipped;
+        return gem==null?1f:(1f+gem.Value(3)/100f)*(fishing.GemAngryState?gem.ScalePiercer:1f);
+    }
     private int RollNormalDamage()
     {
         int tier=progress!=null && progress.Data!=null?progress.Data.rodEquipped:0;
@@ -409,7 +418,7 @@ public sealed class FishingBurstDamageRuntime : MonoBehaviour
     {
         int tier = progress != null ? Mathf.Clamp(progress.Data.rodEquipped, 0, ShopCatalog.MaxRodTier) : 0;
         bool critical;
-        int rolledDamage = RollBurstForTier(tier, UnityEngine.Random.value, UnityEngine.Random.value, out critical);
+        int rolledDamage = RollBurstForTier(tier, UnityEngine.Random.value, UnityEngine.Random.value-(progress?.Data.gems.Bonus(5)??0f), out critical);
         // Carry half points so odd Low-drag rolls deal exactly half over time.
         float scaled=BoostDamage(rolledDamage,critical)*FishingDragRules.DamageMultiplier(SelectedDrag)+damageRemainder;
         int damage=Mathf.FloorToInt(scaled);

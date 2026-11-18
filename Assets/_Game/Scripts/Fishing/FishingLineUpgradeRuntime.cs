@@ -50,7 +50,7 @@ public sealed class FishingLineUpgradeRuntime : MonoBehaviour
         if(fishing==null || progress==null || maximumLineDistanceField==null)return;
 
         int tier=Mathf.Clamp(progress.Data.lineEquipped,0,3);
-        float maximum=40f+tier*5f;
+        float maximum=40f+tier*5f+(progress.Data.gems.Equipped?.Value(6)??0);
         float current=(float)maximumLineDistanceField.GetValue(fishing);
         if(!Mathf.Approximately(current,maximum))
             maximumLineDistanceField.SetValue(fishing,maximum);

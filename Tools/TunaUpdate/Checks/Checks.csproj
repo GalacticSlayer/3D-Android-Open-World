@@ -10,5 +10,5 @@
   <Compile Include="../../../Assets/_Game/Scripts/Reef/ReefCatalog.cs"/>
   <Reference Include="Microsoft.CodeAnalysis"><HintPath>$(MSBuildSDKsPath)/../Roslyn/bincore/Microsoft.CodeAnalysis.dll</HintPath></Reference>
   <Reference Include="Microsoft.CodeAnalysis.CSharp"><HintPath>$(MSBuildSDKsPath)/../Roslyn/bincore/Microsoft.CodeAnalysis.CSharp.dll</HintPath></Reference>
- </ItemGroup>
+ <Compile Include="../../../Assets/_Game/Scripts/Fishing/AbyssalGemData.cs"/></ItemGroup>
 </Project>

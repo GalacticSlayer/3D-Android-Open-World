@@ -35,6 +35,23 @@ class Program {
   Check(FishingBurstDamageRuntime.RollBurstForTier(7,0,0,out bool c)==160&&c,"Minimum critical");
   Check(FishingBurstDamageRuntime.RollBurstForTier(7,1,0,out c)==190&&c,"Maximum critical");
   Check(FishingNetworkCompatibility.RodTier(7,true,6)==6&&FishingNetworkCompatibility.RodTier(7,true,7)==7,"Legacy and updated server tiers");
+  var gemData=new ShopProgress();
+  var gem=gemData.Data.gems.Create((min,max)=>min);gemData.Data.gems.Equip(gem.id);
+  gem.attributes=new[]{2,3,4,5};gem.values=new[]{20,10,40,20};gem.level=15;
+  var system=new FishingSystem();var runtime=new FishingBurstDamageRuntime();
+  const System.Reflection.BindingFlags flags=System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic;
+  typeof(FishingBurstDamageRuntime).GetField("fishing",flags).SetValue(runtime,system);
+  typeof(FishingBurstDamageRuntime).GetField("progress",flags).SetValue(runtime,gemData);
+  var skill=typeof(FishingBurstDamageRuntime).GetMethod("GemSkillMultiplier",flags);
+  system.GemAngryState=false;
+  Check(Math.Abs((float)skill.Invoke(runtime,null)-1.1f)<.0001f,"Gem skill bonus while calm");
+  system.GemAngryState=true;
+  Check(Math.Abs((float)skill.Invoke(runtime,null)-2.42f)<.0001f,"Angry primary stacks with skill bonus");
+  var boost=typeof(FishingBurstDamageRuntime).GetMethod("BoostDamage",flags);
+  Check((int)boost.Invoke(runtime,new object[]{100,false})==120,"Attack bonus applies once");
+  Check((int)boost.Invoke(runtime,new object[]{200,true})==288,"Critical bonus adds to 2x multiplier");
+  gemData.Data.gems.Equip(gem.id);
+  Check(Math.Abs((float)skill.Invoke(runtime,null)-1f)<.0001f && (int)boost.Invoke(runtime,new object[]{100,false})==100,"Unequipping removes all gem combat bonuses");
   Console.WriteLine($"PASS: {count} checks: Level 8 purchase, prerequisite, affordability, save/reload, re-equipping, all rod damage ranges, critical boundaries, tension, escape, network compatibility.");
  }
 }

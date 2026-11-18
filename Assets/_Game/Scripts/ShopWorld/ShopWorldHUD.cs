@@ -47,6 +47,10 @@ public sealed class ShopWorldHUD : MonoBehaviour
     private InputField profileNameInput;
     private RectTransform list;
     private GameObject personalStatsView;
+    private GameObject gemView;
+    private string selectedGem,gemUpgradeResult;
+    private int selectedGemAttribute;
+    public void OpenGem(string id) { if(fishing!=null && fishing.HasActiveCast)return;selectedGem=id;selectedGemAttribute=0;gemUpgradeResult="";dirty=true;Open("gem"); }
     private ScrollRect scroll;
     private Text heading, wallet, feedback, nearLabel;
     private string page="travel", message="";
@@ -186,6 +190,8 @@ public sealed class ShopWorldHUD : MonoBehaviour
     }
     public void CloseMenuPage()
     {
+        var confirmation=modal!=null?modal.GetComponentInChildren<AbyssalGemConfirmation>(true):null;
+        if(confirmation!=null){Destroy(confirmation.gameObject);return;}
         if(travelMenuSession && page!="travel") { bagPicker=null; Open("travel"); }
         else Close();
     }
@@ -329,6 +335,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
     private void Refresh(bool top)
     {
         dirty=false;
+        if(gemView!=null){gemView.SetActive(false);Destroy(gemView);}
         if(fishIndexView!=null)fishIndexView.gameObject.SetActive(false);
         if(personalStatsView!=null){personalStatsView.SetActive(false);Destroy(personalStatsView);}
         float position=scroll.verticalNormalizedPosition;
@@ -355,6 +362,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
         if(index)heading.text=page=="islands"?"ISLAND / BIOME INDEX":ReefCatalog.Zones[indexBiome].name.ToUpperInvariant()+" • FISH INDEX";
         if(page=="bag")heading.text="FISH BAG";
         if(page=="equipment")heading.text="EQUIPMENT";
+        if(page=="gem"){heading.text="ABYSSAL GEM";wallet.text="CRYSTAL DUST  "+progress.Data.gems.dust+"  •  "+(progress.Data.gems.equippedId==selectedGem?"EQUIPPED":"NOT EQUIPPED");}
         if(page=="bait")heading.text="BAIT / LURES";
         if(page=="multiplayer")heading.text="MULTIPLAYER";
         if(page=="homes")heading.text="PLAYER AQUARIUMS";
@@ -397,7 +405,21 @@ public sealed class ShopWorldHUD : MonoBehaviour
         feedback.gameObject.SetActive(!fishIndex);scroll.gameObject.SetActive(!fishIndex);
         scroll.verticalScrollbar.gameObject.SetActive(!fishIndex);
         foreach(var tab in navigationTabs)tab.SetActive(page=="travel");
-        if(page=="stats")
+        if(page=="gem")
+        {
+            feedback.gameObject.SetActive(false);scroll.gameObject.SetActive(false);scroll.verticalScrollbar.gameObject.SetActive(false);
+            gemView=AbyssalGemView.Build(modal.transform,progress,selectedGem,selectedGemAttribute,
+                choice=>{selectedGemAttribute=choice;Refresh(false);},()=>{
+                    if(progress.UpgradeGem(selectedGem,out int slot,out int amount))
+                    {
+                        selectedGemAttribute=slot+1;
+                        var gem=progress.Data.gems.Find(selectedGem);
+                        gemUpgradeResult="UPGRADED! "+AbyssalGemCollection.Names[gem.attributes[slot]]+" +"+amount+(gem.attributes[slot]==6?" m":"%");
+                    }
+                    Refresh(false);
+                },gemUpgradeResult);
+        }
+        else if(page=="stats")
         {
             wallet.gameObject.SetActive(false);feedback.gameObject.SetActive(false);
             scroll.gameObject.SetActive(false);scroll.verticalScrollbar.gameObject.SetActive(false);
@@ -437,7 +459,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
         modal.GetComponent<Image>().color=themed?Color.clear:ink;
         var r=modal.GetComponent<RectTransform>();
         bool index=page=="islands" || page=="reef-fish";
-        bool sharedFrame=themed || index || page=="stats" || page=="travel";
+        bool sharedFrame=themed || index || page=="stats" || page=="travel" || page=="gem";
         // Identical size and true screen center for both themed menus.
         r.anchorMin=sharedFrame?new Vector2(.025f,.0275f):new Vector2(.045f,.045f);
         r.anchorMax=sharedFrame?new Vector2(.975f,.9725f):new Vector2(.955f,.955f);
@@ -669,6 +691,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
     }
     private void BagPage()
     {
+        AbyssalGemView.Inventory(list,modal.transform,progress,OpenGem,()=>Refresh(false));
         if(BagSortAndFilterControls())return;
         if(progress.Data.bag.Count==0) {Row("No catches yet","Your infinite worms are always available. Travel to the island and cast.","TRAVEL",()=>Open("travel"));return;}
         foreach(var record in SortedBagFish())
@@ -678,6 +701,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
     }
     private void EquipmentPage(bool shop)
     {
+        if(!shop)AbyssalGemView.Inventory(list,modal.transform,progress,OpenGem,()=>Refresh(false));
         if(shop && !travel.Near("gear")) { Row("Visit the tackle counter","Return to the counter to make purchases.","CLOSE",Close); return; }
         foreach(GearKind kind in Enum.GetValues(typeof(GearKind)))
         {

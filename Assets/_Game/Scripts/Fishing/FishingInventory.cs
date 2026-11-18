@@ -47,7 +47,7 @@ public class FishingInventory : MonoBehaviour
 
     public int AddFish(
         int speciesId,
-        float weightKg, bool countAsCatch=false,string biomeId=null,bool offshoreNapoleon=false)
+        float weightKg, bool countAsCatch=false,string biomeId=null,bool offshoreNapoleon=false,int catchHealth=0)
     {
         if(IsFull || (shop!=null && shop.ReadOnly)) return -1;
         CaughtFishRecord record =
@@ -63,7 +63,11 @@ public class FishingInventory : MonoBehaviour
 
         fish.Add(record);
         if(countAsCatch && shop!=null)shop.Data.RecordCatch(record.speciesId,record.weightKg);
+        int dust=0;
+        if(countAsCatch && shop!=null && catchHealth>0)
+            dust=shop.Data.gems.AwardCatch(catchHealth,record.speciesId==FishCatalog.AbyssalLeviathanId,UnityEngine.Random.Range);
         Save();
+        if(dust>0)shop.NotifyCrystalDust(dust);
 
         return fish.Count - 1;
     }
