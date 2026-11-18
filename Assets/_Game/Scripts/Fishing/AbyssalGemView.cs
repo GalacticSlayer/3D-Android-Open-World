@@ -46,11 +46,12 @@ public static class AbyssalGemView
         go.SetActive(true);
         return button;
     }
-    private static void Picture(Transform parent,string name,float x0,float y0,float x1,float y1)
+    private static Image Picture(Transform parent,string name,float x0,float y0,float x1,float y1)
     {
         var go=new GameObject(name,typeof(RectTransform),typeof(Image));go.transform.SetParent(parent,false);
         var image=go.GetComponent<Image>();image.sprite=Art(name);image.preserveAspect=true;image.raycastTarget=false;
         Place(image.rectTransform,x0,y0,x1,y1);
+        return image;
     }
     public static string Value(AbyssalGem gem,int slot)=>"+"+gem.values[slot]+(gem.attributes[slot]==6?" m":"%");
     public static string Summary(AbyssalGem gem)
@@ -109,8 +110,8 @@ public static class AbyssalGemView
         for(int i=0;i<5;i++)
         {
             int choice=i;var pos=points[i];
-            string title=i==0?"PRIMARY\nSCALE PIERCER\n"+gem.ScalePiercer.ToString("0.00")+"×":AbyssalGemCollection.Names[gem.attributes[i-1]].ToUpperInvariant()+"\n"+Value(gem,i-1);
-            Button(left.transform,title,pos.x-.17f,pos.y-.115f,pos.x+.17f,pos.y+.115f,()=>select(choice),i==0?6:selected==i?1:0);
+            string title=i==0?"<color=#FFEA00>PRIMARY</color>\nSCALE PIERCER\n"+gem.ScalePiercer.ToString("0.00")+"×":AbyssalGemCollection.Names[gem.attributes[i-1]].ToUpperInvariant()+"\n"+Value(gem,i-1);
+            Button(left.transform,title,pos.x-.17f,pos.y-.115f,pos.x+.17f,pos.y+.115f,()=>select(choice),i==0?(selected==0?10:6):selected==i?1:0);
         }
         selected=Mathf.Clamp(selected,0,4);
         Label(right.transform,"ATTRIBUTE DETAILS",31,.06f,.86f,.94f,.99f,new Color(1f,.86f,.28f));
@@ -121,10 +122,47 @@ public static class AbyssalGemView
         var footer=Panel(root.transform,"Gem progression",0,0,1,.16f);
         Label(footer.transform,"LEVEL "+gem.level+" / 15\n"+(gem.level==15?"MAX LEVEL":"Scale Piercer +0.05× and one random attribute"),24,.02f,.05f,.45f,.95f,Color.white);
         bool canUpgrade=progress.CanManageGems && gem.level<15 && progress.Data.gems.dust>=AbyssalGemCollection.UpgradeCost(gem.level);
-        Button(footer.transform,gem.level==15?"MAX LEVEL":"LEVEL UP GEM\n"+AbyssalGemCollection.UpgradeCost(gem.level)+" Crystal Dust",.70f,.06f,.99f,.94f,upgrade,1,canUpgrade);
-        Picture(footer.transform,"CrystalDust",.53f,.1f,.61f,.9f);
-        Label(footer.transform,progress.Data.gems.dust.ToString("N0"),30,.61f,.12f,.69f,.88f,new Color(1f,.86f,.28f));
+        var upgradeButton=Button(footer.transform,gem.level==15?"MAX LEVEL":"LEVEL UP GEM\n"+AbyssalGemCollection.UpgradeCost(gem.level)+" Crystal Dust",.70f,.06f,.99f,.94f,upgrade,1,canUpgrade);
+        var upgradeLabel=upgradeButton.GetComponentInChildren<Text>();
+        Place(upgradeLabel.rectTransform,.28f,.06f,.96f,.94f);
+        // Icon centre at 14%: halfway between the left border and text at 28%.
+        var dustIcon=Picture(upgradeButton.transform,"CrystalDust",.04f,.18f,.24f,.82f);
+        dustIcon.color=canUpgrade?Color.white:new Color(.45f,.45f,.45f,.8f);
         return root;
+    }
+    public static GameObject BuildDustWallet(Transform parent,RectTransform close,int dust)
+    {
+        var box=Panel(parent,"Crystal dust wallet",0,0,1,1);
+        var rect=box.GetComponent<RectTransform>();
+        rect.anchorMin=rect.anchorMax=rect.pivot=Vector2.one;
+        rect.sizeDelta=new Vector2(0,close.sizeDelta.y);
+        rect.anchoredPosition=close.anchoredPosition-new Vector2(close.sizeDelta.x+18f,0);
+        box.GetComponent<Image>().raycastTarget=false;
+        var layout=box.AddComponent<HorizontalLayoutGroup>();
+        layout.padding=new RectOffset(14,14,0,0);layout.spacing=12;
+        layout.childAlignment=TextAnchor.MiddleCenter;
+        layout.childControlWidth=true;layout.childControlHeight=true;
+        layout.childForceExpandWidth=false;layout.childForceExpandHeight=false;
+        var icon=Picture(box.transform,"CrystalDust",0,0,1,1);
+        var iconSize=icon.gameObject.AddComponent<LayoutElement>();
+        iconSize.minWidth=iconSize.preferredWidth=54;iconSize.preferredHeight=48;
+        WalletLabel(box.transform,"CRYSTAL DUST",25,Color.white);
+        WalletLabel(box.transform,"|",27,FishingHudTheme.Cyan);
+        WalletLabel(box.transform,dust.ToString("N0"),30,FishingHudTheme.Cyan);
+        // The right pivot keeps the gap to Close fixed. More digits increase
+        // preferred width, so only the left edge moves when the balance grows.
+        var fit=box.AddComponent<ContentSizeFitter>();
+        fit.horizontalFit=ContentSizeFitter.FitMode.PreferredSize;
+        return box;
+    }
+    private static void WalletLabel(Transform parent,string value,int size,Color color)
+    {
+        var label=Label(parent,value,size,0,0,1,1,color,TextAnchor.MiddleCenter);
+        label.resizeTextForBestFit=false;label.fontStyle=FontStyle.Bold;
+        label.horizontalOverflow=HorizontalWrapMode.Overflow;
+        var layout=label.gameObject.AddComponent<LayoutElement>();
+        layout.minWidth=layout.preferredWidth=Mathf.Ceil(label.preferredWidth);
+        layout.preferredHeight=42;
     }
     // Built outside the detail view so a save-driven refresh cannot remove the result.
     // Values are captured at the successful upgrade, not re-read from the live gem.

@@ -5,7 +5,7 @@ using UnityEngine.UI;
 public static class FishingHudTheme
 {
     public static readonly Color Cyan = new Color(.05f, .95f, 1f, 1f);
-    private static readonly Sprite[] sprites = new Sprite[10];
+    private static readonly Sprite[] sprites = new Sprite[11];
 
     public static void Panel(GameObject target, int style = 0)
     {
@@ -56,10 +56,13 @@ public static class FishingHudTheme
             if (style == 5)
                 c = Color.Lerp(new Color(.72f,.09f,.07f,.96f),Color.black,
                     Mathf.Clamp01(d+4f));
-            if (style == 6)
+            if (style == 6 || style == 10)
             {
-                Color selectedEdge = new Color(1f,.86f,.04f,1f);
-                c = Color.Lerp(new Color(.025f,.12f,.14f,.98f), selectedEdge, Mathf.Max(rim,glow*1.8f));
+                Color selectedEdge = style==10?new Color(1f,1f,.15f,1f):new Color(1f,.86f,.04f,1f);
+                // Primary selection: double the ordinary gold rim's 1.3px
+                // half-width, shifted inward to preserve the rounded silhouette.
+                float goldRim=style==10?Mathf.Clamp01(1f-Mathf.Abs(d+3f)/2.6f):rim;
+                c = Color.Lerp(new Color(.025f,.12f,.14f,.98f), selectedEdge, Mathf.Max(goldRim,glow*1.8f));
             }
             if (style == 7 || style == 8)
             {

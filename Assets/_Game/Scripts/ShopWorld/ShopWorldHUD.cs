@@ -47,7 +47,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
     private InputField profileNameInput;
     private RectTransform list;
     private GameObject personalStatsView;
-    private GameObject gemView,gemUpgradeBanner,equipmentTabs;
+    private GameObject gemView,gemUpgradeBanner,equipmentTabs,gemDustWallet;
     private int equipmentCategory;
     public bool ShowingFishingRods => page=="equipment" && equipmentCategory==0;
     private string selectedGem;
@@ -346,6 +346,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
     {
         dirty=false;
         if(equipmentTabs!=null){equipmentTabs.SetActive(false);Destroy(equipmentTabs);}
+        if(gemDustWallet!=null){gemDustWallet.SetActive(false);Destroy(gemDustWallet);}
         if(gemView!=null){gemView.SetActive(false);Destroy(gemView);}
         if(fishIndexView!=null)fishIndexView.gameObject.SetActive(false);
         if(personalStatsView!=null){personalStatsView.SetActive(false);Destroy(personalStatsView);}
@@ -373,7 +374,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
         if(index)heading.text=page=="islands"?"ISLAND / BIOME INDEX":ReefCatalog.Zones[indexBiome].name.ToUpperInvariant()+" • FISH INDEX";
         if(page=="bag")heading.text="FISH BAG";
         if(page=="equipment")heading.text="EQUIPMENT";
-        if(page=="gem"){heading.text="ABYSSAL GEM";wallet.text="CRYSTAL DUST  "+progress.Data.gems.dust+"  •  "+(progress.Data.gems.equippedId==selectedGem?"EQUIPPED":"NOT EQUIPPED");}
+        if(page=="gem"){heading.text="ABYSSAL GEM";wallet.text=progress.Data.gems.equippedId==selectedGem?"EQUIPPED":"NOT EQUIPPED";}
         if(page=="bait")heading.text="BAIT / LURES";
         if(page=="multiplayer")heading.text="MULTIPLAYER";
         if(page=="homes")heading.text="PLAYER AQUARIUMS";
@@ -418,6 +419,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
         foreach(var tab in navigationTabs)tab.SetActive(page=="travel");
         if(page=="gem")
         {
+            gemDustWallet=AbyssalGemView.BuildDustWallet(modal.transform,menuClose.GetComponent<RectTransform>(),progress.Data.gems.dust);
             feedback.gameObject.SetActive(false);scroll.gameObject.SetActive(false);scroll.verticalScrollbar.gameObject.SetActive(false);
             gemView=AbyssalGemView.Build(modal.transform,progress,selectedGem,selectedGemAttribute,
                 choice=>{selectedGemAttribute=choice;Refresh(false);},()=>{
