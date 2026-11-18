@@ -47,10 +47,11 @@ public sealed class ShopWorldHUD : MonoBehaviour
     private InputField profileNameInput;
     private RectTransform list;
     private GameObject personalStatsView;
-    private GameObject gemView;
-    private string selectedGem,gemUpgradeResult;
+    private GameObject gemView,gemUpgradeBanner,equipmentTabs;
+    private int equipmentCategory;
+    private string selectedGem;
     private int selectedGemAttribute;
-    public void OpenGem(string id) { if(fishing!=null && fishing.HasActiveCast)return;selectedGem=id;selectedGemAttribute=0;gemUpgradeResult="";dirty=true;Open("gem"); }
+    public void OpenGem(string id) { if(gemUpgradeBanner!=null || (fishing!=null && fishing.HasActiveCast))return;selectedGem=id;selectedGemAttribute=0;dirty=true;Open("gem"); }
     private ScrollRect scroll;
     private Text heading, wallet, feedback, nearLabel;
     private string page="travel", message="";
@@ -90,7 +91,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
         if(homeDirectory!=null)homeDirectory.Changed+=RefreshVisitedHabitatSoon;
         message=progress.Notice; MenuOpen=false;
     }
-    private void OnDestroy() { RestorePoseHUD(); if(player!=null)player.SetPoseLookArea(null); if(poseOnlyCanvas!=null)Destroy(poseOnlyCanvas.gameObject); if(progress!=null) progress.Changed-=RefreshSoon; if(homeDirectory!=null)homeDirectory.Changed-=RefreshVisitedHabitatSoon; MenuOpen=false;if(islandThumbnail!=null)Destroy(islandThumbnail);if(rockyThumbnail!=null)Destroy(rockyThumbnail);if(deepThumbnail!=null)Destroy(deepThumbnail);if(bluewaterThumbnail!=null)Destroy(bluewaterThumbnail);if(snapperThumbnail!=null)Destroy(snapperThumbnail); }
+    private void OnDestroy() { DismissGemUpgrade(); RestorePoseHUD(); if(player!=null)player.SetPoseLookArea(null); if(poseOnlyCanvas!=null)Destroy(poseOnlyCanvas.gameObject); if(progress!=null) progress.Changed-=RefreshSoon; if(homeDirectory!=null)homeDirectory.Changed-=RefreshVisitedHabitatSoon; MenuOpen=false;if(islandThumbnail!=null)Destroy(islandThumbnail);if(rockyThumbnail!=null)Destroy(rockyThumbnail);if(deepThumbnail!=null)Destroy(deepThumbnail);if(bluewaterThumbnail!=null)Destroy(bluewaterThumbnail);if(snapperThumbnail!=null)Destroy(snapperThumbnail); }
     private void RefreshSoon() => dirty=true;
     private void RefreshVisitedHabitatSoon()
     {
@@ -162,6 +163,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
 
     public void Open(string destination)
     {
+        if(gemUpgradeBanner!=null)return;
         if(root==null || travel.Traveling || (fishing!=null && fishing.IsFishPosing)) return;
         if(MenuOpen && shopSession!=null && destination!=shopSession && !(shopSession=="market" && destination=="sell-confirm"))return;
         if(MenuOpen && page==destination && !dirty)return;
@@ -180,6 +182,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
     public void Close()
     {
         if(travel!=null && travel.Traveling) return;
+        DismissGemUpgrade();
         SaveProfileName();
         MenuOpen=false;travelMenuSession=false;shopSession=null;bagPicker=null;habitatPicker=null;message="";
         if(previews!=null)previews.Suspend();
@@ -188,8 +191,14 @@ public sealed class ShopWorldHUD : MonoBehaviour
         if(fishingHUD!=null) fishingHUD.SetMenuCovered(false);
 
     }
+    private void DismissGemUpgrade()
+    {
+        if(gemUpgradeBanner==null)return;
+        gemUpgradeBanner.SetActive(false);Destroy(gemUpgradeBanner);gemUpgradeBanner=null;
+    }
     public void CloseMenuPage()
     {
+        if(gemUpgradeBanner!=null){DismissGemUpgrade();return;}
         var confirmation=modal!=null?modal.GetComponentInChildren<AbyssalGemConfirmation>(true):null;
         if(confirmation!=null){Destroy(confirmation.gameObject);return;}
         if(travelMenuSession && page!="travel") { bagPicker=null; Open("travel"); }
@@ -335,6 +344,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
     private void Refresh(bool top)
     {
         dirty=false;
+        if(equipmentTabs!=null){equipmentTabs.SetActive(false);Destroy(equipmentTabs);}
         if(gemView!=null){gemView.SetActive(false);Destroy(gemView);}
         if(fishIndexView!=null)fishIndexView.gameObject.SetActive(false);
         if(personalStatsView!=null){personalStatsView.SetActive(false);Destroy(personalStatsView);}
@@ -410,14 +420,20 @@ public sealed class ShopWorldHUD : MonoBehaviour
             feedback.gameObject.SetActive(false);scroll.gameObject.SetActive(false);scroll.verticalScrollbar.gameObject.SetActive(false);
             gemView=AbyssalGemView.Build(modal.transform,progress,selectedGem,selectedGemAttribute,
                 choice=>{selectedGemAttribute=choice;Refresh(false);},()=>{
+                    if(gemUpgradeBanner!=null)return;
+                    var gem=progress.Data.gems.Find(selectedGem);
+                    if(gem==null)return;
+                    int oldLevel=gem.level;float oldPrimary=gem.ScalePiercer;
                     if(progress.UpgradeGem(selectedGem,out int slot,out int amount))
                     {
                         selectedGemAttribute=slot+1;
-                        var gem=progress.Data.gems.Find(selectedGem);
-                        gemUpgradeResult="UPGRADED! "+AbyssalGemCollection.Names[gem.attributes[slot]]+" +"+amount+(gem.attributes[slot]==6?" m":"%");
+                        ShopActionAudio.Play(this,ShopActionAudio.Cue.GemUpgrade);
+                        Refresh(false);
+                        gemUpgradeBanner=AbyssalGemView.ShowUpgradeSuccess(root.transform,oldLevel,gem.level,
+                            oldPrimary,gem.ScalePiercer,gem.attributes[slot],gem.values[slot]-amount,
+                            gem.values[slot],DismissGemUpgrade);
                     }
-                    Refresh(false);
-                },gemUpgradeResult);
+                });
         }
         else if(page=="stats")
         {
@@ -691,7 +707,6 @@ public sealed class ShopWorldHUD : MonoBehaviour
     }
     private void BagPage()
     {
-        AbyssalGemView.Inventory(list,modal.transform,progress,OpenGem,()=>Refresh(false));
         if(BagSortAndFilterControls())return;
         if(progress.Data.bag.Count==0) {Row("No catches yet","Your infinite worms are always available. Travel to the island and cast.","TRAVEL",()=>Open("travel"));return;}
         foreach(var record in SortedBagFish())
@@ -701,10 +716,22 @@ public sealed class ShopWorldHUD : MonoBehaviour
     }
     private void EquipmentPage(bool shop)
     {
-        if(!shop)AbyssalGemView.Inventory(list,modal.transform,progress,OpenGem,()=>Refresh(false));
+        if(!shop)
+        {
+            BuildEquipmentTabs();
+            if(equipmentCategory==2)
+            {
+                AbyssalGemView.Inventory(list,modal.transform,progress,OpenGem,()=>Refresh(false));
+                if(progress.Data.gems.items.Count==0)
+                    Row("NO GEMS YET","Catch the Abyssal Leviathan to obtain an Abyssal Gem.","CLOSE",Close);
+                return;
+            }
+        }
         if(shop && !travel.Near("gear")) { Row("Visit the tackle counter","Return to the counter to make purchases.","CLOSE",Close); return; }
         foreach(GearKind kind in Enum.GetValues(typeof(GearKind)))
         {
+            if(!shop && ((equipmentCategory==0 && kind!=GearKind.Rod) ||
+                (equipmentCategory==1 && kind==GearKind.Rod)))continue;
             int tierCount=kind==GearKind.Rod?ShopCatalog.RodNames.Length:
                 kind==GearKind.Reel?ShopCatalog.ReelNames.Length:ShopCatalog.LineNames.Length;
             for(int tier=0;tier<tierCount;tier++)
@@ -723,6 +750,31 @@ public sealed class ShopWorldHUD : MonoBehaviour
             }
         }
         if(shop)BaitPage(true);
+    }
+    private void BuildEquipmentTabs()
+    {
+        equipmentTabs=new GameObject("Equipment categories",typeof(RectTransform));
+        equipmentTabs.transform.SetParent(modal.transform,false);
+        Anchor(equipmentTabs.GetComponent<RectTransform>(),0,1,1,1,22,-234,-22,-138);
+        string[] captions={"FISHING RODS","REELS AND LINES","GEMS"};
+        for(int i=0;i<captions.Length;i++)
+        {
+            int category=i;
+            var tab=ButtonAt(equipmentTabs.transform,captions[i],()=>{
+                if(equipmentCategory==category)return;
+                equipmentCategory=category;Refresh(true);
+            });
+            Anchor(tab.GetComponent<RectTransform>(),i/3f,0,(i+1)/3f,1,6,6,-6,-6);
+            FishingHudTheme.Panel(tab.gameObject,equipmentCategory==i?6:0);
+            var label=tab.GetComponentInChildren<Text>();
+            label.fontSize=28;label.resizeTextForBestFit=true;label.resizeTextMinSize=14;label.resizeTextMaxSize=28;
+            label.fontStyle=FontStyle.Bold;
+            label.color=equipmentCategory==i?new Color(1f,.86f,.28f):FishingHudTheme.Cyan;
+        }
+        // Keep category controls visible while the equipment list scrolls beneath them.
+        var viewport=scroll.viewport;var top=viewport.offsetMax;top.y=-250;viewport.offsetMax=top;
+        var track=scroll.verticalScrollbar.GetComponent<RectTransform>();
+        top=track.offsetMax;top.y=-250;track.offsetMax=top;
     }
     private void RefreshBaitShortcut()
     {

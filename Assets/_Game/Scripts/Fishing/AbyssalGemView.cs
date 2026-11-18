@@ -79,7 +79,7 @@ public static class AbyssalGemView
             progress.BreakDownGem(id);UnityEngine.Object.Destroy(shade);refresh();
         },8);
     }
-    public static GameObject Build(Transform parent,ShopProgress progress,string id,int selected,Action<int> select,Action upgrade,string result)
+    public static GameObject Build(Transform parent,ShopProgress progress,string id,int selected,Action<int> select,Action upgrade)
     {
         var root=new GameObject("Abyssal Gem Attributes",typeof(RectTransform));root.transform.SetParent(parent,false);
         Place(root.GetComponent<RectTransform>(),.015f,.02f,.985f,.86f,0);
@@ -106,13 +106,51 @@ public static class AbyssalGemView
         string name=selected==0?"SCALE PIERCER":AbyssalGemCollection.Names[gem.attributes[selected-1]].ToUpperInvariant();
         Label(right.transform,name,34,.06f,.66f,.94f,.86f,Color.white);
         Label(right.transform,Description(gem,selected),26,.06f,.13f,.94f,.66f,Color.white,TextAnchor.UpperLeft);
-        Label(right.transform,result??"Select an attribute to learn more.",21,.06f,.02f,.94f,.17f,FishingHudTheme.Cyan);
+
         var footer=Panel(root.transform,"Gem progression",0,0,1,.16f);
         Label(footer.transform,"LEVEL "+gem.level+" / 15\n"+(gem.level==15?"MAX LEVEL":"Scale Piercer +0.05× and one random attribute"),24,.02f,.05f,.6f,.95f,Color.white);
         var level=Button(footer.transform,gem.level==15?"MAX LEVEL":"LEVEL UP GEM\n"+AbyssalGemCollection.UpgradeCost(gem.level)+" Crystal Dust",.68f,.06f,.99f,.94f,upgrade,1);
         level.interactable=progress.CanManageGems && gem.level<15 && progress.Data.gems.dust>=AbyssalGemCollection.UpgradeCost(gem.level);
         Picture(footer.transform,"CrystalDust",.6f,.1f,.68f,.9f);
         return root;
+    }
+    // Built outside the detail view so a save-driven refresh cannot remove the result.
+    // Values are captured at the successful upgrade, not re-read from the live gem.
+    public static GameObject ShowUpgradeSuccess(Transform parent,int oldLevel,int newLevel,
+        float oldPrimary,float newPrimary,int attribute,int oldValue,int newValue,Action dismiss)
+    {
+        var shade=new GameObject("Gem upgrade success overlay",typeof(RectTransform),typeof(Image));
+        shade.transform.SetParent(parent,false);
+        Place(shade.GetComponent<RectTransform>(),0,0,1,1,0);
+        var dimmer=shade.GetComponent<Image>();
+        dimmer.color=new Color(.12f,.14f,.16f,.76f);
+        dimmer.raycastTarget=true; // Block further upgrades and all covered controls.
+        var banner=Panel(shade.transform,"Upgrade success banner",.12f,.23f,.88f,.83f);
+        Label(banner.transform,"ENHANCEMENT SUCCESS",36,.06f,.86f,.94f,.98f,Color.white,TextAnchor.MiddleCenter);
+        var band=Panel(banner.transform,"Ocean blue level-up band",.012f,.37f,.988f,.85f,1);
+        band.GetComponent<Image>().raycastTarget=false;
+        Picture(banner.transform,"AbyssalGem",.40f,.54f,.60f,.84f);
+        Label(banner.transform,"LEVEL UP",32,.25f,.43f,.75f,.53f,Color.white,TextAnchor.MiddleCenter);
+        Label(banner.transform,"LEVEL "+oldLevel+"  →  LEVEL "+newLevel,23,.25f,.375f,.75f,.445f,
+            new Color(.75f,.98f,1f),TextAnchor.MiddleCenter);
+        UpgradeRow(banner.transform,"SCALE PIERCER",oldPrimary.ToString("0.00")+"×",
+            newPrimary.ToString("0.00")+"×",.20f,.34f);
+        string unit=attribute==6?" m":"%";
+        UpgradeRow(banner.transform,AbyssalGemCollection.Names[attribute].ToUpperInvariant(),
+            "+"+oldValue+unit,"+"+newValue+unit,.045f,.185f);
+        Button(shade.transform,"CONTINUE",.39f,.12f,.61f,.21f,dismiss,1);
+        shade.transform.SetAsLastSibling();
+        return shade;
+    }
+    private static void UpgradeRow(Transform parent,string name,string before,string after,float bottom,float top)
+    {
+        var row=Panel(parent,name+" upgrade",.035f,bottom,.965f,top,3);
+        row.GetComponent<Image>().raycastTarget=false;
+        Label(row.transform,name,27,.025f,.08f,.46f,.92f,Color.white);
+        Label(row.transform,before,28,.46f,.08f,.64f,.92f,new Color(.72f,.83f,.87f),TextAnchor.MiddleCenter);
+        Label(row.transform,"→",32,.64f,.08f,.72f,.92f,FishingHudTheme.Cyan,TextAnchor.MiddleCenter);
+        Label(row.transform,after,30,.72f,.08f,.91f,.92f,new Color(1f,.86f,.28f),TextAnchor.MiddleCenter);
+        Label(row.transform,"↑",30,.91f,.08f,.98f,.92f,FishingHudTheme.Cyan,TextAnchor.MiddleCenter);
     }
     private static string Description(AbyssalGem gem,int selected)
     {

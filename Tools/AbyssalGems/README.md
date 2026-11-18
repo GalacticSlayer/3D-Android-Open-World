@@ -1,6 +1,6 @@
 # Abyssal Gems
 
-A confirmed Leviathan catch adds one individually identified Level 1 gem to the shared shop ledger. New gems have Scale Piercer (1.50x) and four distinct secondary attributes, sampled uniformly without replacement from the eight requested attributes. Each secondary receives one initial roll in its stated upgrade range. Gems do not auto-equip; manage them in Fish Bag or Equipment.
+A confirmed Leviathan catch adds one individually identified Level 1 gem to the shared shop ledger. New gems have Scale Piercer (1.50x) and four distinct secondary attributes, sampled uniformly without replacement from the eight requested attributes. Each secondary receives one initial roll in its stated upgrade range. Gems do not auto-equip; manage them in Equipment → Gems. Equipment has fixed Fishing Rods, Reels and Lines, and Gems category tabs; the Fish Bag only contains fish.
 
 Each upgrade adds 0.05x to Scale Piercer and selects exactly one of the existing four secondary attributes uniformly, then rolls its inclusive increase. The four attribute types never change. Level 15 caps Scale Piercer at 2.20x. Only the equipped gem supplies bonuses; loadout changes, breakdown and upgrades require no active cast.
 
@@ -34,7 +34,7 @@ Upgrade from level L costs `50 + 25*(L-1)` dust: 50, 75, 100, 125, 150, 175, 200
 
 ## Presentation
 
-The third hotbar slot shows the supplied gem art, its level, and a 2.5-second cyan pulse with the awarded dust amount. Clicking it opens the shared shop modal. Scale Piercer sits at the pentagon apex, four secondary cards surround the gem, and the right panel describes the selected attribute. The footer shows the next upgrade cost or MAX LEVEL. Your original PNGs are stored byte-for-byte as TextAssets, decoded once and cached; no generated replacement art or per-frame texture work.
+The third hotbar slot shows the supplied gem art, its level, and a 2.5-second cyan pulse with the awarded dust amount. Clicking it opens the shared shop modal. Scale Piercer sits at the pentagon apex, four secondary cards surround the gem, and the right panel describes the selected attribute. The footer shows the next upgrade cost or MAX LEVEL. A successful upgrade plays the supplied Gem Upgrade Noise clip once and opens a navy/teal enhancement banner over a translucent grey backdrop. It shows the gem, level change, and old/new values for Scale Piercer and the upgraded secondary. Continue or Escape dismisses the banner; covered controls cannot trigger another upgrade. Your original PNGs are stored byte-for-byte as TextAssets, decoded once and cached; no generated replacement art or per-frame texture work.
 
 ## Verification
 

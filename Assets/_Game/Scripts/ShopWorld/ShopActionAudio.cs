@@ -5,15 +5,16 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public sealed class ShopActionAudio : MonoBehaviour
 {
-    public enum Cue { AquariumStored, AquariumPickup, AquariumPlaced, StorePurchase }
+    public enum Cue { AquariumStored, AquariumPickup, AquariumPlaced, StorePurchase, GemUpgrade }
 
     private static readonly string[] Paths={
         "Fishing/Audio/AquariumStored",
         "Fishing/Audio/AquariumPickup",
         "Fishing/Audio/AquariumPlaced",
-        "Fishing/Audio/StorePurchase"
+        "Fishing/Audio/StorePurchase",
+        "Fishing/Audio/GemUpgrade"
     };
-    private readonly AudioClip[] clips=new AudioClip[4];
+    private readonly AudioClip[] clips=new AudioClip[Paths.Length];
     private AudioSource output;
 
     public static void Play(Component owner,Cue cue)
