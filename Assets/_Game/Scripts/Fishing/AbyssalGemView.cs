@@ -178,11 +178,14 @@ public static class AbyssalGemView
         var banner=Panel(shade.transform,"Upgrade success banner",.12f,.23f,.88f,.83f);
         Label(banner.transform,"ENHANCEMENT SUCCESS",36,.06f,.86f,.94f,.98f,Color.white,TextAnchor.MiddleCenter);
         var band=Panel(banner.transform,"Ocean blue level-up band",.012f,.37f,.988f,.85f,1);
-        band.GetComponent<Image>().raycastTarget=false;
+        var bandImage=band.GetComponent<Image>();
+        bandImage.sprite=Art("UpgradeSuccessBackground");
+        bandImage.type=Image.Type.Simple;
+        bandImage.color=Color.white;
+        bandImage.raycastTarget=false;
         Picture(banner.transform,"AbyssalGem",.40f,.54f,.60f,.84f);
-        Label(banner.transform,"LEVEL UP",32,.25f,.43f,.75f,.53f,Color.white,TextAnchor.MiddleCenter);
-        Label(banner.transform,"LEVEL "+oldLevel+"  →  LEVEL "+newLevel,23,.25f,.375f,.75f,.445f,
-            new Color(.75f,.98f,1f),TextAnchor.MiddleCenter);
+        Label(banner.transform,"LEVEL "+oldLevel+"  →  <color=#FFDB47>LEVEL "+newLevel+"</color>",36,.20f,.385f,.80f,.53f,
+            Color.white,TextAnchor.MiddleCenter);
         UpgradeRow(banner.transform,"SCALE PIERCER",oldPrimary.ToString("0.00")+"×",
             newPrimary.ToString("0.00")+"×",.20f,.34f);
         string unit=attribute==6?" m":"%";
