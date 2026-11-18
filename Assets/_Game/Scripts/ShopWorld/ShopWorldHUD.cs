@@ -427,7 +427,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
                     var gem=progress.Data.gems.Find(selectedGem);
                     if(gem==null)return;
                     int oldLevel=gem.level;float oldPrimary=gem.ScalePiercer;
-                    if(progress.UpgradeGem(selectedGem,out int slot,out int amount))
+                    if(progress.UpgradeGem(selectedGem,out int slot,out float amount))
                     {
                         selectedGemAttribute=slot+1;
                         ShopActionAudio.Play(this,ShopActionAudio.Cue.GemUpgrade);

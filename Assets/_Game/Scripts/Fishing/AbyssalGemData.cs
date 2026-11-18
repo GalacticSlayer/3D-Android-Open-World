@@ -7,16 +7,17 @@ public sealed class AbyssalGem
     public string id;
     public int level=1;
     public int[] attributes=new int[4];
-    public int[] values=new int[4];
+    public float[] values=new float[4];
     public float ScalePiercer => 1.5f+.05f*(level-1);
-    public int Value(int attribute)
+    public float Value(int attribute)
     {
         for(int i=0;i<4;i++)if(attributes[i]==attribute)return values[i];
         return 0;
     }
 }
 
-// Pure save/economy rules; integer rolls use an exclusive upper bound.
+// Pure save/economy rules; sample integer tenths with an exclusive upper bound.
+// Float values also read existing whole-number JSON saves without changing their bonuses.
 [Serializable]
 public sealed class AbyssalGemCollection
 {
@@ -46,20 +47,22 @@ public sealed class AbyssalGemCollection
         for(int i=0;i<4;i++)
         {
             int slot=roll(0,pool.Count),kind=pool[slot];pool.RemoveAt(slot);
-            gem.attributes[i]=kind;gem.values[i]=roll(Minimum[kind],Maximum[kind]+1);
+            gem.attributes[i]=kind;gem.values[i]=RollIncrease(kind,roll);
         }
         items.Add(gem);return gem;
     }
-    public bool Upgrade(string id,Func<int,int,int> roll,out int slot,out int increase)
+    public bool Upgrade(string id,Func<int,int,int> roll,out int slot,out float increase)
     {
         slot=-1;increase=0;
         var gem=Find(id);
         if(gem==null || gem.level>=MaxLevel || dust<UpgradeCost(gem.level))return false;
         slot=roll(0,4);int kind=gem.attributes[slot];
-        increase=roll(Minimum[kind],Maximum[kind]+1);
-        dust-=UpgradeCost(gem.level);gem.level++;gem.values[slot]+=increase;
+        increase=RollIncrease(kind,roll);
+        dust-=UpgradeCost(gem.level);gem.level++;gem.values[slot]=(float)Math.Round(gem.values[slot]+increase,1);
         return true;
     }
+    private static float RollIncrease(int kind,Func<int,int,int> roll)
+        =>roll(Minimum[kind]*10,Maximum[kind]*10+1)/10f;
     public bool Equip(string id)
     {
         if(Find(id)==null)return false;
@@ -88,7 +91,7 @@ public sealed class AbyssalGemCollection
             if(gem==null || string.IsNullOrEmpty(gem.id) || !ids.Add(gem.id) || gem.level<1 || gem.level>15 || gem.attributes==null || gem.values==null || gem.attributes.Length!=4 || gem.values.Length!=4)
                 throw new InvalidOperationException("Invalid Abyssal Gem save");
             var kinds=new HashSet<int>();
-            for(int i=0;i<4;i++)if(gem.attributes[i]<0 || gem.attributes[i]>=8 || !kinds.Add(gem.attributes[i]) || gem.values[i]<1 || gem.values[i]>Maximum[gem.attributes[i]]*gem.level)
+            for(int i=0;i<4;i++)if(gem.attributes[i]<0 || gem.attributes[i]>=8 || !kinds.Add(gem.attributes[i]) || float.IsNaN(gem.values[i]) || float.IsInfinity(gem.values[i]) || gem.values[i]<1 || gem.values[i]>Maximum[gem.attributes[i]]*gem.level)
                 throw new InvalidOperationException("Invalid Abyssal Gem attribute");
         }
         if(Equipped==null)equippedId="";

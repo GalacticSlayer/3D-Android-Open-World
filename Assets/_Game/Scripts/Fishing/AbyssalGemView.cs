@@ -53,7 +53,7 @@ public static class AbyssalGemView
         Place(image.rectTransform,x0,y0,x1,y1);
         return image;
     }
-    public static string Value(AbyssalGem gem,int slot)=>"+"+gem.values[slot]+(gem.attributes[slot]==6?" m":"%");
+    public static string Value(AbyssalGem gem,int slot)=>"+"+gem.values[slot].ToString("0.#")+(gem.attributes[slot]==6?" m":"%");
     public static string Summary(AbyssalGem gem)
     {
         var parts=new List<string>();
@@ -110,8 +110,14 @@ public static class AbyssalGemView
         for(int i=0;i<5;i++)
         {
             int choice=i;var pos=points[i];
-            string title=i==0?"<color=#FFEA00>PRIMARY</color>\nSCALE PIERCER\n"+gem.ScalePiercer.ToString("0.00")+"×":AbyssalGemCollection.Names[gem.attributes[i-1]].ToUpperInvariant()+"\n"+Value(gem,i-1);
-            Button(left.transform,title,pos.x-.17f,pos.y-.115f,pos.x+.17f,pos.y+.115f,()=>select(choice),i==0?(selected==0?10:6):selected==i?1:0);
+            string title=i==0?"<color=#FFEA00>PRIMARY</color>\nSCALE PIERCER":AbyssalGemCollection.Names[gem.attributes[i-1]].ToUpperInvariant();
+            var statButton=Button(left.transform,title,pos.x-.17f,pos.y-.115f,pos.x+.17f,pos.y+.115f,()=>select(choice),i==0?(selected==0?10:6):selected==i?1:0);
+            Place(statButton.GetComponentInChildren<Text>().rectTransform,.04f,.35f,.96f,.96f);
+            string statValue=i==0?gem.ScalePiercer.ToString("0.00")+"×":Value(gem,i-1);
+            var valueLabel=Label(statButton.transform,statValue,26,.04f,.015f,.96f,.38f,new Color(1f,.86f,.28f),TextAnchor.MiddleCenter);
+            var outline=valueLabel.gameObject.AddComponent<Outline>();
+            outline.effectColor=Color.black;
+            outline.effectDistance=new Vector2(1f,-1f);
         }
         selected=Mathf.Clamp(selected,0,4);
         Label(right.transform,"ATTRIBUTE DETAILS",31,.06f,.86f,.94f,.99f,new Color(1f,.86f,.28f));
@@ -167,7 +173,7 @@ public static class AbyssalGemView
     // Built outside the detail view so a save-driven refresh cannot remove the result.
     // Values are captured at the successful upgrade, not re-read from the live gem.
     public static GameObject ShowUpgradeSuccess(Transform parent,int oldLevel,int newLevel,
-        float oldPrimary,float newPrimary,int attribute,int oldValue,int newValue,Action dismiss)
+        float oldPrimary,float newPrimary,int attribute,float oldValue,float newValue,Action dismiss)
     {
         var shade=new GameObject("Gem upgrade success overlay",typeof(RectTransform),typeof(Image));
         shade.transform.SetParent(parent,false);
@@ -199,7 +205,7 @@ public static class AbyssalGemView
             newPrimary.ToString("0.00")+"×",.20f,.34f);
         string unit=attribute==6?" m":"%";
         UpgradeRow(banner.transform,AbyssalGemCollection.Names[attribute].ToUpperInvariant(),
-            "+"+oldValue+unit,"+"+newValue+unit,.045f,.185f);
+            "+"+oldValue.ToString("0.#")+unit,"+"+newValue.ToString("0.#")+unit,.045f,.185f);
         Button(shade.transform,"CONTINUE",.39f,.12f,.61f,.21f,dismiss,1);
         shade.transform.SetAsLastSibling();
         return shade;

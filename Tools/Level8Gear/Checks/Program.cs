@@ -37,7 +37,7 @@ class Program {
   Check(FishingNetworkCompatibility.RodTier(7,true,6)==6&&FishingNetworkCompatibility.RodTier(7,true,7)==7,"Legacy and updated server tiers");
   var gemData=new ShopProgress();
   var gem=gemData.Data.gems.Create((min,max)=>min);gemData.Data.gems.Equip(gem.id);
-  gem.attributes=new[]{2,3,4,5};gem.values=new[]{20,10,40,20};gem.level=15;
+  gem.attributes=new[]{2,3,4,5};gem.values=new[]{20f,10f,40f,20f};gem.level=15;
   var system=new FishingSystem();var runtime=new FishingBurstDamageRuntime();
   const System.Reflection.BindingFlags flags=System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic;
   typeof(FishingBurstDamageRuntime).GetField("fishing",flags).SetValue(runtime,system);

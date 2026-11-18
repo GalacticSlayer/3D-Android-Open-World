@@ -1,8 +1,8 @@
 # Abyssal Gems
 
-A confirmed Leviathan catch adds one individually identified Level 1 gem to the shared shop ledger. New gems have Scale Piercer (1.50x) and four distinct secondary attributes, sampled uniformly without replacement from the eight requested attributes. Each secondary receives one initial roll in its stated upgrade range. Gems do not auto-equip; manage them in Equipment → Gems. Equipment has fixed Fishing Rods, Reels and Lines, and Gems category tabs; the Fish Bag only contains fish.
+A confirmed Leviathan catch adds one individually identified Level 1 gem to the shared shop ledger. New gems have Scale Piercer (1.50x) and four distinct secondary attributes, sampled uniformly without replacement from the eight requested attributes. Each secondary receives one initial roll in its stated upgrade range, in uniformly sampled 0.1 increments (including both endpoints). Gems do not auto-equip; manage them in Equipment → Gems. Equipment has fixed Fishing Rods, Reels and Lines, and Gems category tabs; the Fish Bag only contains fish.
 
-Each upgrade adds 0.05x to Scale Piercer and selects exactly one of the existing four secondary attributes uniformly, then rolls its inclusive increase. The four attribute types never change. Level 15 caps Scale Piercer at 2.20x. Only the equipped gem supplies bonuses; loadout changes, breakdown and upgrades require no active cast.
+Each upgrade adds 0.05x to Scale Piercer and selects exactly one of the existing four secondary attributes uniformly, then rolls its inclusive increase in 0.1 increments. Totals are rounded to one decimal after addition; existing whole-number saves retain their values. The four attribute types never change. Level 15 caps Scale Piercer at 2.20x. Only the equipped gem supplies bonuses; loadout changes, breakdown and upgrades require no active cast.
 
 ## Dust economy
 
@@ -47,6 +47,6 @@ dotnet run --project Tools/FishingDrag/Checks/Checks.csproj
 dotnet run --project Tools/AnglerProgression/Checks/Checks.csproj
 ```
 
-These cover 2,000 complete gem progressions, distinct starting rolls, inclusive increment ranges, exact costs, cap enforcement, save/reload, one-time breakdown, reward eligibility, combat stacking and unequipping, existing equipment, drag, charged skills, Lightning and angler progression. Full Unity compilation/play-mode and Android visual/input validation remain required; the standalone tests use Unity stubs. The older ShopWorldChecks harness cannot build due to pre-existing missing progression, geography and tuning dependencies; the current Level8Gear harness compiles and exercises the real ShopLedger instead.
+These cover 2,000 complete gem progressions, distinct starting rolls, inclusive increment ranges, exact costs, cap enforcement, legacy integer save loading, every possible fractional drop/upgrade increment, fractional save/reload, one-time breakdown, reward eligibility, combat stacking and unequipping, existing equipment, drag, charged skills, Lightning and angler progression. Full Unity compilation/play-mode and Android visual/input validation remain required; the standalone tests use Unity stubs. The older ShopWorldChecks harness cannot build due to pre-existing missing progression, geography and tuning dependencies; the current Level8Gear harness compiles and exercises the real ShopLedger instead.
 
 Unity acceptance: land a server-confirmed Leviathan; inspect and equip the drop; catch an ordinary fish; verify the pulse and dust after restart; select all five cards; upgrade and verify one secondary changes alongside Scale Piercer; test cancel/escape/confirm on breakdown; test Angry versus other states and line-snap lure recovery; verify layout on wide and narrow landscape screens.

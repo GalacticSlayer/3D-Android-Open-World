@@ -7,6 +7,26 @@ class Program
     static void Check(bool value,string message){checks++;if(!value)throw new Exception(message);}
     static void Main()
     {
+        var jsonOptions=new JsonSerializerOptions{IncludeFields=true,IgnoreReadOnlyProperties=true};
+        var legacy=JsonSerializer.Deserialize<AbyssalGemCollection>(
+            "{\"items\":[{\"id\":\"legacy\",\"level\":1,\"attributes\":[0,2,6,7],\"values\":[2,3,3,8]}],\"equippedId\":\"legacy\",\"dust\":100}",jsonOptions);
+        legacy.Validate();
+        Check(legacy.Equipped.Value(6)==3f && legacy.Bonus(2)==.03f,"Old integer saves retain line and percentage bonuses");
+        for(int kind=0;kind<8;kind++)
+        for(int tenth=AbyssalGemCollection.Minimum[kind]*10;tenth<=AbyssalGemCollection.Maximum[kind]*10;tenth++)
+        {
+            var fractional=new AbyssalGemCollection{dust=50};int call=0;
+            var rolled=fractional.Create((min,max)=>{call++;return call==1?kind:call==2?tenth:min;});
+            fractional.Equip(rolled.id);
+            Check(rolled.values[0]==tenth/10f,"Every tenth including endpoints is obtainable on drop");
+            Check(Math.Abs(fractional.Bonus(kind)-tenth/1000f)<.00001f,"Fractional bonus reaches gameplay");
+            Check(fractional.Upgrade(rolled.id,(min,max)=>min==0?0:tenth,out int selected,out float increment),"Fractional upgrade succeeds");
+            Check(selected==0 && increment==tenth/10f && Math.Abs(rolled.values[0]-tenth/5f)<.00001f,"Every tenth is obtainable on upgrade without truncation");
+            fractional.Validate();
+            var reloaded=JsonSerializer.Deserialize<AbyssalGemCollection>(JsonSerializer.Serialize(fractional,jsonOptions),jsonOptions);
+            reloaded.Validate();
+            Check(reloaded.Equipped.values.SequenceEqual(rolled.values),"Fractional bonuses survive save/reload exactly");
+        }
         var shop=new ShopProgress();var inventory=new FishingInventory{component=shop};
         typeof(FishingInventory).GetMethod("Awake",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).Invoke(inventory,null);
         Check(inventory.AddFish(43,420,true,catchHealth:220000)==0,"Boss accepted into bag");
@@ -42,10 +62,10 @@ class Program
             for(int i=0;i<4;i++)Check(gem.values[i]>=AbyssalGemCollection.Minimum[gem.attributes[i]] && gem.values[i]<=AbyssalGemCollection.Maximum[gem.attributes[i]],"Initial roll bounds");
             for(int n=1;n<15;n++)
             {
-                int[] old=(int[])gem.values.Clone();int[] kinds=(int[])gem.attributes.Clone();int before=data.dust;
-                Check(data.Upgrade(gem.id,rng.Next,out int slot,out int amount),"Upgrade succeeds");
+                float[] old=(float[])gem.values.Clone();int[] kinds=(int[])gem.attributes.Clone();int before=data.dust;
+                Check(data.Upgrade(gem.id,rng.Next,out int slot,out float amount),"Upgrade succeeds");
                 Check(data.dust==before-AbyssalGemCollection.UpgradeCost(n),"Correct dust charge");
-                Check(gem.values.Where((v,i)=>v!=old[i]).Count()==1 && gem.values[slot]==old[slot]+amount,"Exactly one secondary upgraded");
+                Check(gem.values.Where((v,i)=>v!=old[i]).Count()==1 && Math.Abs(gem.values[slot]-(old[slot]+amount))<.0001f,"Exactly one secondary upgraded");
                 Check(kinds.SequenceEqual(gem.attributes),"Upgrade never rerolls attribute kinds");
                 Check(amount>=AbyssalGemCollection.Minimum[kinds[slot]] && amount<=AbyssalGemCollection.Maximum[kinds[slot]],"Upgrade roll bounds");
                 Check(Math.Abs(gem.ScalePiercer-(1.5f+n*.05f))<.0001,"Primary increases every level");

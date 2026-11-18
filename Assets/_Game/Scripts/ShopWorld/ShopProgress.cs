@@ -192,7 +192,7 @@ public sealed class ShopProgress : MonoBehaviour
     public bool CanManageGems => !ReadOnly && (GetComponent<FishingSystem>()==null || !GetComponent<FishingSystem>().HasActiveCast);
     public bool EquipGem(string id)=>CanManageGems && Commit(Data.gems.Equip(id));
     public bool BreakDownGem(string id)=>CanManageGems && Commit(Data.gems.BreakDown(id));
-    public bool UpgradeGem(string id,out int slot,out int increase)
+    public bool UpgradeGem(string id,out int slot,out float increase)
     {
         slot=-1;increase=0;
         if(!CanManageGems)return false;
