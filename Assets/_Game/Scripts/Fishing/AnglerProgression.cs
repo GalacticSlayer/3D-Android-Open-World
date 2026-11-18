@@ -46,8 +46,8 @@ public sealed class AnglerProgression
     public float ImmortalityDuration => 5f + Math.Max(0,AbilityRank(2)-1);
     public float SirenDuration => 4f + Math.Max(0,AbilityRank(3)-1);
     // The exponential base is unchanged. Each completed five-level bracket
-    // adds 150 XP through level 100, 450 XP from 105 through 200,
-    // and 1,500 XP from 205 onward. Previous brackets keep their original cost.
+    // adds 150 XP through level 100, 1,500 XP from 105 through 200,
+    // and 9,000 XP from 205 onward. Previous brackets keep their original cost.
     public static double RequiredXp(int currentLevel)
     {
         int level = Math.Max(0, currentLevel);
@@ -55,7 +55,7 @@ public sealed class AnglerProgression
         int midBrackets = Math.Max(0, Math.Min(level, 200) - 100) / 5;
         int lateBrackets = Math.Max(0, level - 200) / 5;
         double baseXp = Math.Ceiling(250d * Math.Pow(1.015d, Math.Max(0, Math.Min(MaxLevel - 1, level - 1))));
-        return baseXp + 150d * standardBrackets + 450d * midBrackets + 1500d * lateBrackets;
+        return baseXp + 150d * standardBrackets + 1500d * midBrackets + 9000d * lateBrackets;
     }
     public static int CatchXp(int maximumHealth, float difficulty)
         => Math.Max(1, (int)Math.Round(4d * Math.Sqrt(Math.Max(1, maximumHealth)) * (1d + 2d * Math.Max(0d, Math.Min(2d, difficulty)))));

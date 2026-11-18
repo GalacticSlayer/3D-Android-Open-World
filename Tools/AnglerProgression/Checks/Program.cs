@@ -22,7 +22,7 @@ class Program
   int surcharge=0;
   for(int l=1;l<=600;l++)
   {
-    if(l%5==0)surcharge+=l<=100 ? 150 : l<=200 ? 450 : 1500;
+    if(l%5==0)surcharge+=l<=100 ? 150 : l<=200 ? 1500 : 9000;
     Check(AnglerProgression.RequiredXp(l)==BaseXp(l)+surcharge,"Correct cumulative XP surcharge at level "+l);
   }
   foreach(int l in new[]{5,100,105,110,200,205,210})
