@@ -114,7 +114,7 @@ public static class AbyssalGemView
             var statButton=Button(left.transform,title,pos.x-.17f,pos.y-.115f,pos.x+.17f,pos.y+.115f,()=>select(choice),i==0?(selected==0?10:6):selected==i?1:0);
             Place(statButton.GetComponentInChildren<Text>().rectTransform,.04f,.35f,.96f,.96f);
             string statValue=i==0?gem.ScalePiercer.ToString("0.00")+"×":Value(gem,i-1);
-            var valueLabel=Label(statButton.transform,statValue,26,.04f,.015f,.96f,.38f,new Color(1f,.86f,.28f),TextAnchor.MiddleCenter);
+            var valueLabel=Label(statButton.transform,statValue,29,.04f,.08f,.96f,.47f,new Color(1f,.86f,.28f),TextAnchor.MiddleCenter);
             var outline=valueLabel.gameObject.AddComponent<Outline>();
             outline.effectColor=Color.black;
             outline.effectDistance=new Vector2(1f,-1f);
@@ -130,9 +130,10 @@ public static class AbyssalGemView
         bool canUpgrade=progress.CanManageGems && gem.level<15 && progress.Data.gems.dust>=AbyssalGemCollection.UpgradeCost(gem.level);
         var upgradeButton=Button(footer.transform,gem.level==15?"MAX LEVEL":"LEVEL UP GEM\n"+AbyssalGemCollection.UpgradeCost(gem.level)+" Crystal Dust",.70f,.06f,.99f,.94f,upgrade,1,canUpgrade);
         var upgradeLabel=upgradeButton.GetComponentInChildren<Text>();
-        Place(upgradeLabel.rectTransform,.28f,.06f,.96f,.94f);
-        // Icon centre at 14%: halfway between the left border and text at 28%.
+        Place(upgradeLabel.rectTransform,.04f,.06f,.96f,.94f);
+        // Keep the label centered on the entire button and enlarge the icon in place.
         var dustIcon=Picture(upgradeButton.transform,"CrystalDust",.04f,.18f,.24f,.82f);
+        dustIcon.rectTransform.localScale=Vector3.one*2f;
         dustIcon.color=canUpgrade?Color.white:new Color(.45f,.45f,.45f,.8f);
         return root;
     }
@@ -145,7 +146,7 @@ public static class AbyssalGemView
         rect.anchoredPosition=close.anchoredPosition-new Vector2(close.sizeDelta.x+18f,0);
         box.GetComponent<Image>().raycastTarget=false;
         var layout=box.AddComponent<HorizontalLayoutGroup>();
-        layout.padding=new RectOffset(14,14,0,0);layout.spacing=12;
+        layout.padding=new RectOffset(22,26,0,0);layout.spacing=12;
         layout.childAlignment=TextAnchor.MiddleCenter;
         layout.childControlWidth=true;layout.childControlHeight=true;
         layout.childForceExpandWidth=false;layout.childForceExpandHeight=false;
