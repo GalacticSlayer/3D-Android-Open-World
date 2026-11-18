@@ -49,6 +49,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
     private GameObject personalStatsView;
     private GameObject gemView,gemUpgradeBanner,equipmentTabs;
     private int equipmentCategory;
+    public bool ShowingFishingRods => page=="equipment" && equipmentCategory==0;
     private string selectedGem;
     private int selectedGemAttribute;
     public void OpenGem(string id) { if(gemUpgradeBanner!=null || (fishing!=null && fishing.HasActiveCast))return;selectedGem=id;selectedGemAttribute=0;dirty=true;Open("gem"); }
@@ -471,7 +472,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
             }
         }
         // The item surface reaches the frame bottom, with equal 20-unit list insets.
-        Anchor(storeBody.GetComponent<RectTransform>(),0,0,1,1,0,0,0,tackle?-258:-158);
+        Anchor(storeBody.GetComponent<RectTransform>(),0,0,1,1,0,0,0,tackle?-258:page=="equipment"?-138:-158);
         modal.GetComponent<Image>().color=themed?Color.clear:ink;
         var r=modal.GetComponent<RectTransform>();
         bool index=page=="islands" || page=="reef-fish";

@@ -27,12 +27,17 @@ public static class AbyssalGemView
     }
     private static Text Label(Transform parent,string text,int size,float x0,float y0,float x1,float y1,Color color,TextAnchor alignment=TextAnchor.MiddleLeft)
         =>PersonalStatsView.Label(parent,text,size,x0,y0,x1,y1,color,alignment);
-    private static Button Button(Transform parent,string title,float x0,float y0,float x1,float y1,Action action,int style=0)
+    private static Button Button(Transform parent,string title,float x0,float y0,float x1,float y1,Action action,int style=0,bool interactable=true)
     {
         var go=Panel(parent,title,x0,y0,x1,y1,style);
+        // Apply availability before OnEnable paints the first frame. A rebuilt
+        // unaffordable upgrade must not fade from the default enabled tint.
+        go.SetActive(false);
         var button=go.AddComponent<Button>();button.targetGraphic=go.GetComponent<Image>();
+        button.interactable=interactable;
         button.onClick.AddListener(()=>action());
         Label(go.transform,title,25,.04f,.06f,.96f,.94f,Color.white,TextAnchor.MiddleCenter);
+        go.SetActive(true);
         return button;
     }
     private static void Picture(Transform parent,string name,float x0,float y0,float x1,float y1)
@@ -102,16 +107,17 @@ public static class AbyssalGemView
             Button(left.transform,title,pos.x-.17f,pos.y-.115f,pos.x+.17f,pos.y+.115f,()=>select(choice),i==0?6:selected==i?1:0);
         }
         selected=Mathf.Clamp(selected,0,4);
-        Label(right.transform,"ATTRIBUTE DETAILS",25,.06f,.86f,.94f,.98f,FishingHudTheme.Cyan);
+        Label(right.transform,"ATTRIBUTE DETAILS",31,.06f,.86f,.94f,.99f,new Color(1f,.86f,.28f));
         string name=selected==0?"SCALE PIERCER":AbyssalGemCollection.Names[gem.attributes[selected-1]].ToUpperInvariant();
         Label(right.transform,name,34,.06f,.66f,.94f,.86f,Color.white);
         Label(right.transform,Description(gem,selected),26,.06f,.13f,.94f,.66f,Color.white,TextAnchor.UpperLeft);
 
         var footer=Panel(root.transform,"Gem progression",0,0,1,.16f);
-        Label(footer.transform,"LEVEL "+gem.level+" / 15\n"+(gem.level==15?"MAX LEVEL":"Scale Piercer +0.05× and one random attribute"),24,.02f,.05f,.6f,.95f,Color.white);
-        var level=Button(footer.transform,gem.level==15?"MAX LEVEL":"LEVEL UP GEM\n"+AbyssalGemCollection.UpgradeCost(gem.level)+" Crystal Dust",.68f,.06f,.99f,.94f,upgrade,1);
-        level.interactable=progress.CanManageGems && gem.level<15 && progress.Data.gems.dust>=AbyssalGemCollection.UpgradeCost(gem.level);
-        Picture(footer.transform,"CrystalDust",.6f,.1f,.68f,.9f);
+        Label(footer.transform,"LEVEL "+gem.level+" / 15\n"+(gem.level==15?"MAX LEVEL":"Scale Piercer +0.05× and one random attribute"),24,.02f,.05f,.45f,.95f,Color.white);
+        bool canUpgrade=progress.CanManageGems && gem.level<15 && progress.Data.gems.dust>=AbyssalGemCollection.UpgradeCost(gem.level);
+        Button(footer.transform,gem.level==15?"MAX LEVEL":"LEVEL UP GEM\n"+AbyssalGemCollection.UpgradeCost(gem.level)+" Crystal Dust",.70f,.06f,.99f,.94f,upgrade,canUpgrade?1:3,canUpgrade);
+        Picture(footer.transform,"CrystalDust",.46f,.1f,.54f,.9f);
+        Label(footer.transform,progress.Data.gems.dust.ToString("N0"),30,.54f,.12f,.69f,.88f,new Color(1f,.86f,.28f));
         return root;
     }
     // Built outside the detail view so a save-driven refresh cannot remove the result.

@@ -4,15 +4,14 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// ShopWorldHUD's legacy EQUIPMENT page still builds only four rod tiers. The
-/// Tackle Store itself is now handled by TabbedTackleStoreExtension, so this
-/// compatibility component only appends an owned Level 5 rod to EQUIPMENT.
+/// Legacy Level 5 fallback, restricted to the Fishing Rods equipment category.
+/// The current equipment builder already lists every owned rod; this fallback
+/// only inserts Level 5 if it is missing from that category.
 /// </summary>
 [DefaultExecutionOrder(1800)]
 public sealed class Level5FishingRodShopRuntime : MonoBehaviour
 {
     private static readonly BindingFlags Flags=BindingFlags.Instance|BindingFlags.NonPublic;
-    private static readonly FieldInfo PageField=typeof(ShopWorldHUD).GetField("page",Flags);
     private static readonly MethodInfo RowMethod=typeof(ShopWorldHUD).GetMethod("Row",Flags);
     private static readonly MethodInfo ResultMethod=typeof(ShopWorldHUD).GetMethod("Result",Flags);
 
@@ -32,7 +31,7 @@ public sealed class Level5FishingRodShopRuntime : MonoBehaviour
     {
         hud=GetComponent<ShopWorldHUD>();
         progress=FindFirstObjectByType<ShopProgress>();
-        if(hud==null || PageField==null || RowMethod==null || ResultMethod==null)
+        if(hud==null || RowMethod==null || ResultMethod==null)
         {
             Debug.LogError("Level5FishingRodShopRuntime could not bind the existing equipment UI and was disabled.");
             enabled=false;
@@ -46,8 +45,8 @@ public sealed class Level5FishingRodShopRuntime : MonoBehaviour
         if(progress==null)progress=FindFirstObjectByType<ShopProgress>();
         if(progress==null)return;
 
-        string page=PageField.GetValue(hud) as string;
-        if(!string.Equals(page,"equipment",StringComparison.Ordinal))return;
+        // The fallback must never insert a rod into Reels and Lines or Gems.
+        if(!hud.ShowingFishingRods)return;
 
         bool owned=progress.Data.OwnsGear(GearKind.Rod,4);
         if(!owned || HasLevel5Row())return;
