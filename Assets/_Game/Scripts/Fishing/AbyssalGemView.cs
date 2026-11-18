@@ -179,10 +179,19 @@ public static class AbyssalGemView
         Label(banner.transform,"ENHANCEMENT SUCCESS",36,.06f,.86f,.94f,.98f,Color.white,TextAnchor.MiddleCenter);
         var band=Panel(banner.transform,"Ocean blue level-up band",.012f,.37f,.988f,.85f,1);
         var bandImage=band.GetComponent<Image>();
-        bandImage.sprite=Art("UpgradeSuccessBackground");
-        bandImage.type=Image.Type.Simple;
-        bandImage.color=Color.white;
+        // Clip the supplied artwork to the theme's rounded nine-slice contour.
+        FishingHudTheme.Fill(bandImage);
         bandImage.raycastTarget=false;
+        band.AddComponent<Mask>().showMaskGraphic=false;
+        var background=Picture(band.transform,"UpgradeSuccessBackground",0,0,1,1);
+        Place(background.rectTransform,0,0,1,1,0);
+        background.preserveAspect=false;
+        var border=new GameObject("Cyan rounded border",typeof(RectTransform),typeof(Image));
+        border.transform.SetParent(band.transform,false);
+        var borderImage=border.GetComponent<Image>();
+        Place(borderImage.rectTransform,0,0,1,1,0);
+        FishingHudTheme.RoundedWhiteBorder(borderImage);
+        borderImage.color=FishingHudTheme.Cyan;
         Picture(banner.transform,"AbyssalGem",.40f,.54f,.60f,.84f);
         Label(banner.transform,"LEVEL "+oldLevel+"  →  <color=#FFDB47>LEVEL "+newLevel+"</color>",36,.20f,.385f,.80f,.53f,
             Color.white,TextAnchor.MiddleCenter);
