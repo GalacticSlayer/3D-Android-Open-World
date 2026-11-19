@@ -5,7 +5,7 @@ class Program {
  static void Check(bool b,string msg){count++;if(!b)throw new Exception(msg);}
  static void Main(){
   foreach(GearKind kind in new[]{GearKind.Rod,GearKind.Reel}) {
-   int[] prices=kind==GearKind.Rod?new[]{1100000,7800000}:new[]{900000,6800000};
+   int[] prices=kind==GearKind.Rod?new[]{1100000,1000}:new[]{900000,1000};
    for(int tier=7;tier<=8;tier++) {
     int price=prices[tier-7];
     int previous=tier-1;

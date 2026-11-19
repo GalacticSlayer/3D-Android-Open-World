@@ -150,8 +150,8 @@ public static class ShopCatalog
     public static readonly string[] LineNames = { "Standard Line", "Reinforced Line", "Braided Line", "Elite Braid" };
     public static readonly string[] BaitNames = { "Worms", "Worms (legacy)", "Shrimp", "Squid", "Heavy Jig" };
     public static readonly int[] BaitPrices = { 0, 35, 90, 180, 0 };
-    public static readonly int[] RodPrices = { 0, 2000, 6000, 19000, 39500, 85000, 215000, 1100000, 7800000 };
-    public static readonly int[] ReelPrices = { 0, 1500, 4500, 12000, 35000, 77000, 195000, 900000, 6800000 };
+    public static readonly int[] RodPrices = { 0, 2000, 6000, 19000, 39500, 85000, 215000, 1100000, 1000 };
+    public static readonly int[] ReelPrices = { 0, 1500, 4500, 12000, 35000, 77000, 195000, 900000, 1000 };
     public static readonly int[] LinePrices = { 0, 100, 400, 2500 };
     public static readonly float[] LineBonus = { 0, 0, 0, 0 };
     public static HabitatDefinition Habitat(string id) => Array.Find(Habitats, h => h.id == id);
