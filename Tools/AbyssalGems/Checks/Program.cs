@@ -31,6 +31,7 @@ class Program
         typeof(FishingInventory).GetMethod("Awake",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).Invoke(inventory,null);
         Check(inventory.AddFish(43,420,true,catchHealth:220000)==0,"Boss accepted into bag");
         Check(shop.SaveCount==1 && shop.LastSaved.bag.Count==1 && shop.LastSaved.gems.items.Count==1,"Fish and boss gem persisted together");
+        Check(shop.GemNotifications==1,"Successful Leviathan catch shows one gem notification after saving");
         shop.Data.gems.Equip(shop.Data.gems.items[0].id);
         inventory.AddFish(1,2,true,catchHealth:10000);
         Check(shop.LastSaved.gems.dust==10 && shop.NotifiedDust==10 && shop.LastSaved.bag.Count==2,"Catch dust saved alongside fish, then notification fires");
@@ -42,6 +43,7 @@ class Program
         while(inventory.Fish.Count<50)inventory.AddExistingFish(new CaughtFishRecord{speciesId=1});
         int saves=shop.SaveCount;
         Check(inventory.AddFish(43,420,true,catchHealth:220000)==-1 && shop.SaveCount==saves && shop.Data.gems.items.Count==1 && shop.Data.gems.dust==10,"Full bag grants no catch, gem or dust");
+        Check(shop.GemNotifications==1,"Ordinary catches, transfers, rejected and full-bag catches do not show gem notices");
         var rng=new Random(43112);
         var data=new AbyssalGemCollection();data.Validate();
         Check(data.AwardCatch(220000,true,rng.Next)==0,"First boss gives gem but no dust without equipped gem");

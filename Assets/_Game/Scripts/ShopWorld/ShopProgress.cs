@@ -187,6 +187,8 @@ public sealed class ShopProgress : MonoBehaviour
         try{Save();return true;}
         catch(Exception ex){Data.playerName=previous;Debug.LogError("Could not save player name: "+ex.Message);return false;}
     }
+    public event Action AbyssalGemAcquired;
+    public void NotifyAbyssalGemAcquired()=>AbyssalGemAcquired?.Invoke();
     public event Action<int> CrystalDustAwarded;
     public void NotifyCrystalDust(int amount){if(amount>0)CrystalDustAwarded?.Invoke(amount);}
     public bool CanManageGems => !ReadOnly && (GetComponent<FishingSystem>()==null || !GetComponent<FishingSystem>().HasActiveCast);

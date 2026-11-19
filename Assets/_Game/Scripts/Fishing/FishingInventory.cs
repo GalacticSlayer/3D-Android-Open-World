@@ -64,10 +64,15 @@ public class FishingInventory : MonoBehaviour
         fish.Add(record);
         if(countAsCatch && shop!=null)shop.Data.RecordCatch(record.speciesId,record.weightKg);
         int dust=0;
+        bool gemAwarded=false;
         if(countAsCatch && shop!=null && catchHealth>0)
-            dust=shop.Data.gems.AwardCatch(catchHealth,record.speciesId==FishCatalog.AbyssalLeviathanId,UnityEngine.Random.Range);
+        {
+            gemAwarded=record.speciesId==FishCatalog.AbyssalLeviathanId;
+            dust=shop.Data.gems.AwardCatch(catchHealth,gemAwarded,UnityEngine.Random.Range);
+        }
         Save();
         if(dust>0)shop.NotifyCrystalDust(dust);
+        if(gemAwarded)shop.NotifyAbyssalGemAcquired();
 
         return fish.Count - 1;
     }

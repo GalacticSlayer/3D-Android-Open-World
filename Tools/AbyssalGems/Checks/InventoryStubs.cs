@@ -34,7 +34,8 @@ public class ShopProgress
 {
  public TestLedger Data=new TestLedger(),LastSaved;
  public bool ReadOnly; public event Action Changed;
- public int SaveCount,NotifiedDust;
+ public int SaveCount,NotifiedDust,GemNotifications;
+ public void NotifyAbyssalGemAcquired(){if(LastSaved==null || LastSaved.gems.items.Count<=GemNotifications)throw new Exception("Gem notice before save");GemNotifications++;}
  public void Save(){SaveCount++;LastSaved=UnityEngine.JsonUtility.FromJson<TestLedger>(UnityEngine.JsonUtility.ToJson(Data));Changed?.Invoke();}
  public void NotifyCrystalDust(int amount)
  {

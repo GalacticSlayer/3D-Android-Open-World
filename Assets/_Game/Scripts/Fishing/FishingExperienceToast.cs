@@ -46,6 +46,10 @@ public sealed class FishingExperienceToast : MonoBehaviour
     private Text noticeHeading, noticeStat, noticeDetail;
     private NoticePhase noticePhase = NoticePhase.Hidden;
     private float noticeElapsed;
+    private RectTransform gemNotice;
+    private NoticePhase gemPhase=NoticePhase.Hidden;
+    private int pendingGems;
+    private float gemElapsed, gemTopOffset, gemVisible, gemHoldSeconds;
     private ShopProgress progress;
     private RectTransform popup;
     private RectTransform meterFill;
@@ -64,6 +68,7 @@ public sealed class FishingExperienceToast : MonoBehaviour
         if (progress != null)
         {
             progress.FishingXpAwarded += OnFishingXpAwarded;
+            progress.AbyssalGemAcquired += OnAbyssalGemAcquired;
             progress.FishingLevelAwarded += OnFishingLevelAwarded;
         }
     }
@@ -73,6 +78,7 @@ public sealed class FishingExperienceToast : MonoBehaviour
         if (progress != null)
         {
             progress.FishingXpAwarded -= OnFishingXpAwarded;
+            progress.AbyssalGemAcquired -= OnAbyssalGemAcquired;
             progress.FishingLevelAwarded -= OnFishingLevelAwarded;
         }
         IsShowingXp = false;
@@ -82,6 +88,8 @@ public sealed class FishingExperienceToast : MonoBehaviour
     {
         IsShowingXp = false;
     }
+
+    private void OnAbyssalGemAcquired() => pendingGems++;
 
     private void OnFishingLevelAwarded(int level, int stat, int value)
     {
@@ -106,7 +114,7 @@ public sealed class FishingExperienceToast : MonoBehaviour
     {
         if (popup == null)
         {
-            if (waiting.Count == 0 || !BuildIfReady()) return;
+            if ((waiting.Count == 0 && pendingGems == 0) || !BuildIfReady()) return;
         }
 
         float dt = Mathf.Min(.1f, Time.unscaledDeltaTime);
@@ -154,6 +162,7 @@ public sealed class FishingExperienceToast : MonoBehaviour
         // This card uses the exact slide-in/hold/slide-out timing and easing
         // of the XP bar, but can finish independently without delaying XP.
         UpdateLevelNotice(dt);
+        UpdateGemNotice(dt);
         if (badge != null)
         {
             badgePulse = Mathf.MoveTowards(badgePulse, 0f, dt * 2.5f);
@@ -225,6 +234,47 @@ public sealed class FishingExperienceToast : MonoBehaviour
                 }
                 break;
         }
+    }
+
+    private void UpdateGemNotice(float dt)
+    {
+        if(gemNotice==null)return;
+        if(gemPhase==NoticePhase.Hidden && pendingGems>0)
+        {
+            pendingGems--;
+            gemElapsed=0f;gemVisible=0f;
+            // Extend the complete on-screen lifetime by 1.5x while keeping
+            // both slide animations at the XP card's original speed.
+            float xpFill=phase!=Phase.Hidden?fillSeconds:0f;
+            gemHoldSeconds=(2f*SlideSeconds+xpFill+HoldSeconds)*1.5f-2f*SlideSeconds;
+            gemTopOffset=TopOffset+Height+12f;
+            gemPhase=NoticePhase.Entering;
+            gemNotice.gameObject.SetActive(true);
+            gemNotice.SetAsLastSibling();
+        }
+        if(gemPhase==NoticePhase.Hidden)return;
+        // Reserve the level/ability row before the XP fill reaches a new level.
+        // Keep that position until this card exits, even if the upper card ends.
+        if(noticePhase!=NoticePhase.Hidden || pendingNotices.Count>0 ||
+            (phase!=Phase.Hidden && current.endLevel>current.startLevel))
+            gemTopOffset=Mathf.Max(gemTopOffset,LevelNoticeTopOffset+104f+12f);
+        gemElapsed+=dt;
+        switch(gemPhase)
+        {
+            case NoticePhase.Entering:
+                gemVisible=Mathf.SmoothStep(0f,1f,Mathf.Clamp01(gemElapsed/SlideSeconds));
+                if(gemElapsed>=SlideSeconds){gemPhase=NoticePhase.Holding;gemElapsed=0f;}
+                break;
+            case NoticePhase.Holding:
+                if(gemElapsed>=gemHoldSeconds){gemPhase=NoticePhase.Exiting;gemElapsed=0f;}
+                break;
+            case NoticePhase.Exiting:
+                gemVisible=1f-Mathf.SmoothStep(0f,1f,Mathf.Clamp01(gemElapsed/SlideSeconds));
+                if(gemElapsed>=SlideSeconds){gemPhase=NoticePhase.Hidden;gemNotice.gameObject.SetActive(false);}
+                break;
+        }
+        gemNotice.anchoredPosition=new Vector2(
+            Mathf.Lerp(gemNotice.rect.width+45f,-RightMargin,gemVisible),-gemTopOffset);
     }
 
     private void SetNoticeSlide(float visible)
@@ -381,6 +431,22 @@ public sealed class FishingExperienceToast : MonoBehaviour
             .045f, .07f, .96f, .35f, Cyan, TextAnchor.MiddleLeft, true);
         notice.SetActive(false);
         SetNoticeSlide(0f);
+
+        GameObject gemBox=new GameObject("AbyssalGemAcquiredPopup",
+            typeof(RectTransform),typeof(Image),typeof(CanvasGroup));
+        gemBox.transform.SetParent(root,false);
+        gemNotice=gemBox.GetComponent<RectTransform>();
+        gemNotice.anchorMin=gemNotice.anchorMax=gemNotice.pivot=Vector2.one;
+        gemNotice.sizeDelta=new Vector2(popup.sizeDelta.x,104f);
+        FishingHudTheme.Panel(gemBox);
+        gemBox.GetComponent<Image>().raycastTarget=false;
+        var gemGroup=gemBox.GetComponent<CanvasGroup>();
+        gemGroup.interactable=false;gemGroup.blocksRaycasts=false;
+        var gemIcon=ImageAt(gemBox.transform,"AbyssalGem",.025f,.06f,.19f,.94f).GetComponent<Image>();
+        gemIcon.sprite=AbyssalGemView.Art("AbyssalGem");gemIcon.preserveAspect=true;
+        TextAt(gemBox.transform,"GemAcquiredTitle","Abyssal Gem Acquired",30,
+            .22f,.14f,.96f,.86f,Gold,TextAnchor.MiddleLeft,true);
+        gemBox.SetActive(false);
 
         popup.gameObject.SetActive(false);
         SetSlide(0f);
