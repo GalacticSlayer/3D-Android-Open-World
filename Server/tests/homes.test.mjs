@@ -639,7 +639,7 @@ test('HTTP Home endpoints work without opening a room and support >4 KB uploads'
   const visitingPose={world:2,x:4003,y:200,z:4012,yaw:175,
     heldFishSpecies:-1,heldFishWeight:0,swimming:false,
     sprinting:false,rodEquipped:false,reeling:false,hasFish:false,
-    lureInWater:false,fishPosing:false,rodTier:7,reelTier:7};
+    lureInWater:false,fishPosing:false,rodTier:8,reelTier:8};
   const guestPresence=await send('/v1/homes/presence',{
     code:created.code,session:'2'.repeat(32),name:'Guest',
     pose:visitingPose
@@ -653,7 +653,8 @@ test('HTTP Home endpoints work without opening a room and support >4 KB uploads'
   });
   assert.equal(ownerPresence.otherCount,1);
   assert.equal(ownerPresence.players[0].id,'2'.repeat(32));
-  assert.equal(ownerPresence.players[0].rodTier,7);
+  assert.equal(ownerPresence.players[0].rodTier,8);
+  assert.equal(ownerPresence.players[0].reelTier,8);
   const invalid=await send('/v1/homes/update',{...upload,ownerKey:'a'.repeat(64)});
   assert.equal(invalid.status,403);
   assert.equal((await send('/v1/state',{})).status,401);

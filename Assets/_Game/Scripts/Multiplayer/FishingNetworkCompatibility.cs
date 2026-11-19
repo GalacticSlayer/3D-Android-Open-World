@@ -3,7 +3,7 @@ using System;
 public static class FishingNetworkCompatibility
 {
     // Older deployed servers support zero-based tiers 0..4. They omit the
-    // capability field; upgraded servers advertise 7 for Level 8 rods and reels.
+    // capability field; newer servers advertise the highest gear tier they accept.
     public const int LegacyMaximumRodTier=4;
     public static int AdvertisedMaximum(int advertised,int clientMaximum)
         =>advertised>0?Math.Min(advertised,clientMaximum):Math.Min(LegacyMaximumRodTier,clientMaximum);

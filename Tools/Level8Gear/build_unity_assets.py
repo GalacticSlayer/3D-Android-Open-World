@@ -1,16 +1,22 @@
 """Build native Unity meshes/materials/prefabs from prepared authored geometry.
 No Blender dependency in Unity. Existing transform and animation documents are copied unchanged.
-Usage: python Tools/TackleUpgrade/build_unity_assets.py [uploaded-texture-folder]
+Usage: python Tools/Level8Gear/build_unity_assets.py [uploaded-texture-folder] [--level 8|9]
 """
 from pathlib import Path
-import hashlib,json,re,struct,sys,shutil
+import argparse,hashlib,json,re,shutil
 import numpy as np
 ROOT=Path(__file__).resolve().parents[2]
 BASE='Assets/_Game/Fishing/RodReel'
-PREP=ROOT/'Tools/Level8Gear/Prepared'
-def guid(path):return hashlib.sha256(('level8-gear-v1:'+path).encode()).hexdigest()[:32]
+parser=argparse.ArgumentParser()
+parser.add_argument('source',nargs='?',type=Path,help='Optional folder with the original texture')
+parser.add_argument('--level',type=int,choices=(8,9),default=8)
+args=parser.parse_args()
+level=args.level
+PREP=ROOT/f'Tools/Level{level}Gear/Prepared'
+GEAR=f'{BASE}/Level{level}'
+def guid(path):return hashlib.sha256((f'level{level}-gear-v1:'+path).encode()).hexdigest()[:32]
 def write(path,text):
- p=ROOT/path;p.parent.mkdir(parents=True,exist_ok=True);p.write_text(text)
+ p=ROOT/path;p.parent.mkdir(parents=True,exist_ok=True);p.write_text(text if level==8 else '\n'.join(line.rstrip() for line in text.split('\n')))
 def native_meta(path,fileid):
  write(path+'.meta',f'fileFormatVersion: 2\nguid: {guid(path)}\nNativeFormatImporter:\n  externalObjects: {{}}\n  mainObjectFileID: {fileid}\n  userData: \n  assetBundleName: \n  assetBundleVariant: \n')
 def docs(path):
@@ -52,16 +58,16 @@ def texture(path,source=None):
  s=re.sub(r'^guid: .*','guid: '+guid(path),s,flags=re.M).replace('  nPOTScale: 1','  nPOTScale: 0')
  write(path+'.meta',s)
 
-textures=[BASE+'/Level8/Source/Level8EquipmentTexture.png']
-source=Path(sys.argv[1]) if len(sys.argv)>1 else None
-texture(textures[0],source/'neon_mirror_seamless-1.png' if source else None)
-for level,kind in [(8,'Reel'),(8,'Rod')]:
+texture_path=f'{GEAR}/Source/Level{level}EquipmentTexture.png'
+original_name='neon_mirror_seamless-1.png' if level==8 else 'Level 9 Rod and Reel Texture.png'
+texture(texture_path,args.source/original_name if args.source else None)
+for kind in ('Reel','Rod'):
  label=f'Level{level}Fishing{kind}';isrod=kind=='Rod'
  prepared=json.loads((PREP/(label+'.json')).read_text())
  template='Assets/Resources/Fishing/FishingRodReelLevel6Rod.prefab' if isrod else 'Assets/Resources/Fishing/FishingRodReelLevel6.prefab'
  ds=docs(template);names,positions=components(ds)
- gen=f'{BASE}/Level8/Generated'
- mat=f'{gen}/{label}.mat';material(mat,textures[0])
+ gen=f'{GEAR}/Generated'
+ mat=f'{gen}/{label}.mat';material(mat,texture_path)
  parts={p['name']:p for p in prepared['parts']};meshpaths={}
  for name,part in parts.items():
   assert isrod or np.linalg.norm(np.array(part['position'])-np.array(positions[name]))<.002, ('Reel pivot mismatch',name)
@@ -81,7 +87,18 @@ for level,kind in [(8,'Reel'),(8,'Rod')]:
  write(path+'.meta',f'fileFormatVersion: 2\nguid: {guid(path)}\nPrefabImporter:\n  externalObjects: {{}}\n  userData: \n  assetBundleName: \n  assetBundleVariant: \n')
  print('BUILT',path)
 # Stable folder GUIDs, without changing any existing folder metadata.
-for parent in (ROOT/BASE).rglob('*'):
+for parent in [ROOT/GEAR,*(ROOT/GEAR).rglob('*')]:
  if parent.is_dir() and not parent.with_suffix('.meta').exists():
   path=parent.relative_to(ROOT).as_posix()
   write(path+'.meta',f'fileFormatVersion: 2\nguid: {guid(path)}\nfolderAsset: yes\nDefaultImporter:\n  externalObjects: {{}}\n  userData: \n  assetBundleName: \n  assetBundleVariant: \n')
+
+if level==9:
+ # Source FBXs are retained for editing. Game prefabs use the native meshes only.
+ for kind in ('Rod','Reel'):
+  source=f'{GEAR}/Source/Level{level}Fishing{kind}.fbx'
+  assert (ROOT/source).is_file()
+  meta=(ROOT/f'{BASE}/Level8/Source/Level8Fishing{kind}.fbx.meta').read_text()
+  write(source+'.meta',re.sub(r'^guid: .*','guid: '+guid(source),meta,flags=re.M))
+  icon=f'Assets/Resources/Fishing/ItemIcons/{kind}{level-1}.png'
+  meta=(ROOT/f'Assets/Resources/Fishing/ItemIcons/{kind}7.png.meta').read_text()
+  write(icon+'.meta',re.sub(r'^guid: .*','guid: '+guid(icon),meta,flags=re.M))

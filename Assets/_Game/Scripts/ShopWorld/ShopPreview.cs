@@ -81,9 +81,9 @@ public sealed class ShopPreview : MonoBehaviour
                 if(reelBackground!=null)target.rectTransform.anchoredPosition=reelBackground.anchoredPosition;
                 target.color=Color.white;
             }
-            // Supplied Level 7 rod art and model-rendered Level 8 gear use
+            // Supplied Level 7 rod art and model-rendered Level 8 and 9 gear use
             // transparent icons over the existing separate water background.
-            if(resolvedGear=="Rod6" || resolvedGear=="Rod7" || resolvedGear=="Reel7")
+            if(resolvedGear=="Rod6" || resolvedGear=="Rod7" || resolvedGear=="Rod8" || resolvedGear=="Reel7" || resolvedGear=="Reel8")
             {
                 Texture2D supplied=Resources.Load<Texture2D>("Fishing/ItemIcons/"+resolvedGear);
                 if(supplied!=null)

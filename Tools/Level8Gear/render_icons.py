@@ -1,5 +1,5 @@
-"""Render transparent UI icons from the same prepared Level 8 meshes and UVs."""
-import bpy,json,math,sys
+"""Render transparent UI icons from the same prepared gear meshes and UVs."""
+import argparse,bpy,json,math,sys
 from mathutils import Vector,Matrix
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[2]
@@ -28,8 +28,12 @@ def reel_card_transform(positions):
  to_blender=Matrix(((1,0,0),(0,0,1),(0,1,0)))
  return to_blender@roll@yaw@source_basis
 
-kinds=sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else []
-if not kinds:kinds=['Rod','Reel']
+parser=argparse.ArgumentParser()
+parser.add_argument('--level',type=int,choices=(8,9),default=8)
+parser.add_argument('kinds',nargs='*',help='Rod and/or Reel, defaults to both')
+args=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
+level=args.level
+kinds=args.kinds or ['Rod','Reel']
 assert all(kind in ('Rod','Reel') for kind in kinds),'Choose Rod and/or Reel after --'
 for kind in kinds:
  bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -42,11 +46,11 @@ for kind in kinds:
  scene.view_settings.view_transform='Standard'
  mat=bpy.data.materials.new('Original UV texture');mat.use_nodes=True
  nodes=mat.node_tree.nodes;bsdf=nodes.get('Principled BSDF')
- tex=nodes.new('ShaderNodeTexImage');tex.image=bpy.data.images.load(str(ROOT/'Assets/_Game/Fishing/RodReel/Level8/Source/Level8EquipmentTexture.png'))
+ tex=nodes.new('ShaderNodeTexImage');tex.image=bpy.data.images.load(str(ROOT/f'Assets/_Game/Fishing/RodReel/Level{level}/Source/Level{level}EquipmentTexture.png'))
  mat.node_tree.links.new(tex.outputs['Color'],bsdf.inputs['Base Color'])
  bsdf.inputs['Roughness'].default_value=.42;bsdf.inputs['Metallic'].default_value=.15
  points=[]
- parts=json.loads((ROOT/f'Tools/Level8Gear/Prepared/Level8Fishing{kind}.json').read_text())['parts']
+ parts=json.loads((ROOT/f'Tools/Level{level}Gear/Prepared/Level{level}Fishing{kind}.json').read_text())['parts']
  positions={part['name']:[Vector(part['vertices'][i:i+3])+Vector(part['position'])
                          for i in range(0,len(part['vertices']),3)] for part in parts}
  transform=(Matrix.Rotation(-math.pi/4,3,'Z') if kind=='Rod'
@@ -74,5 +78,5 @@ for kind in kinds:
   lightdata=bpy.data.lights.new('Softbox','AREA');lightdata.energy=power;lightdata.shape='DISK';lightdata.size=size
   light=bpy.data.objects.new('Softbox',lightdata);scene.collection.objects.link(light);light.location=center+Vector(offset);light.rotation_euler=(center-light.location).to_track_quat('-Z','Y').to_euler()
  scene.render.image_settings.file_format='PNG';scene.render.image_settings.color_mode='RGBA'
- scene.render.filepath=str(ROOT/f'Assets/Resources/Fishing/ItemIcons/{kind}7.png')
+ scene.render.filepath=str(ROOT/f'Assets/Resources/Fishing/ItemIcons/{kind}{level-1}.png')
  bpy.ops.render.render(write_still=True)

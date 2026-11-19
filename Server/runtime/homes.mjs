@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { MAX_GEAR_TIER } from './fishing-gear.mjs';
 import { randomBytes, createHash, timingSafeEqual } from 'node:crypto';
 
 // Independent of room membership: a compact, persistent read-only Home showcase.
@@ -270,8 +271,8 @@ export function createHomes({directory,clock=Date.now}={}){
         heldFishSpecies:p.heldFishSpecies??-1,
         heldFishWeight:p.heldFishWeight??0,
         fishPosing:p.fishPosing===true,
-        rodTier:Number.isInteger(p.rodTier)?Math.max(0,Math.min(7,p.rodTier)):0,
-        reelTier:Number.isInteger(p.reelTier)?Math.max(0,Math.min(7,p.reelTier)):0,
+        rodTier:Number.isInteger(p.rodTier)?Math.max(0,Math.min(MAX_GEAR_TIER,p.rodTier)):0,
+        reelTier:Number.isInteger(p.reelTier)?Math.max(0,Math.min(MAX_GEAR_TIER,p.reelTier)):0,
         reelTime:finite(p.reelTime,0,10000000)?p.reelTime:0,
         castSequence:Number.isInteger(p.castSequence)&&p.castSequence>=0
           ?p.castSequence:0

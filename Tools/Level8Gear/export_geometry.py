@@ -1,17 +1,23 @@
 """Run with Blender 5.x: blender -b --python Tools/Level8Gear/export_geometry.py.
 Preserves the supplied corner UVs/normals and the existing animated reel-part contract.
 """
-import bpy,json
+import argparse,bpy,json,sys
 from pathlib import Path
 from mathutils import Matrix,Vector
 ROOT=Path(__file__).resolve().parents[2]
-SOURCE=ROOT/'Tools/Level8Gear/Source'
-OUTPUT=ROOT/'Tools/Level8Gear/Prepared'
+parser=argparse.ArgumentParser()
+parser.add_argument('--level',type=int,choices=(8,9),default=8)
+args=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
+TOOL_DIR=ROOT/f'Tools/Level{args.level}Gear'
+SOURCE=TOOL_DIR/'Source'
+OUTPUT=TOOL_DIR/'Prepared'
 MAP={'Plane':'ReelFootAndBody','Cylinder':'Rotor','Cylinder.001':'ReelHousing','Cylinder.002':'Spool','Cylinder.003':'Handle'}
 
 def export(label,rod=False):
  bpy.ops.wm.open_mainfile(filepath=str(SOURCE/(label+'.blend')))
  bpy.context.scene.frame_set(1)
+ # The authored reel uses animated object transforms. The FBX default pose
+ # does not preserve the intended rotation and scale of the rotor and handle.
  deps=bpy.context.evaluated_depsgraph_get()
  parts=[]
  objects={o.name:o for o in bpy.context.scene.objects if o.type=='MESH'}
@@ -66,5 +72,5 @@ def export(label,rod=False):
  path=OUTPUT/(label.replace(' ','')+'.json')
  path.write_text(json.dumps({'parts':parts},separators=(',',':')))
  print('EXPORTED',label,total,'triangles; original corner UVs retained')
-export('Level 8 Fishing Reel')
-export('Level 8 Fishing Rod',True)
+export(f'Level {args.level} Fishing Reel')
+export(f'Level {args.level} Fishing Rod',True)
