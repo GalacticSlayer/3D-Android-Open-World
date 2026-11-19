@@ -9,7 +9,7 @@ Each upgrade adds 0.05x to Scale Piercer and selects exactly one of the existing
 Dust is a shared wallet, earned only with a gem equipped when a fish is successfully added to the bag. A capped gem continues collecting dust for other gems. Full-bag releases and habitat transfers award nothing. A catch, its dust and its gem drop are saved in a single ledger snapshot. Leviathan uses the existing server-confirmed landing path.
 
 Ordinary catch reward: `clamp(2 + floor(sqrt(maximum fish HP) / 12), 2, 25)`.
-Leviathan: 30 dust. Breakdown: exactly 100 dust, regardless of level, after explicit irreversible-action confirmation. Breaking down the equipped gem clears the slot and bonuses. Invested dust is not refunded.
+Leviathan: 30 dust. Breakdown: 10 base dust plus 20% of the cumulative upgrade costs, after explicit irreversible-action confirmation showing the refund. Level 1 returns 10; level 15 returns 605 (10 + 20% of 2,975). Breaking down the equipped gem clears the slot and bonuses. Existing gems use their level to reconstruct the same upgrade investment; no save migration is needed.
 
 | Fish maximum HP | Dust |
 | --- | ---: |

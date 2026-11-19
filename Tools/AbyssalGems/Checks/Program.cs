@@ -52,8 +52,8 @@ class Program
         int dust=data.dust;int level=gem.level;
         Check(!data.Upgrade(gem.id,rng.Next,out _,out _) && data.dust==dust && gem.level==level,"Cannot upgrade without dust");
         Check(!data.BreakDown("missing") && data.dust==dust,"Missing gem is not redeemable");
-        Check(data.BreakDown(gem.id) && data.Equipped==null && data.dust==dust+100,"Breakdown awards 100 and clears equipment");
-        Check(!data.BreakDown(gem.id) && data.dust==dust+100,"No repeated redemption");
+        Check(data.BreakDown(gem.id) && data.Equipped==null && data.dust==dust+10,"Level 1 breakdown awards 10 and clears equipment");
+        Check(!data.BreakDown(gem.id) && data.dust==dust+10,"No repeated redemption");
         Check(data.AwardCatch(10000,false,rng.Next)==0,"No dust while unequipped");
         for(int run=0;run<2000;run++)
         {
@@ -79,6 +79,19 @@ class Program
             data=JsonSerializer.Deserialize<AbyssalGemCollection>(json,options);data.Validate();
             Check(data.Equipped.id==gem.id && data.Equipped.level==15 && data.Equipped.values.SequenceEqual(gem.values),"Save reload retains exact rolls and equipped ID");
         }
+        int invested=0;
+        for(int gemLevel=1;gemLevel<=15;gemLevel++)
+        {
+            var refunds=new AbyssalGemCollection{dust=10000};
+            var refundGem=refunds.Create(rng.Next);refunds.Equip(refundGem.id);
+            for(int n=1;n<gemLevel;n++)refunds.Upgrade(refundGem.id,rng.Next,out _,out _);
+            int balance=refunds.dust,expected=10+invested/5;
+            Check(AbyssalGemCollection.BreakdownDust(gemLevel)==expected,"Preview matches 10 plus 20 percent invested at every level");
+            Check(refunds.BreakDown(refundGem.id) && refunds.dust==balance+expected && refunds.Equipped==null,"Breakdown returns correct investment refund and unequips");
+            Check(!refunds.BreakDown(refundGem.id) && refunds.dust==balance+expected,"Refund cannot be claimed twice");
+            invested+=AbyssalGemCollection.UpgradeCost(gemLevel);
+        }
+        Check(AbyssalGemCollection.BreakdownDust(15)==605,"Max-level refund is 10 plus 595");
         int previous=0;
         for(int hp=0;hp<250000;hp+=37)
         {

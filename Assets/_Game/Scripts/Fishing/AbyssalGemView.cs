@@ -85,9 +85,10 @@ public static class AbyssalGemView
         var box=Panel(shade.transform,"Confirm breakdown",.2f,.22f,.8f,.78f);
         Label(box.transform,"BREAK DOWN ABYSSAL GEM?",34,.06f,.72f,.94f,.94f,Color.white);
         var gem=progress.Data.gems.Find(id);
-        Label(box.transform,"Permanently destroy this Level "+(gem?.level??1)+" gem and all its upgrades for 100 Crystal Dust.\n\nThis cannot be undone. "+(progress.Data.gems.equippedId==id?"Your equipped gem will be removed.":""),26,.06f,.28f,.94f,.72f,Color.white);
+        int refund=AbyssalGemCollection.BreakdownDust(gem?.level??1);
+        Label(box.transform,"Permanently destroy this Level "+(gem?.level??1)+" gem for "+refund+" Crystal Dust (10 base + 20% of upgrade dust).\n\nThis cannot be undone. "+(progress.Data.gems.equippedId==id?"Your equipped gem will be removed.":""),26,.06f,.28f,.94f,.72f,Color.white);
         Button(box.transform,"CANCEL",.05f,.05f,.47f,.24f,()=>UnityEngine.Object.Destroy(shade));
-        Button(box.transform,"BREAK DOWN • +100 DUST",.5f,.05f,.95f,.24f,()=>{
+        Button(box.transform,"BREAK DOWN • +"+refund+" DUST",.5f,.05f,.95f,.24f,()=>{
             progress.BreakDownGem(id);UnityEngine.Object.Destroy(shade);refresh();
         },8);
     }

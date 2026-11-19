@@ -22,7 +22,7 @@ public sealed class AbyssalGem
 public sealed class AbyssalGemCollection
 {
     public const int MaxLevel=15;
-    public const int BreakdownDust=100;
+    public const int BaseBreakdownDust=10;
     public static readonly string[] Names={"Tension Control","Tension Recovery","Attack Percentage","Skill Damage","Crit Damage","Crit Chance","Extra Line","Lure Saver"};
     public static readonly int[] Minimum={1,1,1,1,1,1,1,4};
     public static readonly int[] Maximum={2,2,3,3,4,3,3,8};
@@ -68,11 +68,20 @@ public sealed class AbyssalGemCollection
         if(Find(id)==null)return false;
         equippedId=equippedId==id?"":id;return true;
     }
+    public static int BreakdownDust(int level)
+    {
+        // Every existing gem paid this same upgrade schedule, so its level
+        // reconstructs the investment without changing the save format.
+        int invested=0;
+        for(int previous=1;previous<Math.Min(MaxLevel,level);previous++)
+            invested+=UpgradeCost(previous);
+        return BaseBreakdownDust+invested/5;
+    }
     public bool BreakDown(string id)
     {
         var gem=Find(id);if(gem==null)return false;
         items.Remove(gem);if(equippedId==id)equippedId="";
-        dust=(int)Math.Min(int.MaxValue,(long)dust+BreakdownDust);return true;
+        dust=(int)Math.Min(int.MaxValue,(long)dust+BreakdownDust(gem.level));return true;
     }
     public int AwardCatch(int maximumHealth,bool leviathan,Func<int,int,int> roll)
     {
