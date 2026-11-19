@@ -46,7 +46,7 @@ class Program {
   Check(FishingDragRules.FragileTimer(danger,true,0,.1f)==0 && FishingDragRules.FragileTimer(danger,false,2,.1f)==0,"Low or mood exit clears countdown");
   Check(FishingDragRules.FragileWarningDuration(false)==2f && FishingDragRules.SkillStunDuration(false)==3f,"Other zones retain default timing");
   float windgroveGrace=FishingDragRules.FragileWarningDuration(true);
-  Check(windgroveGrace==1f && FishingDragRules.SkillStunDuration(true)==1.5f,"Windgrove halves warning and skill stun");
+  Check(windgroveGrace==1f && FishingDragRules.SkillStunDuration(true)==3f,"Windgrove keeps one-second warning and restores three-second skill stun");
   Check(FishingDragRules.FragileTensionGain(0,windgroveGrace,windgroveGrace)==0f,"Windgrove no extra tension before one second");
   Check(Math.Abs(FishingDragRules.FragileTensionGain(.9f,1.1f,windgroveGrace)-.045f)<.0001f,"Windgrove counts only post-grace frame time");
   Check(Math.Abs(FishingDragRules.FragileTensionGain(1f,2f,windgroveGrace)-.45f)<.0001f,"Windgrove retains purple tension rate");
