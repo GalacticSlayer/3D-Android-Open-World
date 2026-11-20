@@ -86,7 +86,8 @@ public static class AbyssalGemView
             row.AddComponent<LayoutElement>().preferredHeight=230;
             Picture(row.transform,"GemResetDial",.01f,.08f,.17f,.92f);
             Label(row.transform,"GEM RESET DIAL",30,.18f,.68f,.74f,.96f,Color.white);
-            Button(row.transform,"RESET GEMS",.76f,.31f,.99f,.69f,beginReset,11,progress.CanManageGems);
+            Label(row.transform,"Rerolls the values of all secondary attributes on a gem. Keeps the existing stats, making it ideal for fixing low-tier rolls.",22,.18f,.25f,.74f,.68f,new Color(.7f,.9f,1f));
+            Button(row.transform,"RESET GEMS",.76f,.31f,.99f,.69f,beginReset,8,progress.CanManageGems);
         }
     }
     private static void ConfirmReset(Transform parent,ShopProgress progress,string id,Action refresh)
