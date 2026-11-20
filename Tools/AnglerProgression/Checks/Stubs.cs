@@ -20,6 +20,7 @@ namespace UnityEngine {
  }
 }
 public class FishingSystem:UnityEngine.MonoBehaviour {
+ public void CaptureProtectedKnockoutDistance(){}
  public bool PendingLegacyDamageCritical {get;set;}
  public AnglerProgression Progression=new AnglerProgression();
  private string state="Fighting";private int fishHealthPoints=1000,fishMaxHealth=1000,pendingDamage;

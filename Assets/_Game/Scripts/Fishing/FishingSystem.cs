@@ -169,6 +169,17 @@ public class FishingSystem : MonoBehaviour
     private float initialEscapeBurstTimer;
     private bool fishUnconscious;
     private bool fishOnShore;
+    private float? protectedKnockoutDistance;
+
+    internal float EffectiveLineDistanceLimit => state == FishingState.Fighting && fishUnconscious && protectedKnockoutDistance.HasValue
+        ? FishingDragRules.ProtectedKnockoutLineLimit(maximumLineDistance, protectedKnockoutDistance.Value)
+        : maximumLineDistance;
+
+    internal void CaptureProtectedKnockoutDistance()
+    {
+        // Capture the live line endpoint before the KO switches it to the floating fish's mouth.
+        protectedKnockoutDistance ??= GetCurrentLineDistance();
+    }
 
     private const float CatchDistance = 1.15f;
 
@@ -1231,6 +1242,7 @@ public class FishingSystem : MonoBehaviour
     private void StartFight(int initialHealth=-1)
     {
         state = FishingState.Fighting;
+        protectedKnockoutDistance = null;
 
         fightTension = 0.24f;
         fragileBreakTimer=0f;
@@ -1565,10 +1577,11 @@ public class FishingSystem : MonoBehaviour
 
         float lineDistance =
             GetCurrentLineDistance();
+        float lineLimit = EffectiveLineDistanceLimit;
 
         // A fish can cross the limit during UpdateFightBobber this same frame.
         // Activate before the distance snap and undo that frame's tension gain.
-        if (lineDistance >= maximumLineDistance && dragDamage != null)
+        if (lineDistance >= lineLimit && dragDamage != null)
             dragDamage.TryTriggerLineImmortality();
         bool lineProtected = dragDamage != null && dragDamage.LineImmortalityActive;
         if (lineProtected)
@@ -1577,8 +1590,7 @@ public class FishingSystem : MonoBehaviour
             lineBreakTimer = 0f;
         }
 
-        if (lineDistance >=
-            maximumLineDistance && !lineProtected)
+        if (lineDistance >= lineLimit && !lineProtected)
         {
             fightTension = 1f;
 
@@ -3024,7 +3036,7 @@ public class FishingSystem : MonoBehaviour
 
         float lineDistance = GetCurrentLineDistance();
         bobberIndicatorText.text = lineDistance.ToString("0.0") + " m";
-        bool nearLineLimit = hasFish && lineDistance >= maximumLineDistance - 10f;
+        bool nearLineLimit = hasFish && lineDistance >= EffectiveLineDistanceLimit - 10f;
         bool lineProtected = hasFish && dragDamage != null && dragDamage.LineImmortalityActive;
         bobberIndicatorText.color = lineProtected
             ? Color.Lerp(new Color(.65f, .29f, 1f), new Color(.88f, .64f, 1f), FishingEscapeVignette.ImmortalityPulse)

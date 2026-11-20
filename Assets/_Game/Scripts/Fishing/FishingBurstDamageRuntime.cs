@@ -435,6 +435,10 @@ public sealed class FishingBurstDamageRuntime : MonoBehaviour
         rolledDamage = fishing.MitigateBossDamage(rolledDamage, out bool hardened);
         int appliedDamage = Mathf.Min(authoritativeHp, rolledDamage);
 
+        // Line Immortality stops protecting the line as soon as HP reaches zero.
+        // Check it before subtracting the lethal hit and freeze that distance once.
+        if (appliedDamage == authoritativeHp && LineImmortalityActive)
+            fishing.CaptureProtectedKnockoutDistance();
         authoritativeHp -= appliedDamage;
         if(fishing.IsBossFight)fishing.GetComponent<AbyssalLeviathanEncounter>()?.ReportDamage(appliedDamage);
         WriteAuthoritativeHealth(maxHp);

@@ -60,7 +60,8 @@ class Program {
    Set(r,"skillCooldown",0f);Set(r,"skillCharge",1f);Check(r.TrySkillLook(d),"Any direction activates");Tick(0);
   }
   CheckPopupStyles();
-  Console.WriteLine("PASS: live burst and popup regressions, including same-frame passive and gem crit hits, 2x charged-skill text, shield color, and reused labels.");
+  CheckProtectedKnockoutLineRange();
+  Console.WriteLine("PASS: live burst, damage popups, and Line Immortality knockout range regressions.");
  }
 
  static void CheckPopupStyles(){
@@ -97,5 +98,55 @@ class Program {
   FishingDamagePresentation.ConfigureDamageLabel(label,lightning:false,hardened:false,critical:false,skill:false);
   Check(label.fontSize==32 && label.color.g==.85f && label.fontStyle==FontStyle.Normal &&
    label.rectTransform.sizeDelta.x==180,"Reused label resets font, color, and dimensions");
+ }
+
+ static void CheckProtectedKnockoutLineRange(){
+  static void Tick(FishingBurstDamageRuntime burst,float dt){Time.deltaTime=dt;Call(burst,"Update");}
+  static (FishingSystem Fish,FishingHUD Hud,FishingBurstDamageRuntime Burst,FishingLineRangeLimiter Limiter) Setup(){
+   var go=new GameObject();
+   var fish=go.AddComponent<FishingSystem>();
+   var burst=go.AddComponent<FishingBurstDamageRuntime>();
+   var limiter=go.AddComponent<FishingLineRangeLimiter>();
+   fish.Progression.Normalize();fish.Progression.level=20;
+   Check(fish.Progression.UpgradeAbility(2),"Unlock Line Immortality for distance tests");
+   var hud=new FishingHUD();
+   Set(burst,"fishing",fish);Set(burst,"hud",hud);Set(burst,"progress",new ShopProgress());
+   Call(limiter,"Awake");Tick(burst,0);
+   return (fish,hud,burst,limiter);
+  }
+
+  foreach(var (equipped,knockout,limit) in new[]{(40f,47f,52f),(48f,48f,53f)}){
+   var (fish,hud,burst,limiter)=Setup();
+   fish.EquippedLineLimit=equipped;
+   fish.LineDistance=equipped+.5f;Call(limiter,"LateUpdate");
+   Check(burst.LineImmortalityActive && fish.Snaps==0,"Live purple Line Immortality still permits going past the equipped limit");
+   Set(burst,"authoritativeHp",6);hud.ActionInput.IsHeld=true;
+   Tick(burst,.35f);
+   Check(!fish.CapturedKnockoutDistance.HasValue,"A nonlethal hit does not freeze the range");
+   fish.LineDistance=knockout;Tick(burst,.35f);
+   Check(fish.CapturedKnockoutDistance==knockout && fish.EffectiveLineDistanceLimit==limit && !burst.LineImmortalityActive,
+    "The lethal hit snapshots the line and grants exactly 5 m beyond the knockout");
+   hud.ActionInput.IsHeld=false;Tick(burst,1);
+   fish.LineDistance=equipped-1f;Call(limiter,"LateUpdate");
+   Check(fish.EffectiveLineDistanceLimit==limit,"Reeling closer and immunity cleanup do not shrink the limit");
+   fish.LineDistance=limit-.01f;Call(limiter,"LateUpdate");
+   Check(fish.Snaps==0,"Rendered line within the fixed knockout buffer is allowed");
+   fish.LineDistance=limit+.02f;Call(limiter,"LateUpdate");
+   Check(fish.Snaps==1 && fish.EffectiveLineDistanceLimit==equipped,"Beyond the fixed buffer snaps and returns to equipped range");
+   Set(fish,"state","Waiting");fish.LineDistance=equipped+.5f;Call(limiter,"LateUpdate");
+   Check(fish.Retractions==1,"A later cast still retracts at the equipped limit");
+  }
+
+  foreach(bool expired in new[]{false,true}){
+   var (fish,hud,burst,_)=Setup();
+   if(expired){
+    Check(burst.TryTriggerLineImmortality(),"Protection starts before expiry test");
+    Tick(burst,burst.ImmortalitySeconds);
+   }
+   fish.LineDistance=39f;Set(burst,"authoritativeHp",3);hud.ActionInput.IsHeld=true;Tick(burst,.35f);
+   Check(!fish.CapturedKnockoutDistance.HasValue && fish.EffectiveLineDistanceLimit==40f,
+    "A KO without active immunity uses the normal range");
+  }
+  Check(FishingDragRules.ProtectedKnockoutLineLimit(40f,30f)==40f,"A close protected knockout cannot shorten the equipped line");
  }
 }

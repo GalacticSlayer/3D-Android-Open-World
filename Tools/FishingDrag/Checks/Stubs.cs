@@ -1,13 +1,17 @@
 using System;
 using System.Collections.Generic;
 namespace UnityEngine {
- public class Object {public static T FindFirstObjectByType<T>() where T:class=>null;}
- public class MonoBehaviour:Object {public bool enabled=true;public GameObject gameObject=new GameObject();public T GetComponent<T>() where T:class=>null;}
+ public enum FindObjectsSortMode {None}
+ public enum RuntimeInitializeLoadType {AfterSceneLoad}
+ public class RuntimeInitializeOnLoadMethod:Attribute {public RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType mode){}}
+ public class Object {public static T FindFirstObjectByType<T>() where T:class=>null;public static T[] FindObjectsByType<T>(FindObjectsSortMode mode)=>Array.Empty<T>();}
+ public class MonoBehaviour:Object {public bool enabled=true;public GameObject gameObject=new GameObject();public T GetComponent<T>() where T:class=>gameObject.GetComponent<T>();}
  public class DefaultExecutionOrder:Attribute {public DefaultExecutionOrder(int n){}}
  public struct Vector2 {public float x,y;public Vector2(float a,float b){x=a;y=b;}public float magnitude=>MathF.Sqrt(x*x+y*y);public static Vector2 operator*(Vector2 v,float k)=>new Vector2(v.x*k,v.y*k);}
- public struct Vector3 {public float x,y,z;public Vector3(float a,float b,float c){x=a;y=b;z=c;}}
- public class Transform {public Vector3 position;}
- public class GameObject {public Transform transform=new Transform();private readonly Dictionary<Type,object> components=new();public T GetComponent<T>() where T:class=>components.GetValueOrDefault(typeof(T)) as T;public T AddComponent<T>() where T:new(){var c=new T();components[typeof(T)]=c;return c;}}
+ public struct Vector3 {public float x,y,z;public Vector3(float a,float b,float c){x=a;y=b;z=c;}public static float Distance(Vector3 a,Vector3 b)=>MathF.Sqrt(MathF.Pow(a.x-b.x,2)+MathF.Pow(a.y-b.y,2)+MathF.Pow(a.z-b.z,2));}
+ public class Transform {public Vector3 position;public Vector3 TransformPoint(Vector3 p)=>p;}
+ public class GameObject {public Transform transform=new Transform();private readonly Dictionary<Type,object> components=new();public T GetComponent<T>() where T:class=>components.GetValueOrDefault(typeof(T)) as T;public T AddComponent<T>() where T:new(){var c=new T();components[typeof(T)]=c;if(c is MonoBehaviour mb)mb.gameObject=this;return c;}}
+ public class LineRenderer:MonoBehaviour {public int positionCount=2; public bool useWorldSpace=true;public float Length;public Transform transform=>gameObject.transform;public Vector3 GetPosition(int i)=>new(i==0?0:Length,0,0);}
  public class Camera {public Vector3 WorldToScreenPoint(Vector3 p)=>p;}
  public static class Screen {public static int width=1920,height=1080;}
  public static class Time {public static float deltaTime;}
@@ -26,14 +30,25 @@ namespace UnityEngine {
  }
 }
 namespace UnityEngine.UI {
- public class Text:MonoBehaviour {public Font font;public FontStyle fontStyle;public bool resizeTextForBestFit;public Color color;public int fontSize;public RectTransform rectTransform=new();public new T GetComponent<T>() where T:class=>gameObject.GetComponent<T>();}
+ public class Text:MonoBehaviour {public Font font;public FontStyle fontStyle;public bool resizeTextForBestFit;public Color color;public int fontSize;public RectTransform rectTransform=new();}
  public class Outline {public Color effectColor;public Vector2 effectDistance;public bool useGraphicAlpha;}
 }
 public class FishingSystem:UnityEngine.MonoBehaviour {
+ private bool rodEquipped=true;
+ private int activeBait;
+ private readonly UnityEngine.LineRenderer fishingLine=new();
+ public float LineDistance {get=>fishingLine.Length;set=>fishingLine.Length=value;}
+ public float EquippedLineLimit=40f;
+ public float? CapturedKnockoutDistance {get;private set;}
+ public float EffectiveLineDistanceLimit=>state=="Fighting" && fishUnconscious && CapturedKnockoutDistance.HasValue
+  ? FishingDragRules.ProtectedKnockoutLineLimit(EquippedLineLimit,CapturedKnockoutDistance.Value):EquippedLineLimit;
+ public void CaptureProtectedKnockoutDistance(){CapturedKnockoutDistance??=LineDistance;}
+ public int Snaps;private void SnapLine(string message){Snaps++;state="Idle";}
+ public int Retractions;private void FailFishing(string message){Retractions++;state="Idle";}
  public bool PendingLegacyDamageCritical {get;set;}
  public AnglerProgression Progression=new AnglerProgression();
  private string state="Fighting";private int fishHealthPoints=1000,fishMaxHealth=1000,pendingDamage;
- private float fishHealth=1,damageFraction,damageDisplayTimer;private bool fishUnconscious;
+ private float fishHealth=1,damageFraction,damageDisplayTimer;private bool fishUnconscious=false;
  private UnityEngine.GameObject bobber;private UnityEngine.Camera playerCamera;
  public int SkillFeedbacks;public void PlaySkillFeedback(){SkillFeedbacks++;}
  public bool GemAngryState;public bool IsBossFight=>false;public int CurrentFishHealth=>fishHealthPoints;
@@ -54,7 +69,7 @@ public class FishingHUD {public class Input {public bool IsHeld;}public Input Ac
  public void SetDragFightUI(bool fighting,bool live,int mode,float charge,float cooldown=0f){Fighting=fighting;Live=live;Charge=charge;}}
 public class ShopProgress {public class Ledger {public AbyssalGemCollection gems=new AbyssalGemCollection();public int rodEquipped;}public Ledger Data=new Ledger();}
 public class Level2FishingRodRuntime:UnityEngine.MonoBehaviour {}
-public static class ShopCatalog {public const int MaxRodTier=8;}
+public static class ShopCatalog {public const int MaxRodTier=8,StarterLure=0;}
 public static class ShopWorldHUD {public static bool MenuOpen;}
 
 

@@ -3,10 +3,8 @@ using System.Reflection;
 using UnityEngine;
 
 /// <summary>
-/// Enforces the equipped line's hard maximum against the ACTUAL rendered line.
-/// This intentionally runs after lure presentation so walking away from a lure,
-/// fighting fish, or any other movement can never leave more line out than the
-/// configured FishingSystem maximum.
+/// Enforces FishingSystem's effective maximum against the actual rendered line
+/// after lure presentation, including the protected knockout limit.
 /// </summary>
 [DefaultExecutionOrder(1400)]
 public sealed class FishingLineRangeLimiter : MonoBehaviour
@@ -14,7 +12,6 @@ public sealed class FishingLineRangeLimiter : MonoBehaviour
     private FishingSystem fishing;
     private FieldInfo stateField;
     private FieldInfo rodEquippedField;
-    private FieldInfo maximumLineDistanceField;
     private FieldInfo fishingLineField;
     private FieldInfo activeBaitField;
     private MethodInfo failFishingMethod;
@@ -40,14 +37,12 @@ public sealed class FishingLineRangeLimiter : MonoBehaviour
         Type type = typeof(FishingSystem);
         stateField = type.GetField("state", flags);
         rodEquippedField = type.GetField("rodEquipped", flags);
-        maximumLineDistanceField = type.GetField("maximumLineDistance", flags);
         fishingLineField = type.GetField("fishingLine", flags);
         activeBaitField = type.GetField("activeBait", flags);
         failFishingMethod = type.GetMethod("FailFishing", flags);
         snapLineMethod = type.GetMethod("SnapLine", flags);
 
-        if (stateField == null || rodEquippedField == null ||
-            maximumLineDistanceField == null || fishingLineField == null ||
+        if (stateField == null || rodEquippedField == null || fishingLineField == null ||
             activeBaitField == null || failFishingMethod == null ||
             snapLineMethod == null)
         {
@@ -73,7 +68,7 @@ public sealed class FishingLineRangeLimiter : MonoBehaviour
         if (line == null || !line.enabled || line.positionCount < 2)
             return;
 
-        float maximum = Mathf.Max(0.01f, (float)maximumLineDistanceField.GetValue(fishing));
+        float maximum = Mathf.Max(0.01f, fishing.EffectiveLineDistanceLimit);
         float actualLength = RenderedLineLength(line);
         if (actualLength <= maximum + 0.001f)
             return;
