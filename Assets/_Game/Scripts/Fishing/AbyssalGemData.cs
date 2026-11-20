@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 [Serializable]
 public sealed class AbyssalGem
@@ -29,6 +30,9 @@ public sealed class AbyssalGemCollection
     public List<AbyssalGem> items=new List<AbyssalGem>();
     public string equippedId="";
     public int dust;
+    public bool resetDialUnlocked;
+    public bool HasResetDial => resetDialUnlocked || items.Count>0;
+    public IEnumerable<AbyssalGem> SortedItems => items.OrderByDescending(gem=>gem.level);
     public AbyssalGem Equipped => Find(equippedId);
     public AbyssalGem Find(string id)
     {
@@ -49,7 +53,7 @@ public sealed class AbyssalGemCollection
             int slot=roll(0,pool.Count),kind=pool[slot];pool.RemoveAt(slot);
             gem.attributes[i]=kind;gem.values[i]=RollIncrease(kind,roll);
         }
-        items.Add(gem);return gem;
+        items.Add(gem);resetDialUnlocked=true;return gem;
     }
     public bool Upgrade(string id,Func<int,int,int> roll,out int slot,out float increase)
     {
@@ -63,6 +67,15 @@ public sealed class AbyssalGemCollection
     }
     private static float RollIncrease(int kind,Func<int,int,int> roll)
         =>roll(Minimum[kind]*10,Maximum[kind]*10+1)/10f;
+    public bool Reset(string id,Func<int,int,int> roll)
+    {
+        var gem=Find(id);if(gem==null)return false;
+        var values=new float[4];
+        for(int i=0;i<4;i++)values[i]=RollIncrease(gem.attributes[i],roll);
+        gem.values=values;gem.level=1;
+        resetDialUnlocked=true;
+        return true;
+    }
     public bool Equip(string id)
     {
         if(Find(id)==null)return false;
@@ -80,6 +93,7 @@ public sealed class AbyssalGemCollection
     public bool BreakDown(string id)
     {
         var gem=Find(id);if(gem==null)return false;
+        resetDialUnlocked=true;
         items.Remove(gem);if(equippedId==id)equippedId="";
         dust=(int)Math.Min(int.MaxValue,(long)dust+BreakdownDust(gem.level));return true;
     }
@@ -103,6 +117,7 @@ public sealed class AbyssalGemCollection
             for(int i=0;i<4;i++)if(gem.attributes[i]<0 || gem.attributes[i]>=8 || !kinds.Add(gem.attributes[i]) || float.IsNaN(gem.values[i]) || float.IsInfinity(gem.values[i]) || gem.values[i]<1 || gem.values[i]>Maximum[gem.attributes[i]]*gem.level)
                 throw new InvalidOperationException("Invalid Abyssal Gem attribute");
         }
+        if(items.Count>0)resetDialUnlocked=true;
         if(Equipped==null)equippedId="";
     }
 }

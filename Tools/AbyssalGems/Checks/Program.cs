@@ -94,6 +94,46 @@ class Program
             invested+=AbyssalGemCollection.UpgradeCost(gemLevel);
         }
         Check(AbyssalGemCollection.BreakdownDust(15)==605,"Max-level refund is 10 plus 595");
+        Check(legacy.HasResetDial && legacy.resetDialUnlocked,"Legacy owned gems unlock the dial");
+        var resetData=new AbyssalGemCollection{dust=10000};
+        Check(!resetData.HasResetDial,"No dial before first gem");
+        var low=resetData.Create(rng.Next);var high=resetData.Create(rng.Next);
+        resetData.Equip(high.id);
+        for(int n=1;n<15;n++)resetData.Upgrade(high.id,rng.Next,out _,out _);
+        Check(resetData.SortedItems.First()==high,"Highest-level gem sorts first");
+        Check(resetData.items[0]==low,"Display sorting preserves save order");
+        int resetBalance=resetData.dust;
+        int[] resetKinds=(int[])high.attributes.Clone();
+        Check(resetData.Reset(high.id,(min,max)=>max-1),"Max-level equipped gem resets");
+        Check(high.level==1 && high.ScalePiercer==1.5f && resetData.Equipped==high,"Reset keeps gem identity and equipped state, restores primary");
+        Check(high.attributes.SequenceEqual(resetKinds),"Reset never changes attribute types or order");
+        for(int i=0;i<4;i++)Check(high.values[i]==AbyssalGemCollection.Maximum[resetKinds[i]],"Reset uses inclusive base roll maximum");
+        Check(resetData.dust==resetBalance && resetData.items.Count==2,"Reset neither charges/refunds dust nor creates/removes gems");
+        Check(resetData.SortedItems.First()==low,"Reset gem reorders with stable level ties");
+        Check(!resetData.Reset("missing",(min,max)=>throw new Exception("Must not roll")),"Missing gem reset is inert");
+        Check(resetData.Reset(high.id,(min,max)=>min),"Level-one gems can be reset again");
+        for(int i=0;i<4;i++)Check(high.values[i]==AbyssalGemCollection.Minimum[resetKinds[i]],"Reset uses inclusive base roll minimum");
+        resetData.Validate();
+        resetData=JsonSerializer.Deserialize<AbyssalGemCollection>(JsonSerializer.Serialize(resetData,jsonOptions),jsonOptions);
+        resetData.Validate();
+        Check(resetData.Equipped.level==1 && resetData.Equipped.attributes.SequenceEqual(resetKinds) && resetData.dust==resetBalance,"Reset survives save reload");
+        Check(resetData.Upgrade(high.id,(min,max)=>min,out _,out _) && resetData.dust==resetBalance-50,"Reset restarts upgrade costs at level one");
+        Check(AbyssalGemCollection.BreakdownDust(resetData.Equipped.level)==20,"Old investment cannot be reclaimed after reset");
+        resetData.BreakDown(high.id);resetData.BreakDown(low.id);
+        resetData=JsonSerializer.Deserialize<AbyssalGemCollection>(JsonSerializer.Serialize(resetData,jsonOptions),jsonOptions);
+        resetData.Validate();
+        Check(resetData.items.Count==0 && resetData.HasResetDial,"Dial persists after last gem is destroyed and save reloads");
+        for(int kind=0;kind<8;kind++)
+        for(int tenth=AbyssalGemCollection.Minimum[kind]*10;tenth<=AbyssalGemCollection.Maximum[kind]*10;tenth++)
+        {
+            var rolls=new AbyssalGemCollection();
+            var resetGem=rolls.Create((min,max)=>min);
+            resetGem.attributes=new[]{kind,(kind+1)%8,(kind+2)%8,(kind+3)%8};
+            int calls=0;
+            rolls.Reset(resetGem.id,(min,max)=>calls++==0?tenth:min);
+            Check(calls==4 && resetGem.values[0]==tenth/10f,"Reset rolls all four values and supports every fractional increment");
+            rolls.Validate();
+        }
         int previous=0;
         for(int hp=0;hp<250000;hp+=37)
         {

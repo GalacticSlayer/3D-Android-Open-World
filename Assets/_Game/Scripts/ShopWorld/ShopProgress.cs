@@ -193,6 +193,7 @@ public sealed class ShopProgress : MonoBehaviour
     public void NotifyCrystalDust(int amount){if(amount>0)CrystalDustAwarded?.Invoke(amount);}
     public bool CanManageGems => !ReadOnly && (GetComponent<FishingSystem>()==null || !GetComponent<FishingSystem>().HasActiveCast);
     public bool EquipGem(string id)=>CanManageGems && Commit(Data.gems.Equip(id));
+    public bool ResetGem(string id)=>CanManageGems && Commit(Data.gems.Reset(id,UnityEngine.Random.Range));
     public bool BreakDownGem(string id)=>CanManageGems && Commit(Data.gems.BreakDown(id));
     public bool UpgradeGem(string id,out int slot,out float increase)
     {

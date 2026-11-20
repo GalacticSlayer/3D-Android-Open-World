@@ -60,21 +60,49 @@ public static class AbyssalGemView
         for(int i=0;i<4;i++)parts.Add(AbyssalGemCollection.Names[gem.attributes[i]]+" "+Value(gem,i));
         return string.Join("  /  ",parts);
     }
-    public static void Inventory(Transform parent,Transform modal,ShopProgress progress,Action<string> inspect,Action refresh)
+    public static void Inventory(Transform parent,Transform modal,ShopProgress progress,Action<string> inspect,Action refresh,Action beginReset,bool resetting=false)
     {
-        foreach(var gem in progress.Data.gems.items)
+        foreach(var gem in progress.Data.gems.SortedItems)
         {
             var row=Panel(parent,"Abyssal Gem inventory item",0,0,1,1);
             row.AddComponent<LayoutElement>().preferredHeight=230;
             Picture(row.transform,"AbyssalGem",.01f,.08f,.17f,.92f);
             Label(row.transform,"ABYSSAL GEM  •  LEVEL "+gem.level,30,.18f,.68f,.74f,.96f,Color.white);
             Label(row.transform,Summary(gem),22,.18f,.25f,.74f,.68f,new Color(.7f,.9f,1f));
+            if(resetting)
+            {
+                Button(row.transform,"RESET GEM",.76f,.31f,.99f,.69f,()=>ConfirmReset(modal,progress,gem.id,refresh),8,progress.CanManageGems);
+                continue;
+            }
             Button(row.transform,"VIEW ATTRIBUTES",.18f,.03f,.5f,.26f,()=>inspect(gem.id));
             var equip=Button(row.transform,progress.Data.gems.equippedId==gem.id?"UNEQUIP":"EQUIP",.76f,.53f,.99f,.91f,()=>{progress.EquipGem(gem.id);refresh();},1);
             equip.interactable=progress.CanManageGems;
             var dismantle=Button(row.transform,"BREAK DOWN",.76f,.09f,.99f,.47f,()=>Confirm(modal,progress,gem.id,refresh),8);
             dismantle.interactable=progress.CanManageGems;
         }
+        if(!resetting && progress.Data.gems.HasResetDial)
+        {
+            var row=Panel(parent,"Gem Reset Dial inventory item",0,0,1,1);
+            row.AddComponent<LayoutElement>().preferredHeight=230;
+            Picture(row.transform,"GemResetDial",.01f,.08f,.17f,.92f);
+            Label(row.transform,"GEM RESET DIAL",30,.18f,.68f,.74f,.96f,Color.white);
+            Button(row.transform,"RESET GEMS",.76f,.31f,.99f,.69f,beginReset,11,progress.CanManageGems);
+        }
+    }
+    private static void ConfirmReset(Transform parent,ShopProgress progress,string id,Action refresh)
+    {
+        var gem=progress.Data.gems.Find(id);if(gem==null)return;
+        var shade=new GameObject("Permanent gem reset confirmation",typeof(RectTransform),typeof(Image));
+        shade.AddComponent<AbyssalGemConfirmation>();
+        shade.transform.SetParent(parent,false);Place(shade.GetComponent<RectTransform>(),0,0,1,1,0);
+        shade.GetComponent<Image>().color=new Color(0,0,0,.8f);
+        var box=Panel(shade.transform,"Confirm reset",.2f,.22f,.8f,.78f);
+        Label(box.transform,"RESET ABYSSAL GEM?",34,.06f,.72f,.94f,.94f,Color.white);
+        Label(box.transform,"Reset this Level "+gem.level+" gem to Level 1 and Scale Piercer to 1.50×. Reroll all four substat values at their starting ranges; attribute types stay the same.\n\nAll upgrades are lost. No Crystal Dust is refunded. This cannot be undone.",26,.06f,.28f,.94f,.72f,Color.white);
+        Button(box.transform,"CANCEL",.05f,.05f,.47f,.24f,()=>UnityEngine.Object.Destroy(shade));
+        Button(box.transform,"RESET GEM",.5f,.05f,.95f,.24f,()=>{
+            progress.ResetGem(id);UnityEngine.Object.Destroy(shade);refresh();
+        },8,progress.CanManageGems);
     }
     private static void Confirm(Transform parent,ShopProgress progress,string id,Action refresh)
     {

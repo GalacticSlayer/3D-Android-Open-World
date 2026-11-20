@@ -49,6 +49,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
     private GameObject personalStatsView;
     private GameObject gemView,gemUpgradeBanner,equipmentTabs,gemDustWallet;
     private int equipmentCategory;
+    private bool resettingGems;
     public bool ShowingFishingRods => page=="equipment" && equipmentCategory==0;
     private string selectedGem;
     private int selectedGemAttribute;
@@ -176,6 +177,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
             fishing.PrepareForMenu();
         }
         if(destination=="travel")travelMenuSession=true;
+        if(destination!="equipment")resettingGems=false;
         MenuOpen=true; page=destination; modal.SetActive(true); root.transform.SetAsLastSibling();
         player.SetMenuOpen(true); if(fishingHUD!=null) fishingHUD.SetMenuCovered(true);
         Refresh(true);
@@ -185,6 +187,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
         if(travel!=null && travel.Traveling) return;
         DismissGemUpgrade();
         SaveProfileName();
+        resettingGems=false;
         MenuOpen=false;travelMenuSession=false;shopSession=null;bagPicker=null;habitatPicker=null;message="";
         if(previews!=null)previews.Suspend();
         if(modal!=null) modal.SetActive(false);
@@ -202,6 +205,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
         if(gemUpgradeBanner!=null){DismissGemUpgrade();return;}
         var confirmation=modal!=null?modal.GetComponentInChildren<AbyssalGemConfirmation>(true):null;
         if(confirmation!=null){Destroy(confirmation.gameObject);return;}
+        if(resettingGems){resettingGems=false;Refresh(true);return;}
         if(travelMenuSession && page!="travel") { bagPicker=null; Open("travel"); }
         else Close();
     }
@@ -379,7 +383,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
         if(page=="multiplayer")heading.text="MULTIPLAYER";
         if(page=="homes")heading.text="PLAYER AQUARIUMS";
         var closeCaption=menuClose!=null?menuClose.GetComponentInChildren<Text>():null;
-        if(closeCaption!=null)closeCaption.text=page=="homes"?"BACK":"CLOSE";
+        if(closeCaption!=null)closeCaption.text=resettingGems?"CANCEL":page=="homes"?"BACK":"CLOSE";
         if(page=="stats")heading.text="PERSONAL STATS";
         // Only the gold Personal Stats heading has a crisp, thin black border.
         // Keep the shared heading unchanged on every other shop/menu page.
@@ -721,11 +725,20 @@ public sealed class ShopWorldHUD : MonoBehaviour
     {
         if(!shop)
         {
-            BuildEquipmentTabs();
+            if(!resettingGems)BuildEquipmentTabs();
+            else
+            {
+                wallet.gameObject.SetActive(false);
+                feedback.gameObject.SetActive(false);
+                var top=scroll.viewport.offsetMax;top.y=-158;scroll.viewport.offsetMax=top;
+                var track=scroll.verticalScrollbar.GetComponent<RectTransform>();
+                top=track.offsetMax;top.y=-158;track.offsetMax=top;
+            }
             if(equipmentCategory==2)
             {
-                AbyssalGemView.Inventory(list,modal.transform,progress,OpenGem,()=>Refresh(false));
-                if(progress.Data.gems.items.Count==0)
+                AbyssalGemView.Inventory(list,modal.transform,progress,OpenGem,()=>Refresh(false),
+                    ()=>{resettingGems=true;Refresh(true);},resettingGems);
+                if(progress.Data.gems.items.Count==0 && !progress.Data.gems.HasResetDial)
                     Row("NO GEMS YET","Catch the Abyssal Leviathan to obtain an Abyssal Gem.","CLOSE",Close);
                 return;
             }

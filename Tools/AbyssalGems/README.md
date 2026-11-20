@@ -52,3 +52,11 @@ These cover 2,000 complete gem progressions, distinct starting rolls, inclusive 
 Unity acceptance: land a server-confirmed Leviathan; inspect and equip the drop; catch an ordinary fish; verify the pulse and dust after restart; select all five cards; upgrade and verify one secondary changes alongside Scale Piercer; test cancel/escape/confirm on breakdown; test Angry versus other states and line-snap lure recovery; verify layout on wide and narrow landscape screens.
 
 A successfully saved Leviathan catch queues a themed “Abyssal Gem Acquired” card below the XP/level notices, with the gem artwork on the left. It shares XP slide timing/easing and lasts 1.5 times the accompanying XP animation’s full duration (or the standard notice duration if no XP is awarded). It never triggers for habitat transfers or rejected catches.
+
+## Gem Reset Dial
+
+The first gem permanently unlocks the supplied Gem Reset Dial. Existing saves containing gems gain this unlock during validation. Both gem lists sort by descending level, preserving acquisition order for ties; the dial is always last in the regular list. Reset Gems hides the category tabs and wallet, raises the list, and changes Close to Cancel. Cancel/Escape returns to the regular Gems list; when a confirmation is open, it dismisses that confirmation first.
+
+Resetting requires confirmation and no active cast. It retains the gem ID, equipped state, and all four attribute types/order; level returns to 1 (Scale Piercer 1.50x), with each secondary independently rerolled in its original inclusive starting range at 0.1 increments. Resetting is free, refunds no dust, and permanently discards the old upgrade investment. Level-one gems may also be reset. Subsequent upgrade and breakdown costs use the new level. Checks cover reset bounds, every fractional roll, persistence, unlock migration, equipped state, sorting, and post-reset economy.
+
+Unity acceptance for reset: check the supplied icon and matching row layout, centered darker red dial button, tabs hidden/list raised in reset mode, one Reset Gem action per row, warning readability, confirmation cancellation with no changes, reordering after reset, return via Cancel/Escape, and the persisted unlock after all gems are broken down.
