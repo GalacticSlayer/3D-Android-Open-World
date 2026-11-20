@@ -38,7 +38,6 @@ public sealed class Level2FishingRodRuntime : MonoBehaviour
             if(system!=null && system.GetComponent<Level2FishingRodRuntime>()==null)
                 system.gameObject.AddComponent<Level2FishingRodRuntime>();
         EnsureShopCleanup();
-        EnsureDamagePresentation();
     }
 
     private static void EnsureShopCleanup()
@@ -46,13 +45,6 @@ public sealed class Level2FishingRodRuntime : MonoBehaviour
         foreach(ShopWorldHUD hud in FindObjectsByType<ShopWorldHUD>(FindObjectsSortMode.None))
             if(hud!=null && hud.GetComponent<RodShopCleanup>()==null)
                 hud.gameObject.AddComponent<RodShopCleanup>();
-    }
-
-    private static void EnsureDamagePresentation()
-    {
-        foreach(FishingHUD hud in FindObjectsByType<FishingHUD>(FindObjectsSortMode.None))
-            if(hud!=null && hud.GetComponent<FishingDamagePresentation>()==null)
-                hud.gameObject.AddComponent<FishingDamagePresentation>();
     }
 
     private void Awake()
@@ -77,7 +69,6 @@ public sealed class Level2FishingRodRuntime : MonoBehaviour
     private void Start()
     {
         EnsureShopCleanup();
-        EnsureDamagePresentation();
         if(progress==null || fishing==null || rodRootField==null || rodViewField==null || rodPowerField==null ||
            stateField==null || hpField==null || maxHpField==null || healthField==null || pendingDamageField==null ||
            unconsciousField==null || damageFractionField==null || damageDisplayTimerField==null)
@@ -92,7 +83,6 @@ public sealed class Level2FishingRodRuntime : MonoBehaviour
     {
         if(progress==null || fishing==null)return;
         EnsureShopCleanup();
-        EnsureDamagePresentation();
         // Upgraded rods do not receive the old placeholder tension-control bonus.
         rodPowerField.SetValue(fishing,1f);
         int tier=Mathf.Clamp(progress.Data.rodEquipped,0,ShopCatalog.MaxRodTier);
@@ -109,7 +99,7 @@ public sealed class Level2FishingRodRuntime : MonoBehaviour
 
         if(state!="Fighting")
         {
-            FishingDamagePresentation.ClearPendingCritical();
+            fishing.PendingLegacyDamageCritical=false;
             observedHp=current;
             previousState=state;
             criticalBurstIndex=-1;
@@ -208,7 +198,7 @@ public sealed class Level2FishingRodRuntime : MonoBehaviour
                 if(criticalForBurst && !criticalMarkedForBurst)
                 {
                     criticalMarkedForBurst=true;
-                    FishingDamagePresentation.MarkCriticalHit();
+                    fishing.PendingLegacyDamageCritical=true;
                 }
             }
         }
@@ -228,7 +218,7 @@ public sealed class Level2FishingRodRuntime : MonoBehaviour
         damageDisplayTimerField.SetValue(fishing,0f);
         unconsciousField.SetValue(fishing,false);
         observedHp=max;
-        FishingDamagePresentation.ClearPendingCritical();
+        fishing.PendingLegacyDamageCritical=false;
     }
 
     private void ApplyVisual(int tier)

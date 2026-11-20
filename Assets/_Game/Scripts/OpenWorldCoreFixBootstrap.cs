@@ -39,15 +39,6 @@ public sealed class OpenWorldCoreFixBootstrap : MonoBehaviour
                 hud.gameObject.AddComponent<TravelAndIslandMenuRuntime>();
         }
 
-        foreach (FishingHUD hud in FindObjectsByType<FishingHUD>(FindObjectsSortMode.None))
-        {
-            // Critical styling is part of the damage contract, not an optional
-            // cosmetic. Attach it even if the older AfterSceneLoad installer ran
-            // before the generated HUD existed.
-            if (hud != null && hud.GetComponent<FishingDamagePresentation>() == null)
-                hud.gameObject.AddComponent<FishingDamagePresentation>();
-        }
-
         foreach (FishingSystem fishing in FindObjectsByType<FishingSystem>(FindObjectsSortMode.None))
         {
             if (fishing != null && fishing.GetComponent<FishingBurstDamageRuntime>() == null)

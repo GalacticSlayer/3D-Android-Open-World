@@ -21,6 +21,8 @@ class Program {
   ShopWorldHUD.MenuOpen=true;Check(!r.TrySkillLook(new Vector2(400,0)),"Reject menu swipe");before=h.Damage;Tick(1);Check(h.Damage==before,"No passive damage in covered menu");ShopWorldHUD.MenuOpen=false;
   r.SelectDrag(0);Check(r.TrySkillLook(new Vector2(0,.1f)),"Tiny upward look activates full meter");Check(!r.TrySkillLook(new Vector2(400,0)),"One spend only");
   before=h.Damage;Tick(0);Check(h.Damage-before==60 && h.Charge==0,"20x base rod strike, no Low multiplier");
+  Check(h.Popups[^1].Amount==60 && h.Popups[^1].Label.fontSize==76 && h.Popups[^1].Label.color.g==.62f,
+   "Charged skill popup has 2x orange text size without changing damage");
   Check(f.Stuns==1 && FishingDragRules.SkillStunSeconds==3f,"Surviving skill hit applies three-second stun");
   Set(r,"skillCooldown",0f);Set(r,"skillCharge",1f);Set(r,"authoritativeHp",5);Check(r.TrySkillLook(new Vector2(400,0)),"Finisher queued");Tick(0);
   Check(Get<int>(f,"fishHealthPoints")==0 && Get<bool>(f,"fishUnconscious") && f.Presentations>0,"Skill KO uses existing presentation");
@@ -57,6 +59,43 @@ class Program {
   {
    Set(r,"skillCooldown",0f);Set(r,"skillCharge",1f);Check(r.TrySkillLook(d),"Any direction activates");Tick(0);
   }
-  Console.WriteLine("PASS: live burst owner: Low/Medium/High damage, passive ticks, charge, swipe gates, one-shot consumption, skill KO, menu pause, fight reset, Windgrove warning/stun timing and tension ramp.");
+  CheckPopupStyles();
+  Console.WriteLine("PASS: live burst and popup regressions, including same-frame passive and gem crit hits, 2x charged-skill text, shield color, and reused labels.");
+ }
+
+ static void CheckPopupStyles(){
+  var f=new FishingSystem();var h=new FishingHUD();var r=new FishingBurstDamageRuntime();var p=new ShopProgress();
+  Set(r,"fishing",f);Set(r,"hud",h);Set(r,"progress",p);
+  p.Data.rodEquipped=6; // Level 7, 15% base crit
+  p.Data.gems.items.Add(new AbyssalGem{id="test",attributes=new[]{0,1,5,6},values=new[]{1f,1f,5f,1f}});
+  p.Data.gems.Equip("test");
+  Time.deltaTime=0;Call(r,"Update");
+  r.SelectDrag(FishingDragRules.High);
+  Set(r,"passiveSeconds",.9f);h.ActionInput.IsHeld=true;
+  UnityEngine.Random.value=.17f; // Above rod-only crit, below the combined 20%.
+  Time.deltaTime=.35f;Call(r,"Update");
+  Check(h.Popups.Count==2,"Passive damage and a reel crit occur in one Update");
+  var normal=h.Popups[0];var crit=h.Popups[1];
+  Check(normal.Amount==58 && normal.Label.fontSize==32 && normal.Label.color.g==.85f,"Passive hit keeps normal styling");
+  Check(crit.Amount==232 && crit.Label.fontSize==38 && crit.Label.color.g==.62f && crit.Label.color.b==.24f,"Only the gem-assisted reel crit is styled orange");
+
+  f.Shielded=true;r.SelectDrag(FishingDragRules.Medium);Call(r,"Update");
+  var shielded=h.Popups[^1];
+  Check(shielded.Amount==23 && shielded.Label.fontSize==32 && shielded.Label.color.r==shielded.Label.color.g &&
+   shielded.Label.color.g==shielded.Label.color.b,"Shielded crit remains gray and displays the mitigated amount");
+  h.ActionInput.IsHeld=false;Set(r,"skillCharge",1f);
+  Check(r.TrySkillLook(new Vector2(1,0)),"Shielded skill queued");
+  Time.deltaTime=0;Call(r,"Update");
+  var skill=h.Popups[^1];
+  Check(skill.Amount==232 && skill.Label.fontSize==64 && skill.Label.color.r==skill.Label.color.g &&
+   skill.Label.color.g==skill.Label.color.b && skill.Label.rectTransform.sizeDelta.x==360,"Shielded skill is gray and twice its old size");
+  UnityEngine.Random.value=.5f;
+
+  var label=skill.Label;
+  FishingDamagePresentation.ConfigureDamageLabel(label,lightning:true,hardened:false,critical:false,skill:false);
+  Check(label.fontSize==34 && label.color.b==.02f && label.fontStyle==FontStyle.Italic,"Lightning keeps its existing size, color and font style");
+  FishingDamagePresentation.ConfigureDamageLabel(label,lightning:false,hardened:false,critical:false,skill:false);
+  Check(label.fontSize==32 && label.color.g==.85f && label.fontStyle==FontStyle.Normal &&
+   label.rectTransform.sizeDelta.x==180,"Reused label resets font, color, and dimensions");
  }
 }

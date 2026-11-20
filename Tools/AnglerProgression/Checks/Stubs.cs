@@ -20,6 +20,7 @@ namespace UnityEngine {
  }
 }
 public class FishingSystem:UnityEngine.MonoBehaviour {
+ public bool PendingLegacyDamageCritical {get;set;}
  public AnglerProgression Progression=new AnglerProgression();
  private string state="Fighting";private int fishHealthPoints=1000,fishMaxHealth=1000,pendingDamage;
  private float fishHealth=1,damageFraction,damageDisplayTimer;private bool fishUnconscious;
@@ -33,13 +34,12 @@ public class FishingSystem:UnityEngine.MonoBehaviour {
  public int Presentations;private void EnsureUnconsciousFishVisual(){Presentations++;}
 }
 public class FishingHUD {public class Input {public bool IsHeld;}public Input ActionInput=new Input();public bool CombatInputVisible=true,FishingUiVisible=true;public int Damage;public float Charge;public bool Fighting,Live;
- public void ShowDamage(int n,UnityEngine.Vector3 p,bool lightning=false,bool hardened=false){Damage+=n;}
+ public void ShowDamage(int n,UnityEngine.Vector3 p,bool lightning=false,bool hardened=false,bool critical=false,bool skill=false){Damage+=n;}
  public void SetDragFightUI(bool fighting,bool live,int mode,float charge,float cooldown=0f){Fighting=fighting;Live=live;Charge=charge;}}
 public class ShopProgress {public class Ledger {public AbyssalGemCollection gems=new AbyssalGemCollection();public int rodEquipped;}public Ledger Data=new Ledger();}
 public class Level2FishingRodRuntime:UnityEngine.MonoBehaviour {}
 public static class ShopCatalog {public const int MaxRodTier=4;}
 public static class ShopWorldHUD {public static bool MenuOpen;}
-public static class FishingDamagePresentation {public static void MarkCriticalHit(){}public static void ClearPendingCritical(){}}
 
 
 public static class FishingThirdPersonView { public static UnityEngine.Vector3 WorldToScreenPoint(UnityEngine.Camera c,UnityEngine.Vector3 p)=>p; }

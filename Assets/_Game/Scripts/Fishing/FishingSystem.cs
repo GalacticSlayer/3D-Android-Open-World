@@ -149,6 +149,7 @@ public class FishingSystem : MonoBehaviour
     private int fishMaxHealth=1,fishHealthPoints=1,pendingDamage;
     private float damageFraction,damageDisplayTimer;
     private bool pendingDamageHardened;
+    internal bool PendingLegacyDamageCritical { get; set; }
 
     private float stateTimer;
     private float fightTension;
@@ -1251,6 +1252,7 @@ public class FishingSystem : MonoBehaviour
         hookedSpeciesId=FishCatalog.ResolveSizeVariant(hookedSpeciesId,hookedWeightKg);
         damageFraction=0;pendingDamage=0;damageDisplayTimer=0;
         pendingDamageHardened=false;
+        PendingLegacyDamageCritical=false;
         lineBreakTimer = 0f;
         fightTime = 0f;
         surgeAmount = 0f;
@@ -1493,9 +1495,10 @@ public class FishingSystem : MonoBehaviour
             damageDisplayTimer+=Time.deltaTime;
             if(pendingDamage>0 && (damageDisplayTimer>=.35f || fishHealthPoints==0))
             {
-                hud.ShowDamage(pendingDamage,FishingThirdPersonView.WorldToScreenPoint(playerCamera, bobber.transform.position),false,pendingDamageHardened);
+                hud.ShowDamage(pendingDamage,FishingThirdPersonView.WorldToScreenPoint(playerCamera, bobber.transform.position),hardened:pendingDamageHardened,critical:PendingLegacyDamageCritical);
                 pendingDamage=0;damageDisplayTimer=0;
                 pendingDamageHardened=false;
+                PendingLegacyDamageCritical=false;
             }
             if (fishHealth <= 0f)
             {

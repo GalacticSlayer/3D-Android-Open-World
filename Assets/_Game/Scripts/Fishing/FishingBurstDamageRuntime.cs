@@ -365,7 +365,7 @@ public sealed class FishingBurstDamageRuntime : MonoBehaviour
                 abilityUsed[0] = true;
                 StartBurn();
             }
-            DealDamage(Mathf.RoundToInt(FishingDragRules.SkillDamage(RollNormalDamage()) * (fishing.Progression != null ? fishing.Progression.Multiplier(4) : 1f)*GemSkillMultiplier()),maxHp,true);
+            DealDamage(Mathf.RoundToInt(FishingDragRules.SkillDamage(RollNormalDamage()) * (fishing.Progression != null ? fishing.Progression.Multiplier(4) : 1f)*GemSkillMultiplier()),maxHp,false,skill:true);
             if (authoritativeHp > 0) fishing.ApplySkillStun();
         }
         else if (skillCooldown <= 0f)
@@ -429,7 +429,7 @@ public sealed class FishingBurstDamageRuntime : MonoBehaviour
         DealDamage(damage,maxHp,critical);
     }
 
-    private void DealDamage(int rolledDamage,int maxHp,bool critical,bool lightning=false)
+    private void DealDamage(int rolledDamage,int maxHp,bool critical,bool lightning=false,bool skill=false)
     {
         if (authoritativeHp <= 0 || rolledDamage <= 0) return;
         rolledDamage = fishing.MitigateBossDamage(rolledDamage, out bool hardened);
@@ -438,8 +438,6 @@ public sealed class FishingBurstDamageRuntime : MonoBehaviour
         authoritativeHp -= appliedDamage;
         if(fishing.IsBossFight)fishing.GetComponent<AbyssalLeviathanEncounter>()?.ReportDamage(appliedDamage);
         WriteAuthoritativeHealth(maxHp);
-
-        if (critical && !hardened) FishingDamagePresentation.MarkCriticalHit();
 
         if (hud != null)
         {
@@ -452,7 +450,7 @@ public sealed class FishingBurstDamageRuntime : MonoBehaviour
             // Show the rolled attack value, not the remaining-HP-capped value. A
             // finishing critical keeps its rolled attack number even if the fish had
             // less health remaining; only the health bar clamps at zero.
-            hud.ShowDamage(rolledDamage, screenPoint, lightning, hardened);
+            hud.ShowDamage(rolledDamage, screenPoint, lightning, hardened, critical, skill);
         }
     }
 
@@ -499,6 +497,7 @@ public sealed class FishingBurstDamageRuntime : MonoBehaviour
     private void SuppressLegacyDamageFields()
     {
         PendingDamageField.SetValue(fishing, 0);
+        fishing.PendingLegacyDamageCritical = false;
         DamageFractionField.SetValue(fishing, 0f);
         DamageDisplayTimerField.SetValue(fishing, SuppressedLegacyDisplayTimer);
     }
@@ -516,7 +515,6 @@ public sealed class FishingBurstDamageRuntime : MonoBehaviour
 
         inFight = false;
         accumulatedReelSeconds = 0f;
-        FishingDamagePresentation.ClearPendingCritical();
 
         if (legacyUpgradeRuntime != null && !legacyUpgradeRuntime.enabled)
             legacyUpgradeRuntime.enabled = true;
