@@ -338,6 +338,7 @@ public sealed class TabbedTackleStoreExtension : MonoBehaviour
             detail=FishingBurstDamageRuntime.NormalMinimumForTier(tier)+"–"+FishingBurstDamageRuntime.NormalMaximumForTier(tier)+
                 " damage per burst • "+(FishingBurstDamageRuntime.CriticalChanceForTier(tier)*100f).ToString("0")+"% critical chance • critical hits deal 2× damage";
             detail+=ShopCatalog.RodTensionControlDescription(tier);
+            detail+=ShopCatalog.RodTensionRecoveryDescription(tier);
             previewKey="Rod"+tier;
         }
         else if(kind==GearKind.Reel)

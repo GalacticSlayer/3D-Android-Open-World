@@ -756,7 +756,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
                 // Keep bought rods and reels in their original positions in the shop.
                 if((!shop && !owned) || (shop && owned && k==GearKind.Line)) continue;
                 string stats=k==GearKind.Rod?$"{FishingBurstDamageRuntime.NormalMinimumForTier(t)}–{FishingBurstDamageRuntime.NormalMaximumForTier(t)} damage / {FishingBurstDamageRuntime.CriticalChanceForTier(t)*100:0}% critical (2×)":k==GearKind.Reel?$"{(Level2FishingReelRuntime.ReelMultiplier(t)-1f)*100:0}% faster reeling"+ShopCatalog.ReelEscapeDescription(t):$"40 m line / 30 m maximum cast; {t*12}% more line tolerance";
-                if(k==GearKind.Rod)stats+=ShopCatalog.RodTensionControlDescription(t);
+                if(k==GearKind.Rod)stats+=ShopCatalog.RodTensionControlDescription(t)+ShopCatalog.RodTensionRecoveryDescription(t);
                 string action=equipped?"EQUIPPED":owned?"EQUIP":$"BUY {ShopCatalog.GearPrice(k,t):N0}";
                 bool can=owned?!equipped:t>0 && progress.Data.OwnsGear(k,t-1) && progress.Data.coins>=ShopCatalog.GearPrice(k,t);
                 Row(ShopCatalog.GearName(k,t),stats+(owned?"":" / Requires previous tier"),action,()=>

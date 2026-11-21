@@ -210,7 +210,7 @@ public sealed class FishingBurstDamageRuntime : MonoBehaviour
     public static int NormalMinimumForTier(int tier)
     {
         tier = Mathf.Clamp(tier, 0, ShopCatalog.MaxRodTier);
-        if (tier == 8) return 115;
+        if (tier == 8) return 140;
         if (tier == 7) return 80;
         if (tier == 6) return 55;
         if (tier == 5) return 35;
@@ -222,7 +222,7 @@ public sealed class FishingBurstDamageRuntime : MonoBehaviour
     public static int NormalMaximumForTier(int tier)
     {
         tier = Mathf.Clamp(tier, 0, ShopCatalog.MaxRodTier);
-        if (tier == 8) return 135;
+        if (tier == 8) return 165;
         if (tier == 7) return 95;
         if (tier == 6) return 75;
         if (tier == 5) return 50;

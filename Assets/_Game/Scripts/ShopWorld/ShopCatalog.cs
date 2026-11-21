@@ -159,6 +159,8 @@ public static class ShopCatalog
     public static int GearPrice(GearKind kind, int tier) => (kind == GearKind.Rod ? RodPrices : kind == GearKind.Reel ? ReelPrices : LinePrices)[tier];
     public static float RodTensionControlMultiplier(int tier) => tier>=8 ? 1.16f : tier>=7 ? 1.13f : tier>=6 ? 1.09f : tier>=5 ? 1.05f : 1f;
     public static string RodTensionControlDescription(int tier) => tier>=8 ? " / 16% tension control" : tier>=7 ? " / 13% tension control" : tier>=6 ? " / 9% tension control" : tier>=5 ? " / 5% tension control" : "";
+    public static float RodTensionRecoveryMultiplier(int tier) => tier >= 8 ? 1.05f : 1f;
+    public static string RodTensionRecoveryDescription(int tier) => tier >= 8 ? " / 5% tension recovery" : "";
     public static float ReelRetrievalMultiplier(int tier)
     {
         if(tier>=8)return 2.60f;

@@ -1569,7 +1569,12 @@ public class FishingSystem : MonoBehaviour
                 (1f+(shopProgress?.Data.gems.Bonus(0)??0f));
             fightTension = tensionBefore + (fightTension - tensionBefore) / tensionControl;
         }
-        if(fightTension<tensionBefore)fightTension=tensionBefore-(tensionBefore-fightTension)*(1f+(shopProgress?.Data.gems.Bonus(1)??0f));
+        if (fightTension < tensionBefore)
+        {
+            float rodRecovery = ShopCatalog.RodTensionRecoveryMultiplier(shopProgress != null ? shopProgress.Data.rodEquipped : 0);
+            float gemRecovery = 1f + (shopProgress?.Data.gems.Bonus(1) ?? 0f);
+            fightTension = tensionBefore - (tensionBefore - fightTension) * rodRecovery * gemRecovery;
+        }
         fightTension =
             Mathf.Clamp01(
                 fightTension
