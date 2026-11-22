@@ -1,0 +1,8 @@
+Unity 6000.3.24f1; URP 17.3.0
+Visual triangles: 48176
+Materials: 12; missing: 0; external textures required: 0
+Box colliders: 52
+Stair MeshCollider: exact current stair geometry; 232 successful surface probes
+Scale and all object centres match Blender in metres.
+All four light modes pass wrap-boundary continuity checks.
+Play Mode: 825 frames sampled over 18.05 simulation seconds; all 3 animated groups change, constant-blue unchanged; disable/re-enable restores materials.
