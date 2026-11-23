@@ -1143,6 +1143,8 @@ public class FishingSystem : MonoBehaviour
                 hookedSpeciesId=FishCatalog.RollMakoVariant(hookedSpeciesId,Random.value);
             else if(hookedSpeciesId==FishCatalog.MahiMahiId)
                 hookedSpeciesId=FishCatalog.RollMahiMahiVariant(hookedSpeciesId,Random.value);
+            else if(hookedSpeciesId==FishCatalog.MagmaVoltCoralGrouperId)
+                hookedSpeciesId=FishCatalog.RollMagmaVoltVariant(hookedSpeciesId,activeBait,fightBiome);
 
             hookedWeightKg =
                 activeBait==ShopCatalog.StarterLure

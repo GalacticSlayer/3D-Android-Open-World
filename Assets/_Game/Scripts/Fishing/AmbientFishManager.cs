@@ -35,7 +35,14 @@ public class AmbientFishManager : MonoBehaviour
     private static int RollAmbientSpecies(int biome)
     {
         if(biome==OceanixDatacenterZone.BiomeId)
-            return FishCatalog.UltravioletPantherGrouperId;
+        {
+            float roll=Random.value;
+            if(roll<.10f)return FishCatalog.CyberneticCoralGrouperId;
+            if(roll<.325f)return FishCatalog.UltravioletPantherGrouperId;
+            if(roll<.55f)return FishCatalog.ChloroCellTitanTriggerfishId;
+            if(roll<.775f)return FishCatalog.EmberCoreBarracudaId;
+            return FishCatalog.MagmaVoltCoralGrouperId;
+        }
         if(biome!=WindgroveShoalZone.BiomeId)
             return ReefCatalog.Roll(Random.value,0,biome);
         FishingTuning.RememberBiome(biome);

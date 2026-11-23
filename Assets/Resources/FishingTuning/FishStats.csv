@@ -56,3 +56,7 @@ speciesId,speciesName,minWeightKg,maxWeightKg,minHealth,maxHealth,minCostCoins,m
 53,Queensland Grouper,30,180,89000,370000,70000,380000,10
 54,Potato Grouper,15,110,88000,360000,60000,340000,10
 55,Ultraviolet Panther Grouper,0.3,10,330,1600,300,1800,3.8
+56,Chloro-Cell Titan Triggerfish,0.1,12,160,1100,170,1200,3.152
+57,Ember Core Barracuda,3.2,48,1800,12000,1080,10800,3.85
+58,Magma Volt Coral Grouper,0.4,10,345,1700,330,1900,3.8
+59,Cybernetic Coral Grouper,0.4,10,17250,85000,330,1900,3.8

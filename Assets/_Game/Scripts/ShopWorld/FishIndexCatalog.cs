@@ -18,12 +18,14 @@ public static class FishIndexCatalog
             FishCatalog.PotatoGrouperId, FishCatalog.QueenslandGrouperId, FishCatalog.StripedMarlinId,
             FishCatalog.BlackMarlinId
         },
-        new[] { FishCatalog.UltravioletPantherGrouperId }
+        new[] { FishCatalog.UltravioletPantherGrouperId, FishCatalog.ChloroCellTitanTriggerfishId,
+            FishCatalog.EmberCoreBarracudaId, FishCatalog.MagmaVoltCoralGrouperId }
     };
 
     private static readonly int[][] VariantFamilies = {
         new[] { FishCatalog.MakoSharkId, FishCatalog.BattleScarredMakoSharkId },
         new[] { FishCatalog.MahiMahiId, FishCatalog.BlueMahiMahiId },
+        new[] { FishCatalog.MagmaVoltCoralGrouperId, FishCatalog.CyberneticCoralGrouperId },
         new[] { FishCatalog.EmperorAngelfishId, FishCatalog.JuvenileEmperorAngelfishId }
     };
 
@@ -105,7 +107,11 @@ public static class FishIndexCatalog
         if(species==FishCatalog.BlueMahiMahiId)
             return FishingTuning.TryGetChance(FishCatalog.MahiMahiId,key,biome,out float combinedMahiOdds)
                 ?combinedMahiOdds*FishCatalog.BlueMahiMahiVariantChance:-1f;
+        if(species==FishCatalog.CyberneticCoralGrouperId)
+            return FishingTuning.TryGetChance(FishCatalog.MagmaVoltCoralGrouperId,key,biome,out float combinedGrouper)
+                ? (key=="worms" || key=="worms-legacy" ? combinedGrouper:0f):-1f;
         if(!FishingTuning.TryGetChance(species,key,biome,out float odds))return -1f;
+        if(species==FishCatalog.MagmaVoltCoralGrouperId && (key=="worms" || key=="worms-legacy"))return 0f;
         if(species==FishCatalog.MakoSharkId)
             return odds*(1f-FishCatalog.BattleScarredMakoVariantChance);
         return species==FishCatalog.MahiMahiId

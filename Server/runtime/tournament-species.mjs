@@ -1,7 +1,7 @@
 // Generated from the fishing weight/chance tables. Maximum includes the 50% hotspot bonus.
 // Only explicit gameplay variants share tournament targets. Their actual catch
 // weights score at the same 100 points/kg; no variant multiplier is applied.
-export const tournamentSpeciesId = id => ({4:5,20:19,23:22,26:24,29:28,34:33})[id] ?? id;
+export const tournamentSpeciesId = id => ({4:5,20:19,23:22,26:24,29:28,34:33,59:58})[id] ?? id;
 export const tournamentTargets = island => island.fish.filter(f => tournamentSpeciesId(f.id)===f.id);
 export const tournamentIslands = [
   {
@@ -299,7 +299,11 @@ export const tournamentIslands = [
     "id": 6,
     "name": "Oceanix Datacenter",
     "fish": [
-      {"id": 55, "name": "Ultraviolet Panther Grouper", "maxKg": 15}
+      {"id": 55, "name": "Ultraviolet Panther Grouper", "maxKg": 15},
+      {"id": 56, "name": "Chloro-Cell Titan Triggerfish", "maxKg": 18},
+      {"id": 57, "name": "Ember Core Barracuda", "maxKg": 72},
+      {"id": 58, "name": "Magma Volt Coral Grouper", "maxKg": 15},
+      {"id": 59, "name": "Cybernetic Coral Grouper", "maxKg": 15}
     ]
   }
 ];

@@ -111,6 +111,10 @@ public static class FishVisualFactory
             case FishCatalog.JuvenileEmperorAngelfishId:return "Fishing/JuvenileEmperorAngelfish";
             case FishCatalog.PantherGrouperId:return "Fishing/PantherGrouper";
             case FishCatalog.UltravioletPantherGrouperId:return "Fishing/UltravioletPantherGrouper";
+            case FishCatalog.ChloroCellTitanTriggerfishId:return "Fishing/ChloroCellTitanTriggerfish";
+            case FishCatalog.EmberCoreBarracudaId:return "Fishing/EmberCoreBarracuda";
+            case FishCatalog.MagmaVoltCoralGrouperId:return "Fishing/MagmaVoltCoralGrouper";
+            case FishCatalog.CyberneticCoralGrouperId:return "Fishing/CyberneticCoralGrouper";
             case FishCatalog.CoralGrouperId:return "Fishing/CoralGrouper";
             case FishCatalog.BlueTangId:return "Fishing/BlueTang";
             case FishCatalog.DussumieriTangId:return "Fishing/DussumieriTang";

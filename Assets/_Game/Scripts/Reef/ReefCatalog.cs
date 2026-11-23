@@ -41,7 +41,7 @@ public static class ReefCatalog
             "Remote wind-farm waters. Agressive fish lurk in the abyss below",false,
             new float[]{}),
         new Zone(OceanixDatacenterZone.Id,OceanixDatacenterZone.Name,
-            "A high-tech offshore datacenter surrounded by deep water. The Ultraviolet Panther Grouper lives here.",false,
+            "An offshore technological sanctuary with cybernetic fish and a hidden worm-only variant.",false,
             new float[]{})
     };
 
@@ -101,7 +101,15 @@ public static class ReefCatalog
         if(biome==OceanixDatacenterZone.BiomeId)
         {
             var exclusive=new float[FishCatalog.Count];
-            exclusive[FishCatalog.UltravioletPantherGrouperId]=100f;
+            if(bait==0 || bait==1)exclusive[FishCatalog.MagmaVoltCoralGrouperId]=100f;
+            else if(bait==2)
+            {
+                exclusive[FishCatalog.UltravioletPantherGrouperId]=25f;
+                exclusive[FishCatalog.ChloroCellTitanTriggerfishId]=25f;
+                exclusive[FishCatalog.EmberCoreBarracudaId]=25f;
+                exclusive[FishCatalog.MagmaVoltCoralGrouperId]=25f;
+            }
+            else exclusive[FishCatalog.UltravioletPantherGrouperId]=100f;
             return exclusive;
         }
         if (biome == WindgroveShoalZone.BiomeId)

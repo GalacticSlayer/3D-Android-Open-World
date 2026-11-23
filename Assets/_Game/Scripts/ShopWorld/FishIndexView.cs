@@ -181,6 +181,7 @@ public sealed class FishIndexView : MonoBehaviour
         bool emperorFamily=family==FishCatalog.EmperorAngelfishId;
         bool makoFamily=family==FishCatalog.MakoSharkId;
         bool mahiFamily=family==FishCatalog.MahiMahiId;
+        bool magmaFamily=family==FishCatalog.MagmaVoltCoralGrouperId;
         int baitSpecies=emperorFamily?FishCatalog.EmperorAngelfishId:variant;
         if(!known)
             TextRow("Catch and register this fish to reveal its percentages.",21,muted,60);
@@ -192,6 +193,8 @@ public sealed class FishIndexView : MonoBehaviour
                 TextRow("Mako sharks: 80% normal, 20% battle-scarred. The overall bite rate stays the same.",18,muted,60,TextAnchor.MiddleLeft);
             if(mahiFamily)
                 TextRow("Mahi Mahi bites are 90% normal and 10% blue. Either variant can bite the same tackle.",18,muted,60,TextAnchor.MiddleLeft);
+            if(magmaFamily)
+                TextRow("Shrimp catches Magma Volt; worms catch Cybernetic (50x HP). Both share one fish family.",18,muted,60,TextAnchor.MiddleLeft);
             TextRow((emperorFamily?"Combined chance for both variants in ":"Chance in ")+ReefCatalog.Zones[biome].name+" when a fish bites.",18,muted,emperorFamily?60:46,TextAnchor.MiddleLeft);
         }
         var options=FishIndexCatalog.PreferredOptions(baitSpecies,biome,known);

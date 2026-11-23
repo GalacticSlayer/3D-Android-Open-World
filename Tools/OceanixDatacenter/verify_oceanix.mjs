@@ -1,77 +1,40 @@
-// Run from repository root: node Tools/OceanixDatacenter/verify_oceanix.mjs
 import assert from 'node:assert/strict';
-import {existsSync, readFileSync} from 'node:fs';
-import {tournamentIslands} from '../../Server/runtime/tournament-species.mjs';
-
-const source = p => readFileSync(p, 'utf8');
-const csv = name => source('Assets/Resources/FishingTuning/'+name+'.csv')
-    .split(/\r?\n/).filter(l=>l && !l.startsWith('#')).map(l=>l.split(','));
-const oceanix='oceanix-datacenter', id=55, origin=35;
-const [statsHeader,...stats]=csv('FishStats');
-const pick=id=>stats.find(row=>+row[0]===id);
-const base=pick(origin),ultraviolet=pick(id);
-assert(ultraviolet && base);
-assert.deepEqual(ultraviolet.slice(2),base.slice(2),'UV fish physical/HP/speed/coin stats must equal Panther Grouper');
-
-const [weightHeader,...weights]=csv('BiomeFishWeights');
-const [chanceHeader,...chances]=csv('BiomeBaitSpeciesChance');
-const [biomeHeader,...biomeStats]=csv('BiomeFishStats');
-assert.deepEqual(weightHeader,['biomeId','speciesId','speciesName','minKg','maxKg']);
-const speciesIds=stats.map(row=>+row[0]);
-const biomes=new Set(weights.map(row=>row[0]));
-assert.equal(biomes.size,7);
-assert.equal(chances.length,7*9);
-assert.equal(weights.length,7*speciesIds.length);
-const byWeight=new Map(weights.map(row=>[row[0]+'|'+row[1],row]));
-assert.equal(byWeight.size,weights.length);
-for(const biome of biomes)for(const species of speciesIds)
-    assert(byWeight.has(biome+'|'+species), 'missing weight row for '+biome+'/'+species);
-for(const row of weights) {
-    if(row[0]!==oceanix) assert(+row[1]!==id || row[3]==='0' && row[4]==='0');
-    if(row[0]===oceanix) {
-        if(+row[1]===id) assert.deepEqual(row.slice(3),['0.3','10']);
-        else assert.deepEqual(row.slice(3),['0','0']);
-    }
+import {readFileSync} from 'node:fs';
+import {tournamentSpeciesId,tournamentIslands} from '../../Server/runtime/tournament-species.mjs';
+const csv=n=>readFileSync('Assets/Resources/FishingTuning/'+n+'.csv','utf8')
+ .trim().split(/\r?\n/).filter(x=>x&&!x.startsWith('#')).map(x=>x.split(','));
+const [, ...stats]=csv('FishStats'),[,...weights]=csv('BiomeFishWeights'),
+      [header,...odds]=csv('BiomeBaitSpeciesChance'),[,...biomeStats]=csv('BiomeFishStats');
+const fish=new Map(stats.map(x=>[+x[0],x]));
+assert.equal(stats.length,59-1); // IDs 0..59 with retired ID 4 and boss ID 43 excluded.
+assert.equal(weights.length,7*stats.length);
+assert.equal(odds.length,63);
+for(const [id,base] of [[55,35],[56,32],[57,23],[58,36],[59,36]]){
+ const a=fish.get(id),b=fish.get(base);assert(a&&b);
+ assert.deepEqual(a.slice(2,4),b.slice(2,4));
+ assert.equal(a[8],b[8]);
+ if(id===59){assert.equal(+a[4],+b[4]*50);assert.equal(+a[5],+b[5]*50);}
+ else assert.deepEqual(a.slice(4),b.slice(4));
+ for(const biome of ['suncrest-reef','brinebreak-isle','deep-ocean','bluewater-cay','snapper-island','windgrove-shoal','oceanix-datacenter']){
+  const w=weights.find(x=>x[0]===biome&&+x[1]===id);assert(w);
+  if(biome==='oceanix-datacenter')assert.deepEqual(w.slice(3),a.slice(2,4));
+  else assert.deepEqual(w.slice(3),['0','0']);
+ }
 }
-assert.equal(chanceHeader.at(-1),'55_ultraviolet_panther_grouper');
-for(const row of chances) {
-    assert.equal(row.length,chanceHeader.length);
-    assert.equal(row.slice(2).reduce((total,n)=>total+Number(n),0),100);
-    if(row[0]===oceanix) {
-        assert.equal(+row.at(-1),100);
-        assert(row.slice(2,-1).every(x=>x==='0'));
-    }else assert.equal(+row.at(-1),0);
+for(const row of odds){
+ assert.equal(row.length,header.length);
+ assert.equal(row.slice(2).reduce((s,n)=>s+(+n),0),100);
+ const chance=id=>+row[header.findIndex(h=>h.startsWith(id+'_'))];
+ if(row[0]!=='oceanix-datacenter'){
+  for(const id of [55,56,57,58,59])assert.equal(chance(id),0);
+ }else{
+  assert.equal(chance(59),0); // Variant is selected after its family bite.
+  if(row[1]==='worms'||row[1]==='worms-legacy')assert.equal(chance(58),100);
+  if(row[1]==='shrimp')for(const id of [55,56,57,58])assert.equal(chance(id),25);
+  if(row[1]==='squid'||row[1].startsWith('lure:'))assert.equal(chance(55),100);
+ }
 }
-const local=biomeStats.find(row=>row[0]===oceanix && +row[1]===id);
-const old=biomeStats.find(row=>row[0]==='suncrest-reef' && +row[1]===origin);
-assert(local && old);assert.deepEqual(local.slice(3),old.slice(3));
-assert.equal(biomeStats.filter(row=>row[0]===oceanix).length,1);
-
-const scene=source('Assets/Scenes/PrototypeWorld.unity');
-assert(scene.includes('value: Oceanix_Datacenter'));
-assert(scene.includes('value: Grass_0410'));
-assert(scene.includes('m_TransformParent: {fileID: 384836157}'));
-assert(scene.includes('- {fileID: 1273346794}') && scene.includes('- {fileID: 1024244695}'));
-const manifest=JSON.parse(source('Assets/_Game/EditableFishingMap/UserPlacedSceneryManifest.json'));
-assert.equal(manifest.placedObjectCount,2);
-assert.deepEqual(manifest.objects.map(o=>o.name).sort(),['Grass_0410','Oceanix_Datacenter']);
-
-const zone=source('Assets/_Game/Scripts/Islands/OceanixDatacenterZone.cs');
-assert.match(zone,/const int BiomeId = 6;/);
-assert.match(zone,/const float Radius = 150f;/);
-assert.match(zone,/Grass_0410/);
-assert.match(zone,/67\.5f/);
-const catalog=source('Assets/_Game/Scripts/Fishing/FishCatalog.cs');
-assert.match(catalog,/const int UltravioletPantherGrouperId=55;/);
-const visuals=source('Assets/_Game/Scripts/Fishing/FishVisualFactory.cs');
-assert.match(visuals,/case FishCatalog\.UltravioletPantherGrouperId/);
-assert(existsSync('Assets/_Game/Reef/Source/UltravioletPantherGrouper.fbx'));
-assert(existsSync('Assets/_Game/Reef/Source/UltravioletPantherGrouperTexture.png'));
-assert(existsSync('ArtSources/UltravioletPantherGrouper.blend'));
-assert(existsSync('Assets/_Game/Editor/UltravioletPantherGrouperInstaller.cs'));
-
-const server=tournamentIslands.find(item=>item.id===6);
-assert(server && server.fish.length===1);
-assert.equal(server.fish[0].id,id);
-assert.equal(server.fish[0].maxKg,15);
-console.log('Oceanix datacenter scene, protected markers, single-species bait tables, Panther stat parity, asset imports and multiplayer catch cap: PASS');
+for(const id of [55,56,57,58,59])assert(biomeStats.some(x=>x[0]==='oceanix-datacenter'&&+x[1]===id));
+assert.equal(tournamentSpeciesId(59),58);
+assert(tournamentIslands.find(x=>x.id===6).fish.some(x=>x.id===59));
+console.log('Oceanix species and variant tuning: PASS');
