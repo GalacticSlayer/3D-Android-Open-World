@@ -10,10 +10,10 @@ public static class IslandIndexArtwork
 
     public static Texture2D Load(int biome)
     {
-        if (biome < 0 || biome >= Cache.Length || biome == 2 || biome == OceanixDatacenterZone.BiomeId) return null;
+        if (biome < 0 || biome >= Cache.Length || biome == 2) return null;
         if (Attempted[biome]) return Cache[biome];
         Attempted[biome] = true;
-        string name = biome == 0 ? "SuncrestBeach" : biome == 1 ? "BrinebreakIsle" :
+        string name = biome == OceanixDatacenterZone.BiomeId ? "OceanixDatacenter" : biome == 0 ? "SuncrestBeach" : biome == 1 ? "BrinebreakIsle" :
             biome == 3 ? "BluewaterCay" : biome == WindgroveShoalZone.BiomeId ? "WindgroveShoal" : "SnapperIsland";
         var source = Resources.Load<TextAsset>("IslandIndexArtwork/" + name);
         if (source == null) return null;
