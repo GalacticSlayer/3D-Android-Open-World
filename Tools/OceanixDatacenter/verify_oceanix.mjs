@@ -38,3 +38,19 @@ for(const id of [55,56,57,58,59])assert(biomeStats.some(x=>x[0]==='oceanix-datac
 assert.equal(tournamentSpeciesId(59),58);
 assert(tournamentIslands.find(x=>x.id===6).fish.some(x=>x.id===59));
 console.log('Oceanix species and variant tuning: PASS');
+
+// Scene and preview regressions: keep family portrait and teleport coordinates
+// independent from the removed temporary Grass_0410 mesh.
+const indexView=readFileSync('Assets/_Game/Scripts/ShopWorld/FishIndexView.cs','utf8');
+assert(indexView.includes('snapshots.Attach(picture,family,PreviewWeight(family),null,true,true,true);'));
+assert(!indexView.includes('Mahi Mahi bites are 90%'));
+assert(!indexView.includes('Shrimp catches Magma Volt; worms catch Cybernetic'));
+const scenery=JSON.parse(readFileSync('Assets/_Game/EditableFishingMap/UserPlacedSceneryManifest.json','utf8'));
+assert.deepEqual(scenery.objects.map(x=>x.name),['Oceanix_Datacenter']);
+const gameScene=readFileSync('Assets/Scenes/PrototypeWorld.unity','utf8');
+assert(!gameScene.includes('Grass_0410') && !gameScene.includes('1024244694') && !gameScene.includes('1024244695'));
+assert(gameScene.includes('value: Oceanix_Datacenter'));
+const teleport=readFileSync('Assets/_Game/Scripts/Islands/OceanixDatacenterZone.cs','utf8');
+assert(teleport.includes('new Vector3(-249.255f, 5.647f, -3073.303f)'));
+assert(!teleport.includes('arrival.position'));
+console.log('Oceanix index portrait, teleport and scenery cleanup: PASS');

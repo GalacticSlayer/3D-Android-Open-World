@@ -111,6 +111,8 @@ public sealed class FishIndexView : MonoBehaviour
 
     private void BuildCard(int family)
     {
+        // Show the family model on the card because its label is the family name.
+        // Personal bests still refer to the strongest recorded variant.
         int variant=FishIndexCatalog.BestVariant(progress.Data,family);
         bool known=FishIndexCatalog.FoundVariants(progress.Data,family)>0;
         var card=Panel("Species_"+family,grid);
@@ -126,7 +128,7 @@ public sealed class FishIndexView : MonoBehaviour
         Anchor(picture.rectTransform,0,.1f,.34f,.9f,12,0,0,0);
         PreserveImageAspect(picture);
         picture.color=known?Color.white:Color.black;
-        snapshots.Attach(picture,variant,PreviewWeight(variant),null,true,true,true);
+        snapshots.Attach(picture,family,PreviewWeight(family),null,true,true,true);
         var title=Label(card,known?FishCatalog.Get(family).Name.ToUpperInvariant():"???",24,Color.white);
         Anchor(title.rectTransform,.36f,.64f,1,1,0,0,-12,-10);
         float best=FishIndexCatalog.Best(progress.Data,variant);
@@ -143,7 +145,9 @@ public sealed class FishIndexView : MonoBehaviour
         foreach(var card in cards)card.Value.GetComponent<Outline>().enabled=card.Key==family;
         if(family<0){TextRow("Select a species to see its details.",26,muted,80);return;}
         if(variant<0 || FishIndexCatalog.Family(variant)!=family)
-            variant=FishIndexCatalog.BestVariant(progress.Data,family);
+            // The default detail should match the card when the base is known.
+            variant=FishIndexCatalog.Discovered(progress.Data,family)
+                ?family:FishIndexCatalog.BestVariant(progress.Data,family);
         selectedVariant=variant;
         bool known=FishIndexCatalog.Discovered(progress.Data,variant);
         float best=FishIndexCatalog.Best(progress.Data,variant);
@@ -180,8 +184,6 @@ public sealed class FishIndexView : MonoBehaviour
         TextRow(known?"Preferred Lures & Baits":"Top 3 Lures & Baits",27,cyan,44,TextAnchor.MiddleLeft);
         bool emperorFamily=family==FishCatalog.EmperorAngelfishId;
         bool makoFamily=family==FishCatalog.MakoSharkId;
-        bool mahiFamily=family==FishCatalog.MahiMahiId;
-        bool magmaFamily=family==FishCatalog.MagmaVoltCoralGrouperId;
         int baitSpecies=emperorFamily?FishCatalog.EmperorAngelfishId:variant;
         if(!known)
             TextRow("Catch and register this fish to reveal its percentages.",21,muted,60);
@@ -191,10 +193,6 @@ public sealed class FishIndexView : MonoBehaviour
                 TextRow("Juveniles are the smallest 30% of the 10–50 cm range (22 cm or less).",18,muted,60,TextAnchor.MiddleLeft);
             if(makoFamily)
                 TextRow("Mako sharks: 80% normal, 20% battle-scarred. The overall bite rate stays the same.",18,muted,60,TextAnchor.MiddleLeft);
-            if(mahiFamily)
-                TextRow("Mahi Mahi bites are 90% normal and 10% blue. Either variant can bite the same tackle.",18,muted,60,TextAnchor.MiddleLeft);
-            if(magmaFamily)
-                TextRow("Shrimp catches Magma Volt; worms catch Cybernetic (50x HP). Both share one fish family.",18,muted,60,TextAnchor.MiddleLeft);
             TextRow((emperorFamily?"Combined chance for both variants in ":"Chance in ")+ReefCatalog.Zones[biome].name+" when a fish bites.",18,muted,emperorFamily?60:46,TextAnchor.MiddleLeft);
         }
         var options=FishIndexCatalog.PreferredOptions(baitSpecies,biome,known);
