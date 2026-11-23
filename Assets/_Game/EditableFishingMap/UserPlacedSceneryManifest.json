@@ -1,6 +1,51 @@
 {
     "scene": "Assets/Scenes/PrototypeWorld.unity",
     "ownershipRule": "HUMAN-OWNED: never programmatically move, rescale, delete, replace, repaint, or reparent any descendant of USER PLACED SCENERY. Use the scene and this manifest as input for future world code.",
-    "placedObjectCount": 0,
-    "objects": []
+    "placedObjectCount": 2,
+    "objects": [
+        {
+            "name": "Oceanix_Datacenter",
+            "sceneObjectId": "GlobalObjectId_V1-2-99c9720ab356a0642a771bea13969a05-4806259993430032821-1273346793",
+            "prefabAssetPath": "Assets/Oceanix/Oceanix_Datacenter.prefab",
+            "meshAssetPath": "Assets/Oceanix/Oceanix_Datacenter.fbx",
+            "position": {
+                "x": -248.6,
+                "y": 2.5,
+                "z": -3064
+            },
+            "rotationEuler": {
+                "x": 0,
+                "y": 244.907,
+                "z": 0
+            },
+            "scale": {
+                "x": 1.6778,
+                "y": 1.6778,
+                "z": 1.6778
+            },
+            "childObjectCount": 1
+        },
+        {
+            "name": "Grass_0410",
+            "sceneObjectId": "GlobalObjectId_V1-2-99c9720ab356a0642a771bea13969a05-316167353527844569-1024244694",
+            "prefabAssetPath": "",
+            "meshAssetPath": "",
+            "position": {
+                "x": -249.255,
+                "y": 5.647,
+                "z": -3073.303
+            },
+            "rotationEuler": {
+                "x": 0,
+                "y": 93.207,
+                "z": 0
+            },
+            "scale": {
+                "x": 0.6156287,
+                "y": 0.6156287,
+                "z": 0.6156287
+            },
+            "childObjectCount": 1
+        }
+    ]
 }
