@@ -34,6 +34,8 @@ public class AmbientFishManager : MonoBehaviour
     // visual variant of its family. Actual hooked catches still use bait odds.
     private static int RollAmbientSpecies(int biome)
     {
+        if(biome==OceanixDatacenterZone.BiomeId)
+            return FishCatalog.UltravioletPantherGrouperId;
         if(biome!=WindgroveShoalZone.BiomeId)
             return ReefCatalog.Roll(Random.value,0,biome);
         FishingTuning.RememberBiome(biome);

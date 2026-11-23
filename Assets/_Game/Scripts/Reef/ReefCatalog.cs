@@ -4,10 +4,11 @@ using UnityEngine;
 public static class ReefCatalog
 {
     // Menu order is independent of the stable biome IDs used by saves and fishing.
-    public static readonly int[] IslandIndexOrder = { 0, 4, 1, 3, 2, WindgroveShoalZone.BiomeId };
+    public static readonly int[] IslandIndexOrder = { 0, 4, 1, 3, 2, WindgroveShoalZone.BiomeId, OceanixDatacenterZone.BiomeId };
     public static bool SnapperDiscovered {get;set;}
     public static bool BluewaterDiscovered {get;set;}
     public static bool WindgroveDiscovered {get;set;}
+    public static bool OceanixDiscovered {get;set;}
     public const string RuggedId="brinebreak-isle";
     public static bool BrinebreakDiscovered {get;set;}
     public const string StarterId="suncrest-reef";
@@ -21,7 +22,7 @@ public static class ReefCatalog
         public readonly float[] weights;
         public Zone(string id,string name,string description,bool unlocked,float[] weights)
         {this.id=id;this.name=name;this.description=description;unlockedByDefault=unlocked;this.weights=weights;}
-        public bool Unlocked=>unlockedByDefault||(id==RuggedId&&BrinebreakDiscovered)||(id==PelagicIslandGeometry.Id&&BluewaterDiscovered)||(id==SnapperIslandGeometry.Id&&SnapperDiscovered)||(id==WindgroveShoalZone.Id&&WindgroveDiscovered);
+        public bool Unlocked=>unlockedByDefault||(id==RuggedId&&BrinebreakDiscovered)||(id==PelagicIslandGeometry.Id&&BluewaterDiscovered)||(id==SnapperIslandGeometry.Id&&SnapperDiscovered)||(id==WindgroveShoalZone.Id&&WindgroveDiscovered)||(id==OceanixDatacenterZone.Id&&OceanixDiscovered);
     }
 
     // Embedded odds remain only as a fallback if an editable tuning CSV is invalid.
@@ -38,6 +39,9 @@ public static class ReefCatalog
             new float[]{0,38,0,0,0,0,0,0,0,0,0,0,0,0,0,0,37,13,2,0,0,10,4,2}),
         new Zone(WindgroveShoalZone.Id,WindgroveShoalZone.Name,
             "Remote wind-farm waters. Agressive fish lurk in the abyss below",false,
+            new float[]{}),
+        new Zone(OceanixDatacenterZone.Id,OceanixDatacenterZone.Name,
+            "A high-tech offshore datacenter surrounded by deep water. The Ultraviolet Panther Grouper lives here.",false,
             new float[]{})
     };
 
@@ -94,6 +98,12 @@ public static class ReefCatalog
 
     private static float[] EquippedWeights(int bait,int biome)
     {
+        if(biome==OceanixDatacenterZone.BiomeId)
+        {
+            var exclusive=new float[FishCatalog.Count];
+            exclusive[FishCatalog.UltravioletPantherGrouperId]=100f;
+            return exclusive;
+        }
         if (biome == WindgroveShoalZone.BiomeId)
         {
             // Editable tuning is authoritative. Use these odds only if it fails to load.

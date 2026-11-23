@@ -305,6 +305,8 @@ public sealed class IslandExpansionWorld : MonoBehaviour
     }
     public int BiomeAt(Vector3 p)
     {
+        // Oceanix is an exclusive offshore biome. Its radius takes priority when regions overlap.
+        if (OceanixDatacenterZone.Contains(p)) return OceanixDatacenterZone.BiomeId;
         // Nine 150m turbine circles take priority over the offshore oil-rig area.
         if (WindgroveShoalZone.Contains(p)) return WindgroveShoalZone.BiomeId;
         if(SnapperIslandRuntime.Ready && SnapperCavesRockRegion.ContainsBiome(p))

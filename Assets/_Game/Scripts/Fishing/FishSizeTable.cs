@@ -59,7 +59,8 @@ public static class FishSizeTable
         GoldenPompanoCurve(), // ID 51 Trachinotus anak: measured total-length fit
         StripedMarlinCurve(), // ID 52 Kajikia audax: measured total-length conversion
         QueenslandGrouperCurve(), // ID 53 Epinephelus lanceolatus: FishBase Bayesian estimate
-        PotatoGrouperCurve() // ID 54 Epinephelus tukula: Aldabra total-length fit
+        PotatoGrouperCurve(), // ID 54 Epinephelus tukula: Aldabra total-length fit
+        PantherGrouperCurve() // ID 55 Oceanix ultraviolet colorway: identical Panther Grouper length curve
     };
 
     // Edwards et al. (2011), Rodrigues lagoon measurements, n=17 (14-27 cm TL).

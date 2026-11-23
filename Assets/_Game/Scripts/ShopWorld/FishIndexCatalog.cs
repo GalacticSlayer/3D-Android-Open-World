@@ -4,7 +4,7 @@ using System.Collections.Generic;
 // are grouped into a single species card. Add future variant families here.
 public static class FishIndexCatalog
 {
-    // Display order only: Suncrest, Brinebreak, Deep Ocean, Bluewater, Snapper, Windgrove.
+    // Display order only: Suncrest, Brinebreak, Deep Ocean, Bluewater, Snapper, Windgrove, Oceanix.
     // Saved species IDs, spawn odds and variant grouping are independent of this.
     private static readonly int[][] RegionOrder = {
         new[] { 6,7,41,33,31,32,42,35,37,36,39 },
@@ -17,7 +17,8 @@ public static class FishIndexCatalog
             FishCatalog.RainbowRunnerId, FishCatalog.RoosterfishId, FishCatalog.MahiMahiId,
             FishCatalog.PotatoGrouperId, FishCatalog.QueenslandGrouperId, FishCatalog.StripedMarlinId,
             FishCatalog.BlackMarlinId
-        }
+        },
+        new[] { FishCatalog.UltravioletPantherGrouperId }
     };
 
     private static readonly int[][] VariantFamilies = {

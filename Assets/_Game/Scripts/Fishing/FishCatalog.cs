@@ -79,6 +79,7 @@ public static class FishCatalog
     public const int StripedMarlinId=52; // Distinct from Black Marlin and Striped Bass.
     public const int QueenslandGrouperId=53; // Append-only save ID.
     public const int PotatoGrouperId=54; // Append-only save ID.
+    public const int UltravioletPantherGrouperId=55; // Oceanix exclusive; append-only save ID.
     // A single Mahi Mahi bite is split 90/10 without changing overall bait odds.
     public const float BlueMahiMahiVariantChance=.10f;
     public static int RollMahiMahiVariant(int speciesId,float random01)
@@ -148,11 +149,12 @@ public static class FishCatalog
         new FishSpeciesDefinition("Golden Pompano",new Color(.39f,.46f,.38f),new Color(.95f,.72f,.15f),0.25f,2.9f,2.2f,0f,5000),
         new FishSpeciesDefinition("Striped Marlin",new Color(.06f,.13f,.30f),new Color(.30f,.62f,.86f),30f,120f,3f,0f,100000),
         new FishSpeciesDefinition("Queensland Grouper",new Color(.45f,.31f,.15f),new Color(.91f,.68f,.31f),30f,180f,3.5f,0f,70000),
-        new FishSpeciesDefinition("Potato Grouper",new Color(.30f,.37f,.39f),new Color(.73f,.80f,.79f),15f,110f,3.5f,0f,60000)
+        new FishSpeciesDefinition("Potato Grouper",new Color(.30f,.37f,.39f),new Color(.73f,.80f,.79f),15f,110f,3.5f,0f,60000),
+        new FishSpeciesDefinition("Ultraviolet Panther Grouper",new Color(.48f,.18f,.82f),new Color(.2f,.75f,1f),.3f,10f,1.05f,0f,300)
     };
 
     public static int Count=>Species.Length;
-    public static readonly int[] ActiveIds={0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,SpanishMackerelId,GoldenPompanoId,StripedMarlinId,QueenslandGrouperId,PotatoGrouperId};
+    public static readonly int[] ActiveIds={0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,SpanishMackerelId,GoldenPompanoId,StripedMarlinId,QueenslandGrouperId,PotatoGrouperId,UltravioletPantherGrouperId};
     public static int CanonicalId(int id)=>id==4?YellowfinTunaId:id;
 
     // Tournament identity is deliberately separate from save/render identity.
