@@ -293,5 +293,13 @@ export const tournamentIslands = [
       {"id": 53, "name": "Queensland Grouper", "maxKg": 270},
       {"id": 54, "name": "Potato Grouper", "maxKg": 165}
     ]
+  },
+  {
+    // Oceanix catches can count in the map-wide total-weight tournament.
+    "id": 6,
+    "name": "Oceanix Datacenter",
+    "fish": [
+      {"id": 55, "name": "Ultraviolet Panther Grouper", "maxKg": 15}
+    ]
   }
 ];

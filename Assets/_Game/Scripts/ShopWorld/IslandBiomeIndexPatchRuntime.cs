@@ -31,7 +31,7 @@ public sealed class IslandBiomeIndexPatchRuntime : MonoBehaviour
     private FishingMenuSafetyRuntime menuSafety;
     private BoatSystem boats;
     private Font font;
-    private bool lastNavigationPending, lastWindgroveDiscovered;
+    private bool lastNavigationPending, lastWindgroveDiscovered, lastOceanixDiscovered;
 
     private readonly Color teal = new Color(.04f, .36f, .39f, 1f);
     private readonly Color gold = new Color(.89f, .72f, .40f, 1f);
@@ -82,9 +82,11 @@ public sealed class IslandBiomeIndexPatchRuntime : MonoBehaviour
         if (page != "islands") return;
         bool pending = WindgroveNavigation.Pending;
         if (list.Find(MarkerName) != null && lastNavigationPending == pending &&
-            lastWindgroveDiscovered == ReefCatalog.WindgroveDiscovered) return;
+            lastWindgroveDiscovered == ReefCatalog.WindgroveDiscovered &&
+            lastOceanixDiscovered == ReefCatalog.OceanixDiscovered) return;
         lastNavigationPending = pending;
         lastWindgroveDiscovered = ReefCatalog.WindgroveDiscovered;
+        lastOceanixDiscovered = ReefCatalog.OceanixDiscovered;
 
         BuildIslandIndex(list);
     }
@@ -107,6 +109,7 @@ public sealed class IslandBiomeIndexPatchRuntime : MonoBehaviour
         foreach (int biome in ReefCatalog.IslandIndexOrder)
         {
             if (biome == WindgroveShoalZone.BiomeId && !ReefCatalog.WindgroveDiscovered) continue;
+            if (biome == OceanixDatacenterZone.BiomeId && !ReefCatalog.OceanixDiscovered) continue;
             CreateIslandCard(list, biome, currentBiome);
         }
 
@@ -122,9 +125,10 @@ public sealed class IslandBiomeIndexPatchRuntime : MonoBehaviour
         ReefCatalog.Zone entry = ReefCatalog.Zones[biome];
         bool unlocked = entry.Unlocked;
         bool navigate = biome == WindgroveShoalZone.BiomeId && WindgroveNavigation.Pending;
-        bool island = biome == 0 || biome == 1 || biome == 3 || biome == 4 || biome == WindgroveShoalZone.BiomeId;
+        bool island = biome == 0 || biome == 1 || biome == 3 || biome == 4 || biome == WindgroveShoalZone.BiomeId || biome == OceanixDatacenterZone.BiomeId;
         bool here = travel != null && travel.Destination == 0 && currentBiome == biome;
-        bool worldReady = biome == WindgroveShoalZone.BiomeId ? player != null && WindgroveShoalZone.TryGetArrival(player.GetComponent<CharacterController>(), out _, out _) :
+        bool worldReady = biome == OceanixDatacenterZone.BiomeId ? OceanixDatacenterZone.Ready :
+            biome == WindgroveShoalZone.BiomeId ? player != null && WindgroveShoalZone.TryGetArrival(player.GetComponent<CharacterController>(), out _, out _) :
             biome == 4 ? SnapperIslandRuntime.Ready : biome == 0 || biome == 2 || (IslandExpansionWorld.Active != null && IslandExpansionWorld.Active.Ready);
         bool fishingBusy = IsFishingBusy();
 
@@ -212,7 +216,7 @@ public sealed class IslandBiomeIndexPatchRuntime : MonoBehaviour
     {
         if (IsFishingBusy() || travel == null || travel.Traveling || !travel.TournamentAllowsIsland(biome)) return;
         if (biome < 0 || biome >= ReefCatalog.Zones.Length || !ReefCatalog.Zones[biome].Unlocked) return;
-        if (biome != 0 && biome != 1 && biome != 3 && biome != 4 && biome != WindgroveShoalZone.BiomeId) return; // Deep Ocean has no teleport.
+        if (biome != 0 && biome != 1 && biome != 3 && biome != 4 && biome != WindgroveShoalZone.BiomeId && biome != OceanixDatacenterZone.BiomeId) return; // Deep Ocean has no teleport.
         if ((biome == 1 || biome == 3) && (IslandExpansionWorld.Active == null || !IslandExpansionWorld.Active.Ready)) return;
 
         if (menuSafety != null && SafeCloseIndexMethod != null)

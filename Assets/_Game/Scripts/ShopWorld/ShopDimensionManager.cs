@@ -120,23 +120,28 @@ public sealed class ShopDimensionManager : MonoBehaviour
     public void TravelIsland(bool brinebreak)=>TravelIsland(brinebreak?1:0);
     public void TravelIsland(int biome)
     {
-        if(Traveling || !TournamentAllowsIsland(biome) || (biome!=0 && biome!=1 && biome!=3 && biome!=4 && biome!=WindgroveShoalZone.BiomeId))return;
+        if(Traveling || !TournamentAllowsIsland(biome) || (biome!=0 && biome!=1 && biome!=3 && biome!=4 && biome!=WindgroveShoalZone.BiomeId && biome!=OceanixDatacenterZone.BiomeId))return;
         if(!ReefCatalog.Zones[biome].Unlocked)return;
         var expansion=IslandExpansionWorld.Active;
-        if(biome!=0 && (expansion==null || !expansion.Ready))return;
+        if(biome!=0 && biome!=OceanixDatacenterZone.BiomeId && (expansion==null || !expansion.Ready))return;
         if(biome==4 && !SnapperIslandRuntime.Ready)return;
         Vector3 windArrival=Vector3.zero;
         Quaternion windRotation=Quaternion.identity;
         bool toWindgrove=biome==WindgroveShoalZone.BiomeId;
         if(toWindgrove && !WindgroveShoalZone.TryGetArrival(GetComponent<CharacterController>(),out windArrival,out windRotation))return;
+        bool toOceanix=biome==OceanixDatacenterZone.BiomeId;
+        Vector3 oceanixArrival=Vector3.zero;
+        Quaternion oceanixRotation=Quaternion.identity;
+        if(toOceanix && !OceanixDatacenterZone.TryGetArrival(GetComponent<CharacterController>(),out oceanixArrival,out oceanixRotation))return;
         Transform point=biome==4?SnapperIslandRuntime.Arrival:biome==3?expansion.PelagicArrival:
             biome==1?expansion.Arrival:GetComponent<BoatSystem>()?.IslandDock;
         if(point==null && biome==0)point=islandArrival;
-        if(point==null && !toWindgrove)return;
+        if(point==null && !toWindgrove && !toOceanix)return;
         travelIslandBiome=biome;
         if(Destination!=0){StartCoroutine(TravelRoutine(0));return;}
         fishing.PrepareForWorldTravel();
-        Teleport(toWindgrove?windArrival:point.position,toWindgrove?windRotation:point.rotation,
+        Teleport(toOceanix?oceanixArrival:toWindgrove?windArrival:point.position,
+            toOceanix?oceanixRotation:toWindgrove?windRotation:point.rotation,
             biome==4,biome==3,biome==1);
         var ui=FindFirstObjectByType<ShopWorldHUD>();if(ui!=null)ui.Close();
         travelIslandBiome=0;
@@ -211,6 +216,10 @@ public sealed class ShopDimensionManager : MonoBehaviour
             Quaternion windReturnRotation=Quaternion.identity;
             bool returningToWindgrove=travelIslandBiome==WindgroveShoalZone.BiomeId &&
                 ReefCatalog.WindgroveDiscovered && WindgroveShoalZone.TryGetArrival(GetComponent<CharacterController>(),out windReturnPosition,out windReturnRotation);
+            Vector3 oceanixReturnPosition=Vector3.zero;
+            Quaternion oceanixReturnRotation=Quaternion.identity;
+            bool returningToOceanix=travelIslandBiome==OceanixDatacenterZone.BiomeId &&
+                ReefCatalog.OceanixDiscovered && OceanixDatacenterZone.TryGetArrival(GetComponent<CharacterController>(),out oceanixReturnPosition,out oceanixReturnRotation);
             bool returningToSnapper=travelIslandBiome==4 && dock==SnapperIslandRuntime.Arrival &&
                 SnapperIslandRuntime.Ready;
             bool returningToBluewater=travelIslandBiome==3 && expansion!=null &&
@@ -218,8 +227,8 @@ public sealed class ShopDimensionManager : MonoBehaviour
             bool returningToBrinebreak=travelIslandBiome==1 && expansion!=null &&
                 dock==expansion.Arrival;
             travelIslandBiome=0;
-            Teleport(returningToWindgrove?windReturnPosition:dock!=null?dock.position:hasReturn?returnPosition:islandArrival.position,
-                returningToWindgrove?windReturnRotation:dock!=null?dock.rotation:hasReturn?returnRotation:islandArrival.rotation,
+            Teleport(returningToOceanix?oceanixReturnPosition:returningToWindgrove?windReturnPosition:dock!=null?dock.position:hasReturn?returnPosition:islandArrival.position,
+                returningToOceanix?oceanixReturnRotation:returningToWindgrove?windReturnRotation:dock!=null?dock.rotation:hasReturn?returnRotation:islandArrival.rotation,
                 returningToSnapper,returningToBluewater,returningToBrinebreak);
             RenderSettings.fog=oldFog; RenderSettings.fogColor=oldFogColor; RenderSettings.fogDensity=oldFogDensity;
         }

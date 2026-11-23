@@ -57,6 +57,7 @@ public sealed class ShopProgress : MonoBehaviour
         ReefCatalog.BluewaterDiscovered=Data!=null && Data.bluewaterDiscovered;
         ReefCatalog.SnapperDiscovered=Data!=null && Data.snapperDiscovered;
         ReefCatalog.WindgroveDiscovered=Data!=null && Data.windgroveDiscovered;
+        ReefCatalog.OceanixDiscovered=Data!=null && Data.oceanixDiscovered;
         // Ignore migrations/refunds during Awake; track real purchases only.
         lastSavedCoins=Data!=null?Data.coins:0;
         savedCoinBalanceReady=true;
@@ -68,6 +69,8 @@ public sealed class ShopProgress : MonoBehaviour
             gameObject.AddComponent<FishingExperienceToast>();
         if(GetComponent<WindgroveShoalDiscovery>()==null)
             gameObject.AddComponent<WindgroveShoalDiscovery>();
+        if(GetComponent<OceanixDatacenterDiscovery>()==null)
+            gameObject.AddComponent<OceanixDatacenterDiscovery>();
     }
     private static ShopLedger Read(string json)
     {

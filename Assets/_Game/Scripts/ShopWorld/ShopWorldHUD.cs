@@ -584,6 +584,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
         foreach(int zoneIndex in ReefCatalog.IslandIndexOrder)
         {
             if (zoneIndex == WindgroveShoalZone.BiomeId && !ReefCatalog.WindgroveDiscovered) continue;
+            if (zoneIndex == OceanixDatacenterZone.BiomeId && !ReefCatalog.OceanixDiscovered) continue;
             int selectedBiome=zoneIndex;var entry=ReefCatalog.Zones[zoneIndex];
             var card=ButtonAt(list,entry.name+(entry.Unlocked?"\nUNLOCKED":"\nLOCKED")+" • FISHING AREA\n\n"+entry.description+"\n\nOPEN FISH INDEX →",()=>{if(SelectIndexBiome(selectedBiome))Open("reef-fish");});
             card.gameObject.AddComponent<LayoutElement>().preferredHeight=290;
@@ -623,13 +624,14 @@ public sealed class ShopWorldHUD : MonoBehaviour
             new Vector2(-22,-18),new Vector2(170,54));
         FishingHudTheme.Panel(menuClose.gameObject);
     }
-    private Texture2D bluewaterThumbnail,snapperThumbnail,windgroveThumbnail;
+    private Texture2D bluewaterThumbnail,snapperThumbnail,windgroveThumbnail,oceanixThumbnail;
     private Texture2D BiomeThumbnail(int biome)
     {
         var artwork = IslandIndexArtwork.Load(biome);
         if (artwork != null) return artwork;
         if(biome==0)return IslandThumbnail();
         if(biome==WindgroveShoalZone.BiomeId && windgroveThumbnail!=null)return windgroveThumbnail;
+        if(biome==OceanixDatacenterZone.BiomeId && oceanixThumbnail!=null)return oceanixThumbnail;
         if(biome==4 && snapperThumbnail!=null)return snapperThumbnail;
         if(biome==3 && bluewaterThumbnail!=null)return bluewaterThumbnail;
         if(biome==1 && rockyThumbnail!=null)return rockyThumbnail;
@@ -642,6 +644,20 @@ public sealed class ShopWorldHUD : MonoBehaviour
             if(biome==4 && q<.83f)c=q>.64f?new Color(.88f,.79f,.56f):Color.Lerp(new Color(.22f,.40f,.22f),new Color(.38f,.53f,.28f),Mathf.PerlinNoise(x*.05f,y*.05f));
             else if(biome==3 && q<.65f)c=q>.43f?new Color(.83f,.77f,.55f):new Color(.23f,.40f,.25f);
             else if(biome==1 && q<1)c=q>.80f?new Color(.65f,.57f,.39f):Color.Lerp(new Color(.22f,.26f,.24f),new Color(.48f,.47f,.4f),Mathf.PerlinNoise(x*.08f,y*.08f));
+            else if(biome==OceanixDatacenterZone.BiomeId)
+            {
+                // Low-cost procedural preview until user supplies authored index art.
+                // Four illuminated server racks and a datacenter platform over dark water.
+                c=new Color(.012f,.065f,.14f);
+                bool platform=x>33 && x<161 && y>42 && y<116;
+                bool housing=x>48 && x<148 && y>58 && y<104;
+                bool rack=housing && ((x-52)%24)<14;
+                if(platform)c=new Color(.14f,.18f,.26f);
+                if(housing)c=new Color(.06f,.10f,.17f);
+                if(rack)c=((x+y)/11)%2==0?new Color(.27f,.17f,.58f):new Color(.08f,.36f,.66f);
+                if(housing && (y%11)<2)c=new Color(.14f,.78f,.97f);
+                if(platform && !housing && ((x+y)%9)<2)c=new Color(.52f,.29f,.72f);
+            }
             else if(biome==WindgroveShoalZone.BiomeId)
             {
                 c=new Color(.025f,.23f,.34f);
@@ -655,7 +671,7 @@ public sealed class ShopWorldHUD : MonoBehaviour
             else c*=.82f+.18f*Mathf.Sin(y*.30f+x*.05f);
             pixels[y*192+x]=c;
         }
-        texture.SetPixels(pixels);texture.Apply(false,true);if(biome==4)snapperThumbnail=texture;else if(biome==1)rockyThumbnail=texture;else if(biome==3)bluewaterThumbnail=texture;else if(biome==WindgroveShoalZone.BiomeId)windgroveThumbnail=texture;else deepThumbnail=texture;return texture;
+        texture.SetPixels(pixels);texture.Apply(false,true);if(biome==4)snapperThumbnail=texture;else if(biome==1)rockyThumbnail=texture;else if(biome==3)bluewaterThumbnail=texture;else if(biome==WindgroveShoalZone.BiomeId)windgroveThumbnail=texture;else if(biome==OceanixDatacenterZone.BiomeId)oceanixThumbnail=texture;else deepThumbnail=texture;return texture;
     }
     private Texture2D IslandThumbnail()
     {
