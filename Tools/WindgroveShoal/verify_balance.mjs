@@ -15,7 +15,7 @@ const baits = ['worms','shrimp','squid','lure:0','lure:1','lure:2','lure:3','lur
 const [chanceHeader,...chances] = csv('BiomeBaitSpeciesChance');
 const col = new Map(chanceHeader.slice(2).map((name,i)=>[+name.split('_')[0],i+2]));
 assert.equal(col.size,chanceHeader.length-2);
-assert.equal(chances.length,54);
+assert.equal(chances.length,63); // 7 biomes x 9 bait rows, including Oceanix.
 assert.equal(new Set(chances.map(r=>r.slice(0,2).join('/'))).size,chances.length);
 const windOdds = new Map();
 for (const row of chances) {
@@ -40,7 +40,7 @@ const reef = script('Reef/ReefCatalog');
 const savedId = name => Number(catalog.match(new RegExp('const int '+name+'=(\\d+)'))?.[1]);
 const idsFrom = str => [...str.matchAll(/FishCatalog\.(\w+Id)/g)].map(m=>savedId(m[1]));
 const indexTable = index.match(/RegionOrder\s*=\s*\{([\s\S]*?)\n\s*\};/)[1];
-assert.deepEqual(idsFrom(indexTable),order);
+assert.deepEqual(idsFrom(indexTable),[...order,55]); // The separate Oceanix region follows Windgrove.
 assert.match(index,/new\[\] \{ FishCatalog\.MahiMahiId, FishCatalog\.BlueMahiMahiId \}/);
 assert.match(catalog,/BlueMahiMahiVariantChance=\.10f/);
 const fallbackIds = idsFrom(reef.match(/WindgroveFallbackIds\s*=\s*\{([\s\S]*?)\};/)[1]);
@@ -56,7 +56,7 @@ for (const id of withVariant) {
     const ranges = weights.filter(r=>+r[1]===id);
     const local = ranges.find(r=>r[0]===wind);
     const fight = biomeStats.filter(r=>+r[1]===id);
-    assert.equal(ranges.length,6);
+    assert.equal(ranges.length,7); // Oceanix adds an unavailable weight row for each Windgrove-exclusive species.
     assert(ranges.every(r=>r[0]===wind || r[3]==='0' && r[4]==='0'));
     assert.equal(fight.length,1);
     assert.deepEqual(fight[0],[wind,String(id),global[1],...global.slice(4,8)]);

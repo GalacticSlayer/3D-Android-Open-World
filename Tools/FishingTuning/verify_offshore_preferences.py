@@ -52,7 +52,7 @@ compiled = compile_rows(profiles)
 rows = read('BiomeBaitSpeciesChance.csv')
 weights = {(r['biomeId'],int(r['speciesId'])):r for r in read('BiomeFishWeights.csv')}
 stats = {int(r['speciesId']):r for r in read('FishStats.csv')}
-assert len(rows) == 45 and len({(r['biomeId'],r['baitKey']) for r in rows}) == 45
+assert len(rows) == 63 and len({(r['biomeId'],r['baitKey']) for r in rows}) == 63
 for row in rows:
     biome,bait = row['biomeId'],row['baitKey']
     odds = {int(k.split('_')[0]):int(v) for k,v in row.items() if k not in ('biomeId','baitKey')}
@@ -87,4 +87,4 @@ if len(sys.argv)>1:
     assert {key for key in weights if weights[key]!=original_weights[key]} == allowed
     changed=subprocess.check_output(['git','diff',baseline,'--name-only'],cwd=ROOT,text=True).splitlines()
     assert not any(x.endswith('.cs') for x in changed), 'Runtime C# changed'
-print('PASS: 20 preference profiles; 45 runtime rows; exact spawn lists; preferred tackle remains best; worm taper; legacy alias; stat bounds and scope.')
+print('PASS: 20 preference profiles; 63 runtime rows; exact spawn lists; preferred tackle remains best; worm taper; legacy alias; stat bounds and scope.')
