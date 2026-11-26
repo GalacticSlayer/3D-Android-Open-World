@@ -19,7 +19,8 @@ public static class FishIndexCatalog
             FishCatalog.BlackMarlinId
         },
         new[] { FishCatalog.UltravioletPantherGrouperId, FishCatalog.ChloroCellTitanTriggerfishId,
-            FishCatalog.EmberCoreBarracudaId, FishCatalog.MagmaVoltCoralGrouperId }
+            FishCatalog.EmberCoreBarracudaId, FishCatalog.MagmaVoltCoralGrouperId,
+            FishCatalog.AureliaMangroveSnapperId, FishCatalog.ChronoReefSharkId, FishCatalog.CrimsonCybrosMakoSharkId }
     };
 
     private static readonly int[][] VariantFamilies = {

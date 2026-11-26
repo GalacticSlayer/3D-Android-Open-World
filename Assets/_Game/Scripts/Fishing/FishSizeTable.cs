@@ -64,7 +64,10 @@ public static class FishSizeTable
         BalistoidesViridescensCurve(), // ID 56 Chloro-Cell Titan Triggerfish
         GameplayCurve(9f,40), // ID 57 Ember Core Barracuda
         CoralGrouperCurve(), // ID 58 Magma Volt Coral Grouper
-        CoralGrouperCurve() // ID 59 Cybernetic Coral Grouper
+        CoralGrouperCurve(), // ID 59 Cybernetic Coral Grouper
+        GameplayCurve(15f,22) , // ID 60 Aurelia Mangrove Snapper matches source 21
+        GameplayCurve(5f,40) , // ID 61 Chrono Reef Shark matches source 15
+        GameplayCurve(8f,70) // ID 62 Crimson Cybros Mako Shark matches source 19
     };
 
     // Edwards et al. (2011), Rodrigues lagoon measurements, n=17 (14-27 cm TL).

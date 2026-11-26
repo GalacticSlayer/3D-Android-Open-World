@@ -84,6 +84,9 @@ public static class FishCatalog
     public const int EmberCoreBarracudaId=57;
     public const int MagmaVoltCoralGrouperId=58;
     public const int CyberneticCoralGrouperId=59;
+    public const int AureliaMangroveSnapperId=60;
+    public const int ChronoReefSharkId=61;
+    public const int CrimsonCybrosMakoSharkId=62;
 
     // Magma Volt is caught with shrimp; its Cybernetic variant is worm-exclusive.
     public static int RollMagmaVoltVariant(int speciesId,int bait,int biome)
@@ -166,11 +169,14 @@ public static class FishCatalog
         new FishSpeciesDefinition("Chloro-Cell Titan Triggerfish",new Color(.08f,.58f,.32f),new Color(.95f,.72f,.18f),.1f,12f,.84f,0f,170),
         new FishSpeciesDefinition("Ember Core Barracuda",new Color(.25f,.17f,.28f),new Color(1f,.18f,.30f),3.2f,48f,1.8f,0f,1080),
         new FishSpeciesDefinition("Magma Volt Coral Grouper",new Color(.35f,.28f,.62f),new Color(.98f,.15f,.24f),.4f,10f,1.26f,0f,330),
-        new FishSpeciesDefinition("Cybernetic Coral Grouper",new Color(.70f,.75f,.95f),new Color(.22f,.88f,1f),.4f,10f,1.26f,0f,330)
+        new FishSpeciesDefinition("Cybernetic Coral Grouper",new Color(.70f,.75f,.95f),new Color(.22f,.88f,1f),.4f,10f,1.26f,0f,330),
+        new FishSpeciesDefinition("Aurelia Mangrove Snapper",new Color(.54f,.77f,1f),new Color(.95f,.72f,.35f),.5f,10.5f,1.2f,0f,135),
+        new FishSpeciesDefinition("Chrono Reef Shark",new Color(.25f,.55f,.78f),new Color(.67f,.86f,1f),5f,30f,1.9f,0f,1560),
+        new FishSpeciesDefinition("Crimson Cybros Mako Shark",new Color(.67f,.18f,.31f),new Color(1f,.58f,.64f),20f,150f,1.9f,0f,2340)
     };
 
     public static int Count=>Species.Length;
-    public static readonly int[] ActiveIds={0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,SpanishMackerelId,GoldenPompanoId,StripedMarlinId,QueenslandGrouperId,PotatoGrouperId,UltravioletPantherGrouperId,ChloroCellTitanTriggerfishId,EmberCoreBarracudaId,MagmaVoltCoralGrouperId,CyberneticCoralGrouperId};
+    public static readonly int[] ActiveIds={0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,SpanishMackerelId,GoldenPompanoId,StripedMarlinId,QueenslandGrouperId,PotatoGrouperId,UltravioletPantherGrouperId,ChloroCellTitanTriggerfishId,EmberCoreBarracudaId,MagmaVoltCoralGrouperId,CyberneticCoralGrouperId,AureliaMangroveSnapperId,ChronoReefSharkId,CrimsonCybrosMakoSharkId};
     public static int CanonicalId(int id)=>id==4?YellowfinTunaId:id;
 
     // Tournament identity is deliberately separate from save/render identity.

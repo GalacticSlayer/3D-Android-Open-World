@@ -109,6 +109,13 @@ public static class ReefCatalog
                 exclusive[FishCatalog.EmberCoreBarracudaId]=25f;
                 exclusive[FishCatalog.MagmaVoltCoralGrouperId]=25f;
             }
+            else if(bait==3)
+            {
+                exclusive[FishCatalog.UltravioletPantherGrouperId]=25f;
+                exclusive[FishCatalog.AureliaMangroveSnapperId]=25f;
+                exclusive[FishCatalog.ChronoReefSharkId]=25f;
+                exclusive[FishCatalog.CrimsonCybrosMakoSharkId]=25f;
+            }
             else exclusive[FishCatalog.UltravioletPantherGrouperId]=100f;
             return exclusive;
         }

@@ -303,7 +303,10 @@ export const tournamentIslands = [
       {"id": 56, "name": "Chloro-Cell Titan Triggerfish", "maxKg": 18},
       {"id": 57, "name": "Ember Core Barracuda", "maxKg": 72},
       {"id": 58, "name": "Magma Volt Coral Grouper", "maxKg": 15},
-      {"id": 59, "name": "Cybernetic Coral Grouper", "maxKg": 15}
+      {"id": 59, "name": "Cybernetic Coral Grouper", "maxKg": 15},
+      {"id": 60, "name": "Aurelia Mangrove Snapper", "maxKg": 15.75},
+      {"id": 61, "name": "Chrono Reef Shark", "maxKg": 45},
+      {"id": 62, "name": "Crimson Cybros Mako Shark", "maxKg": 225}
     ]
   }
 ];

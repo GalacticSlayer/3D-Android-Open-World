@@ -38,10 +38,13 @@ public class AmbientFishManager : MonoBehaviour
         {
             float roll=Random.value;
             if(roll<.10f)return FishCatalog.CyberneticCoralGrouperId;
-            if(roll<.325f)return FishCatalog.UltravioletPantherGrouperId;
-            if(roll<.55f)return FishCatalog.ChloroCellTitanTriggerfishId;
-            if(roll<.775f)return FishCatalog.EmberCoreBarracudaId;
-            return FishCatalog.MagmaVoltCoralGrouperId;
+            if(roll<.25f)return FishCatalog.UltravioletPantherGrouperId;
+            if(roll<.40f)return FishCatalog.ChloroCellTitanTriggerfishId;
+            if(roll<.55f)return FishCatalog.EmberCoreBarracudaId;
+            if(roll<.70f)return FishCatalog.MagmaVoltCoralGrouperId;
+            if(roll<.80f)return FishCatalog.AureliaMangroveSnapperId;
+            if(roll<.90f)return FishCatalog.ChronoReefSharkId;
+            return FishCatalog.CrimsonCybrosMakoSharkId;
         }
         if(biome!=WindgroveShoalZone.BiomeId)
             return ReefCatalog.Roll(Random.value,0,biome);
