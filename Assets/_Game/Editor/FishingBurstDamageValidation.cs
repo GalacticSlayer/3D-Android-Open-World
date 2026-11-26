@@ -34,7 +34,7 @@ public static class FishingBurstDamageValidation
             CheckTier(5,35,50,.13f,70,100);
             CheckTier(6,55,75,.15f,110,150);
             CheckTier(7,80,95,.17f,160,190);
-            CheckTier(8,115,135,.19f,230,270);
+            CheckTier(8,140,165,.19f,280,330);
 
             // Sweep the complete [0,1) damage-roll interval densely. This is not a
             // statistical test; it verifies the deterministic mapping bounds.
@@ -63,7 +63,7 @@ public static class FishingBurstDamageValidation
             if(showSuccess)
                 EditorUtility.DisplayDialog(
                     "Fishing Damage Validated",
-                    "All nine rod tiers validated. Level 9: 115-135 normal, 230-270 critical, 19% critical chance. 10,000 deterministic rolls per tier passed.",
+                    "All nine rod tiers validated. Level 9: 140-165 normal, 280-330 critical, 19% critical chance. 10,000 deterministic rolls per tier passed.",
                     "OK");
         }
         catch(Exception exception)
