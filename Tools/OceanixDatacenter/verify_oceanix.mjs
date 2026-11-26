@@ -70,3 +70,17 @@ for(const [id,name] of [[60,'AureliaMangroveSnapper'],[61,'ChronoReefShark'],[62
  assert(tournamentIslands.find(x=>x.id===6).fish.some(x=>x.id===id));
 }
 console.log('Oceanix squid-only fish, region validation and 40x health: PASS');
+
+// Auto-import checks: Unity must import the originals straight from Downloads.
+const squidImporter=readFileSync('Assets/_Game/Editor/OceanixSquidFishInstaller.cs','utf8');
+for(const name of ['AureliaMangroveSnapper','ChronoReefShark','CrimsonCybrosMakoShark'])
+ assert(squidImporter.includes('"'+name+'"'));
+for(const original of [
+ 'Aurelia Mangrove Snapper.fbx','Aurelia Mangrove Snapper Texture.png',
+ 'Chrono Reef Shark.fbx','Chrono Reef Shark Texture.png',
+ 'Crimson Cybros Mako shark.fbx','Crimson Cybros Mako Shark Texture.png'])
+ assert(squidImporter.includes('"'+original+'"'));
+assert(squidImporter.includes('swimTakeContains:"ArmatureAction"'));
+assert(squidImporter.includes('OnPreprocessBuild(BuildReport report)'));
+assert(squidImporter.includes('File.Copy(source,destination,false)'));
+console.log('Oceanix downloaded FBX/PNG auto-import and swim-take wiring: PASS');
