@@ -94,3 +94,12 @@ assert(fishImporter.includes('t.name=="Bone.004.R"'));
 assert(fishImporter.includes('if(tail==null && allowRightSuffixedRig)'));
 assert(squidImporter.includes('allowRightSuffixedRig:true'));
 console.log('Oceanix squid fish rig compatibility: standard and .R bone chains PASS');
+
+// Crimson also has unsuffixed fin bones; use the whole .R spine in the
+// presentation controller to prevent aquarium turns from distorting it.
+const snapperPresentation=readFileSync('Assets/_Game/Scripts/Fishing/RedSnapperPresentation.cs','utf8');
+assert(snapperPresentation.includes('FindBone(bones, "Bone.004.R") != null'));
+assert(snapperPresentation.includes('string suffix = rightSpine ? ".R" : string.Empty;'));
+for(const name of ['Bone.001','Bone.002','Bone.003','Bone.004'])
+ assert(snapperPresentation.includes('"'+name+'" + suffix'));
+console.log('Oceanix .R spine swimming animation continuity: PASS');

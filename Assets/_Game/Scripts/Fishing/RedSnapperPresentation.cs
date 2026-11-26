@@ -609,28 +609,37 @@ public class RedSnapperPresentation : MonoBehaviour
                 "Bone"
             );
 
+        // Both Chrono and Crimson sharks have a right-suffixed spine.
+        // Crimson also contains separate unsuffixed fin bones, so resolve
+        // the ENTIRE spine consistently rather than mixing both chains.
+        bool rightSpine =
+            FindBone(bones, "Bone.004") == null &&
+            FindBone(bones, "Bone.004.R") != null;
+
+        string suffix = rightSpine ? ".R" : string.Empty;
+
         frontBodyBone =
             FindBone(
                 bones,
-                "Bone.001"
+                "Bone.001" + suffix
             );
 
         midBodyBone =
             FindBone(
                 bones,
-                "Bone.002"
+                "Bone.002" + suffix
             );
 
         rearBodyBone =
             FindBone(
                 bones,
-                "Bone.003"
+                "Bone.003" + suffix
             );
 
         tailBone =
             FindBone(
                 bones,
-                "Bone.004"
+                "Bone.004" + suffix
             );
 
         if (headBone == null)
