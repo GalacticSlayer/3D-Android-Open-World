@@ -84,3 +84,13 @@ assert(squidImporter.includes('swimTakeContains:"ArmatureAction"'));
 assert(squidImporter.includes('OnPreprocessBuild(BuildReport report)'));
 assert(squidImporter.includes('File.Copy(source,destination,false)'));
 console.log('Oceanix downloaded FBX/PNG auto-import and swim-take wiring: PASS');
+
+// Chrono/Crimson sharks export Bone.004.R, while Aurelia uses Bone.004.
+// The naming fallback is opt-in so older fish imports remain unchanged.
+const fishImporter=readFileSync('Assets/_Game/Editor/SeaBassImporter.cs','utf8');
+assert(fishImporter.includes('bool allowRightSuffixedRig=false'));
+assert(fishImporter.includes('t.name=="Bone.004"'));
+assert(fishImporter.includes('t.name=="Bone.004.R"'));
+assert(fishImporter.includes('if(tail==null && allowRightSuffixedRig)'));
+assert(squidImporter.includes('allowRightSuffixedRig:true'));
+console.log('Oceanix squid fish rig compatibility: standard and .R bone chains PASS');

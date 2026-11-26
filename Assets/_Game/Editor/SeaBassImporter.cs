@@ -10,7 +10,7 @@ public static class SeaBassImporter
     private const string Folder="Assets/_Game/Reef/Source";
     public const string PrefabPath="Assets/Resources/Fishing/SeaBass.prefab";
     public static void Install() => InstallModel("SeaBass",PrefabPath);
-    public static void InstallModel(string assetName,string prefabPath,string sourceFolder=null,string texturePath=null,bool preserveWorldUp=false,bool importHeldStruggle=false,bool useIndexedSwimAndStruggle=false,string swimTakeContains=null,bool discardEmptyRenderers=false)
+    public static void InstallModel(string assetName,string prefabPath,string sourceFolder=null,string texturePath=null,bool preserveWorldUp=false,bool importHeldStruggle=false,bool useIndexedSwimAndStruggle=false,string swimTakeContains=null,bool discardEmptyRenderers=false,bool allowRightSuffixedRig=false)
     {
         string folder=sourceFolder??Folder;
         string fbx=folder+"/"+assetName+".fbx", png=texturePath??(folder+"/"+assetName+"Texture.png");
@@ -101,9 +101,22 @@ public static class SeaBassImporter
             var animator=model.GetComponent<Animator>();if(animator==null)animator=model.AddComponent<Animator>();
             animator.runtimeAnimatorController=controller;animator.applyRootMotion=false;
             animator.cullingMode=AnimatorCullingMode.CullUpdateTransforms;
-            var head=model.GetComponentsInChildren<Transform>(true).FirstOrDefault(t=>t.name=="Bone");
-            var tail=model.GetComponentsInChildren<Transform>(true).FirstOrDefault(t=>t.name=="Bone.004");
-            if(head==null||tail==null)throw new InvalidOperationException("Fish five-bone rig is missing.");
+            var rig=model.GetComponentsInChildren<Transform>(true);
+            var head=rig.FirstOrDefault(t=>t.name=="Bone");
+            var tail=rig.FirstOrDefault(t=>t.name=="Bone.004");
+            // The Oceanix Chrono and Crimson shark FBXs export their spine
+            // with Blender's ".R" suffix, while Aurelia and existing fish
+            // use the unsuffixed names. Opt in per importer to avoid changing
+            // legacy fish orientation or animation binding.
+            if(tail==null && allowRightSuffixedRig)
+                tail=rig.FirstOrDefault(t=>t.name=="Bone.004.R");
+            if(head==null || tail==null)
+                throw new InvalidOperationException(
+                    "Fish spine rig missing head Bone or tail Bone.004"+
+                    (allowRightSuffixedRig?" / Bone.004.R":"")+
+                    " for "+assetName+". Available Bone nodes: "+
+                    string.Join(", ",rig.Where(t=>t.name.StartsWith("Bone",StringComparison.Ordinal))
+                        .Select(t=>t.name).Take(16).ToArray()));
             var forward=(head.position-tail.position).normalized;
             // Flatfish are exported lying on their side; keep world up instead of
             // undoing their authored roll via the FBX root/armature up vector.

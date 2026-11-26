@@ -142,7 +142,8 @@ public static class OceanixSquidFishInstaller
         // The authored Mako export also contains unrelated Plane actions.
         // Always select the rig's ArmatureAction rather than the longest take.
         SeaBassImporter.InstallModel(fish.Name,ResourcesFolder+"/"+fish.Name+".prefab",
-            Source,swimTakeContains:"ArmatureAction",discardEmptyRenderers:true);
+            Source,swimTakeContains:"ArmatureAction",
+            discardEmptyRenderers:true,allowRightSuffixedRig:true);
         if(!Ready(fish))throw new InvalidOperationException(
             "Failed to validate authored mesh, animation, UV atlas or mouth anchor for "+fish.Name);
     }
