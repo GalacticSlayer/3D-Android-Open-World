@@ -118,6 +118,11 @@ public static class FishVisualFactory
             case FishCatalog.AureliaMangroveSnapperId:return "Fishing/AureliaMangroveSnapper";
             case FishCatalog.ChronoReefSharkId:return "Fishing/ChronoReefShark";
             case FishCatalog.CrimsonCybrosMakoSharkId:return "Fishing/CrimsonCybrosMakoShark";
+            case FishCatalog.SyntheticMangroveSnapperId:return "Fishing/SyntheticMangroveSnapper";
+            case FishCatalog.SyntheticTitanTriggerfishId:return "Fishing/SyntheticTitanTriggerfish";
+            case FishCatalog.SyntheticCoralGrouperId:return "Fishing/SyntheticCoralGrouper";
+            case FishCatalog.SyntheticPantherGrouperId:return "Fishing/SyntheticPantherGrouper";
+            case FishCatalog.SyntheticGreatBarracudaId:return "Fishing/SyntheticGreatBarracuda";
             case FishCatalog.CoralGrouperId:return "Fishing/CoralGrouper";
             case FishCatalog.BlueTangId:return "Fishing/BlueTang";
             case FishCatalog.DussumieriTangId:return "Fishing/DussumieriTang";

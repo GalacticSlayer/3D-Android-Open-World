@@ -18,15 +18,20 @@ public static class FishIndexCatalog
             FishCatalog.PotatoGrouperId, FishCatalog.QueenslandGrouperId, FishCatalog.StripedMarlinId,
             FishCatalog.BlackMarlinId
         },
-        new[] { FishCatalog.UltravioletPantherGrouperId, FishCatalog.ChloroCellTitanTriggerfishId,
-            FishCatalog.EmberCoreBarracudaId, FishCatalog.MagmaVoltCoralGrouperId,
-            FishCatalog.AureliaMangroveSnapperId, FishCatalog.ChronoReefSharkId, FishCatalog.CrimsonCybrosMakoSharkId }
+        new[] { FishCatalog.SyntheticPantherGrouperId, FishCatalog.SyntheticTitanTriggerfishId,
+            FishCatalog.SyntheticGreatBarracudaId, FishCatalog.SyntheticCoralGrouperId,
+            FishCatalog.SyntheticMangroveSnapperId, FishCatalog.ChronoReefSharkId,
+            FishCatalog.CrimsonCybrosMakoSharkId }
     };
 
     private static readonly int[][] VariantFamilies = {
         new[] { FishCatalog.MakoSharkId, FishCatalog.BattleScarredMakoSharkId },
         new[] { FishCatalog.MahiMahiId, FishCatalog.BlueMahiMahiId },
-        new[] { FishCatalog.MagmaVoltCoralGrouperId, FishCatalog.CyberneticCoralGrouperId },
+        new[] { FishCatalog.SyntheticPantherGrouperId, FishCatalog.UltravioletPantherGrouperId },
+        new[] { FishCatalog.SyntheticTitanTriggerfishId, FishCatalog.ChloroCellTitanTriggerfishId },
+        new[] { FishCatalog.SyntheticGreatBarracudaId, FishCatalog.EmberCoreBarracudaId },
+        new[] { FishCatalog.SyntheticCoralGrouperId, FishCatalog.MagmaVoltCoralGrouperId, FishCatalog.CyberneticCoralGrouperId },
+        new[] { FishCatalog.SyntheticMangroveSnapperId, FishCatalog.AureliaMangroveSnapperId },
         new[] { FishCatalog.EmperorAngelfishId, FishCatalog.JuvenileEmperorAngelfishId }
     };
 
@@ -108,6 +113,16 @@ public static class FishIndexCatalog
         if(species==FishCatalog.BlueMahiMahiId)
             return FishingTuning.TryGetChance(FishCatalog.MahiMahiId,key,biome,out float combinedMahiOdds)
                 ?combinedMahiOdds*FishCatalog.BlueMahiMahiVariantChance:-1f;
+        if(biome==OceanixDatacenterZone.BiomeId)
+        {
+            int synthetic=FishCatalog.OceanixSyntheticFamilyOf(species);
+            if(synthetic>=0)
+                return FishingTuning.TryGetChance(synthetic,key,biome,out float familyOdds)
+                    ?familyOdds*FishCatalog.OceanixSyntheticVariantChance:-1f;
+            if(FishCatalog.IsOceanixSyntheticNormal(species))
+                return FishingTuning.TryGetChance(species,key,biome,out float familyOdds)
+                    ?familyOdds*(1f-FishCatalog.OceanixSyntheticVariantChance):-1f;
+        }
         if(species==FishCatalog.CyberneticCoralGrouperId)
             return FishingTuning.TryGetChance(FishCatalog.MagmaVoltCoralGrouperId,key,biome,out float combinedGrouper)
                 ? (key=="worms" || key=="worms-legacy" ? combinedGrouper:0f):-1f;

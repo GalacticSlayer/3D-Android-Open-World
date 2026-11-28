@@ -1,7 +1,7 @@
 // Generated from the fishing weight/chance tables. Maximum includes the 50% hotspot bonus.
 // Only explicit gameplay variants share tournament targets. Their actual catch
 // weights score at the same 100 points/kg; no variant multiplier is applied.
-export const tournamentSpeciesId = id => ({4:5,20:19,23:22,26:24,29:28,34:33,59:58})[id] ?? id;
+export const tournamentSpeciesId = id => ({4:5,20:19,23:22,26:24,29:28,34:33,55:66,56:64,57:67,58:65,59:65,60:63})[id] ?? id;
 export const tournamentTargets = island => island.fish.filter(f => tournamentSpeciesId(f.id)===f.id);
 export const tournamentIslands = [
   {
@@ -306,7 +306,12 @@ export const tournamentIslands = [
       {"id": 59, "name": "Cybernetic Coral Grouper", "maxKg": 15},
       {"id": 60, "name": "Aurelia Mangrove Snapper", "maxKg": 15.75},
       {"id": 61, "name": "Chrono Reef Shark", "maxKg": 45},
-      {"id": 62, "name": "Crimson Cybros Mako Shark", "maxKg": 225}
+      {"id": 62, "name": "Crimson Cybros Mako Shark", "maxKg": 225},
+      {"id": 63, "name": "Synthetic Mangrove Snapper", "maxKg": 15.75},
+      {"id": 64, "name": "Synthetic Titan Triggerfish", "maxKg": 18},
+      {"id": 65, "name": "Synthetic Coral Grouper", "maxKg": 15},
+      {"id": 66, "name": "Synthetic Panther Grouper", "maxKg": 15},
+      {"id": 67, "name": "Synthetic Great Barracuda", "maxKg": 72}
     ]
   }
 ];

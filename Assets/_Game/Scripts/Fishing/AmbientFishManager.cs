@@ -37,14 +37,16 @@ public class AmbientFishManager : MonoBehaviour
         if(biome==OceanixDatacenterZone.BiomeId)
         {
             float roll=Random.value;
-            if(roll<.10f)return FishCatalog.CyberneticCoralGrouperId;
-            if(roll<.25f)return FishCatalog.UltravioletPantherGrouperId;
-            if(roll<.40f)return FishCatalog.ChloroCellTitanTriggerfishId;
-            if(roll<.55f)return FishCatalog.EmberCoreBarracudaId;
-            if(roll<.70f)return FishCatalog.MagmaVoltCoralGrouperId;
-            if(roll<.80f)return FishCatalog.AureliaMangroveSnapperId;
-            if(roll<.90f)return FishCatalog.ChronoReefSharkId;
-            return FishCatalog.CrimsonCybrosMakoSharkId;
+            // Ambient populations mirror the new base fish. The existing
+            // futuristic skins appear as rare members of the same families.
+            int synthetic=roll<.15f?FishCatalog.SyntheticPantherGrouperId
+                :roll<.30f?FishCatalog.SyntheticTitanTriggerfishId
+                :roll<.45f?FishCatalog.SyntheticGreatBarracudaId
+                :roll<.60f?FishCatalog.SyntheticCoralGrouperId
+                :roll<.75f?FishCatalog.SyntheticMangroveSnapperId
+                :roll<.875f?FishCatalog.ChronoReefSharkId
+                :FishCatalog.CrimsonCybrosMakoSharkId;
+            return FishCatalog.RollOceanixSyntheticVariant(synthetic,biome,Random.value);
         }
         if(biome!=WindgroveShoalZone.BiomeId)
             return ReefCatalog.Roll(Random.value,0,biome);

@@ -63,3 +63,8 @@ speciesId,speciesName,minWeightKg,maxWeightKg,minHealth,maxHealth,minCostCoins,m
 60,Aurelia Mangrove Snapper,0.5,10.5,9920,42880,135,1500,3.25
 61,Chrono Reef Shark,5,30,468000,1040000,1560,15600,5.2
 62,Crimson Cybros Mako Shark,20,150,780000,1248000,2340,23400,6
+63,Synthetic Mangrove Snapper,0.5,10.5,9920,42880,135,1500,3.25
+64,Synthetic Titan Triggerfish,0.1,12,160,1100,170,1200,3.152
+65,Synthetic Coral Grouper,0.4,10,345,1700,330,1900,3.8
+66,Synthetic Panther Grouper,0.3,10,330,1600,300,1800,3.8
+67,Synthetic Great Barracuda,3.2,48,1800,12000,1080,10800,3.85

@@ -67,7 +67,12 @@ public static class FishSizeTable
         CoralGrouperCurve(), // ID 59 Cybernetic Coral Grouper
         GameplayCurve(15f,22) , // ID 60 Aurelia Mangrove Snapper matches source 21
         GameplayCurve(5f,40) , // ID 61 Chrono Reef Shark matches source 15
-        GameplayCurve(8f,70) // ID 62 Crimson Cybros Mako Shark matches source 19
+        GameplayCurve(8f,70), // ID 62 Crimson Cybros Mako Shark matches source 19
+        GameplayCurve(15f,22), // ID 63 Synthetic Mangrove Snapper, same length curve as 60
+        BalistoidesViridescensCurve(), // ID 64 Synthetic Titan Triggerfish, same length curve as 56
+        CoralGrouperCurve(), // ID 65 Synthetic Coral Grouper, same length curve as 58
+        PantherGrouperCurve(), // ID 66 Synthetic Panther Grouper, same length curve as 55
+        GameplayCurve(9f,40) // ID 67 Synthetic Great Barracuda, same length curve as 57
     };
 
     // Edwards et al. (2011), Rodrigues lagoon measurements, n=17 (14-27 cm TL).
