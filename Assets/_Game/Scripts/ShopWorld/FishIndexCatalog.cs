@@ -120,8 +120,8 @@ public static class FishIndexCatalog
                 return FishingTuning.TryGetChance(synthetic,key,biome,out float familyOdds)
                     ?familyOdds*FishCatalog.OceanixSyntheticVariantChance:-1f;
             if(FishCatalog.IsOceanixSyntheticNormal(species))
-                return FishingTuning.TryGetChance(species,key,biome,out float familyOdds)
-                    ?familyOdds*(1f-FishCatalog.OceanixSyntheticVariantChance):-1f;
+                return FishingTuning.TryGetChance(species,key,biome,out float normalFamilyOdds)
+                    ?normalFamilyOdds*(1f-FishCatalog.OceanixSyntheticVariantChance):-1f;
         }
         if(species==FishCatalog.CyberneticCoralGrouperId)
             return FishingTuning.TryGetChance(FishCatalog.MagmaVoltCoralGrouperId,key,biome,out float combinedGrouper)
